@@ -1,0 +1,59 @@
+{
+  "handle": "InvariantFilter",
+  "mechanism": "A strict communication firewall that intercepts {{message}}s (incoming or outgoing) and evaluates them against an explicit set of {{predicates}} (Invariants). If a {{message}} satisfies all predicates, it is permitted to pass. If it fails even one, it is blocked, dropped, or flagged for review. This enforces 'Contractual Safety' on the communication channel. It inspects every {{message}} via a rigorous {{check}} against defined predicates before allowing transit.",
+  "gloss": "Rule-based message filtering",
+  "failure_modes": [
+    "Incomplete Invariants: If the filter does not catch a specific edge case, bad data leaks through.",
+    "False Positives: Overly strict invariants blocking legitimate messages.",
+    "Latency: Complex predicate evaluation slowing down high-throughput streams."
+  ],
+  "invariants": [
+    "Atomic Blocking: If Predicate(M) is False, M is NOT forwarded.",
+    "Fail-Closed: If evaluation errors (e.g. timeout), default to BLOCK.",
+    "Isolation: The protected agent state is not mutated by evaluation."
+  ],
+  "preconditions": [
+    "A defined Invariant Set (Predicates)",
+    "A {{message}} or {{stream}} to evaluate"
+  ],
+  "postconditions": [
+    "Only compliant messages reach the destination",
+    "Blocked messages are logged (optional)"
+  ],
+  "parameters": [
+    {
+      "name": "action_on_fail",
+      "type": "Enum",
+      "range": "[DROP, REJECT, FLAG]",
+      "description": "What happens when a message violates a predicate"
+    }
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:InvariantFilter#mh:SHA-256:a541049098acbba01ebe35ee9c23ebbdaf9d34e252b1b69f97daa87b3e96eea2",
+      "sema:InvariantFilter#mh:SHA-256:cc3794d06d91be2bd2371c18fcdddc379e5001aa4864f6f3fea1fb3b037bd2b2",
+      "sema:InvariantFilter#mh:SHA-256:5e4da90216dd412c9acc3258da818ffe31965d54ba79cbd966a193563e9c2329"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:InvariantFilter#mh:SHA-256:212b8b7a75ea69b22561e19191aa5cb630aaf75f4e4229e03db798338ab00a8e",
+  "sema_ref": "InvariantFilter#212b",
+  "sema_stub": "212b",
+  "dependencies": {
+    "accepts": {
+      "message": "sema:Message#mh:SHA-256:bf6d3d4643c881a8c245617c3603b13ffef26026304fc7e7c384a80cf25fd237",
+      "predicates": "sema:RuleSet#mh:SHA-256:7ebf36ad0634307d189aa0545d3424f0d0783bf2a0df04dfafdecf64e0cc9146"
+    },
+    "references": {
+      "check": "sema:Check#mh:SHA-256:6890b221c38531710528cd84bbf3a957e29d9836dfc9c02669fc0a86709bcb00",
+      "stream": "sema:Stream#mh:SHA-256:ffa6e636cc2ca9f13c23f5862e60aceb0885a35686fb60f12da157316b159b53"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

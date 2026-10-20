@@ -1,0 +1,68 @@
+{
+  "handle": "EmpathySim",
+  "mechanism": "Theory of Mind simulation. {{agent}} instantiates a temporary 'Virtual {{context}}' initialized from a {{target_profile}} (known priors, goals, and constraints). It then runs inference on this context to predict Target's next move. It spins up an isolated {{agent_sandbox}} to model the target's perspective.",
+  "gloss": "Predictive modeling of external agent states",
+  "failure_modes": [
+    "Projection {{cognitive_bias}}: Leaking Self-Knowledge into the simulation (Mirroring Error).",
+    "Infinite Regress: {{simulation}} of Target simulating Self simulating Target..",
+    "{{simulation}} Capture: Hostile memetics in simulated {{context}} corrupting host {{state}}."
+  ],
+  "invariants": [
+    "Isolation: Simulated context must have NO write access to Host memory.",
+    "Priors Shift: Utility function used must be Target's, not Host's."
+  ],
+  "preconditions": [
+    "{{budget}} available for sub-simulation",
+    "Target profile (goals/constraints) known"
+  ],
+  "postconditions": [
+    "Confidence_Score generated",
+    "Predicted_Action vector generated"
+  ],
+  "parameters": [
+    {
+      "name": "simulation_depth",
+      "type": "Integer",
+      "range": "[1, 3]",
+      "description": "Default: 1"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "related": [
+      "sema:MentalSim#mh:SHA-256:1eca2a515c38f3be5c3956be9885e8f1e5b931a958f60b8e21d97e99dd65f3dd",
+      "Kinproxy"
+    ],
+    "ring": 2,
+    "supersedes": [
+      "sema:EmpathySim#mh:SHA-256:86ab6c06ecf009fce40155d3c1aeadb76738060bcb7adbd88f9c15bd01a52f4c",
+      "sema:EmpathySim#mh:SHA-256:86e98d01cd322735f32c153f35f6d58c4d08ead468b5aa2fe07810483f9de445",
+      "sema:EmpathySim#mh:SHA-256:2f023002b64558552942ebd18f3b1bd76a76198a9bab3a98ef0b34e2dc1fb2de",
+      "sema:EmpathySim#mh:SHA-256:87963fa098676195ed42fdf8804d0378ee74d8aad85830f327aa3925d35a47ef",
+      "sema:EmpathySim#mh:SHA-256:b82af7345040fafb4a1565cd0853e354b86d66ab8eba11f4310260248e9b2290"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:EmpathySim#mh:SHA-256:33c4c1083c17544686139953481e1467b780ec974093cbe6831cc710a5621d0a",
+  "sema_ref": "EmpathySim#33c4",
+  "sema_stub": "33c4",
+  "dependencies": {
+    "accepts": {
+      "target_profile": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd"
+    },
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "agent_sandbox": "sema:AgentSandbox#mh:SHA-256:1594a10a882956e4b8501764091e1d5025ba0b405cce34b7ef931bb17e5c634a",
+      "budget": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef",
+      "cognitive_bias": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387",
+      "context": "sema:Context#mh:SHA-256:c1b72256dc4732033ee42cc07ff5d9fb60a7f1a3e5634449c343692a33340756",
+      "simulation": "sema:Simulation#mh:SHA-256:1058e7090079e846251ed480d7afec0328809d22bebb6b205425b2de614787c3",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

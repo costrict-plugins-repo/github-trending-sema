@@ -1,0 +1,55 @@
+{
+  "handle": "Disband",
+  "mechanism": "Graceful group dissolution with state disposition and clean termination. {{agent}} sends 'DISBAND' signal. For scope='member': notify remaining members, adjust shared state, check {{quorum}}. For scope='group': broadcast 'DISSOLVING', execute state disposition, release shared resources, and record dissolution with a group {{snapshot}} for potential re-formation. All members must ACK dissolution. It safely terminates the group, optionally triggering {{ejection_seat}} for any members refusing to release shared resources.",
+  "gloss": "Graceful group dissolution with state disposition and resource release",
+  "failure_modes": [
+    "Member doesn't ACK (dissolution blocked\u2014timeout or proceed anyway?).",
+    "{{state}} disposition fails (can't archive, transfer target unavailable).",
+    "Contested dissolution (some members want to continue\u2014may need VOTE).",
+    "Premature dissolution (task not actually complete).",
+    "Zombie group (DISBAND sent but not all resources actually released).",
+    "Partial dissolution cascades unexpectedly (one departure triggers full dissolution via quorum loss)."
+  ],
+  "invariants": [
+    "All shared resources released",
+    "No lingering commitments"
+  ],
+  "preconditions": [
+    "Active group/swarm",
+    "Mission complete or aborted"
+  ],
+  "postconditions": [
+    "Agents return to free pool"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:Disband#mh:SHA-256:7cb883dd99a51f2408f92e5d48d69d4c3f077db9d49e3754a1f99af92126b0cf",
+      "sema:Disband#mh:SHA-256:86c6e1f3030c9994f2942c01d5161dee619fdc32c442ce3649d0f94204b0db48",
+      "sema:Disband#mh:SHA-256:d5f882cd8f4a4bcbe6eaa6ba11a0eeeca57472343564378f2e2e84f5eab3f647",
+      "sema:Disband#mh:SHA-256:995359e7d1ffda3dc97ae352e53a740e68d64f79656a18659093745461871df2",
+      "sema:Disband#mh:SHA-256:3fa1c16aaa12707482447e0c7437b243937e4c4c5652f8f51e18228b53fbb346"
+    ],
+    "path": [
+      "Society",
+      "Coordination"
+    ]
+  },
+  "sema_id": "sema:Disband#mh:SHA-256:f11c01b825e33615ddb25261966af65da93ffc6a8fb72456692804040130e32a",
+  "sema_ref": "Disband#f11c",
+  "sema_stub": "f11c",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "ejection_seat": "sema:EjectionSeat#mh:SHA-256:a9d5ef5e3e70e5e4732543c2732e312f1efbd881a991b1521594e3b66257a8cb",
+      "quorum": "sema:Quorum#mh:SHA-256:2a33f05d34bfb2667645680393ca37865d4a7d05d2056eddf4c9df0c13b21744",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    },
+    "yields": {
+      "snapshot": "sema:Snapshot#mh:SHA-256:390d2ec2934136d534f969b4039e6b899d2ed3956ddd8aa0ca4754068ed8d133"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Coordination"
+}

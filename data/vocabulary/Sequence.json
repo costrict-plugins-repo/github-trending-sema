@@ -1,0 +1,44 @@
+{
+  "handle": "Sequence",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "steps"
+    ],
+    "properties": {
+      "steps": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Ordered list of step IDs"
+      },
+      "current_index": {
+        "type": "integer",
+        "description": "Index of currently executing step"
+      },
+      "completed": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "IDs of completed steps"
+      }
+    }
+  },
+  "mechanism": "Ordered execution: A then B. Output of A available to B.",
+  "gloss": "Sequential ordering",
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Sequence#mh:SHA-256:0cae6b0951c4e93742259ff81ded009a85283d250c948f97cce3b9b3b8e58e1a",
+  "sema_ref": "Sequence#0cae",
+  "sema_stub": "0cae",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

@@ -1,0 +1,1726 @@
+"""Graph store for SolutionTaxonomy using SQLite + NetworkX."""
+
+import json
+import re
+import sqlite3
+import sys
+import uuid
+from enum import Enum
+from typing import Any
+
+import networkx as nx
+import numpy as np
+from pydantic import BaseModel, ConfigDict, Field
+
+from .embedding_service import EmbeddingService
+
+
+class NodeType(str, Enum):
+    PATTERN = "PATTERN"
+    SOLUTION = "SOLUTION"  # Deprecated: use PATTERN
+    MECHANISM = "MECHANISM"  # core_mechanism
+    OUTCOME = "OUTCOME"  # long_term_vision
+    PRINCIPLE = "PRINCIPLE"  # design_principles
+    CRITICISM = "CRITICISM"  # why_it_fails
+    JUSTIFICATION = "JUSTIFICATION"  # why_it_works
+    NOVELTY = "NOVELTY"  # what_is_new
+    SCENARIO = "SCENARIO"  # when_to_use / context
+    COUNTERFACTUAL = "COUNTERFACTUAL"  # what happens WITHOUT this pattern (baseline comparison)
+    # Contract types (formal specification)
+    INVARIANT = "INVARIANT"  # strict logical rules that must hold
+    PRECONDITION = "PRECONDITION"  # required state before pattern execution
+    POSTCONDITION = "POSTCONDITION"  # guaranteed state after pattern execution
+    INPUT = "INPUT"  # typed input parameters
+    OUTPUT = "OUTPUT"  # typed output values
+    PARAMETER = "PARAMETER"  # configuration slots with range contracts
+    BASELINE = "BASELINE"  # baseline comparison (deprecated: use COUNTERFACTUAL)
+    # Taxonomy hierarchy — path-based (0.2.0+).
+    # Each TAXONOMY_PATH node represents one prefix of a valid path in
+    # VALID_PATHS. e.g. 'Physics', 'Physics/Primitives' each get their own
+    # node, linked by PARENT edges. Patterns attach via a single IN_PATH
+    # edge to their leaf node.
+    TAXONOMY_PATH = "TAXONOMY_PATH"
+    # Legacy (pre-0.2.0): kept as enum values so older DBs still load
+    # without schema errors. Migration rewrites them to TAXONOMY_PATH.
+    LAYER = "LAYER"
+    CATEGORY = "CATEGORY"
+
+
+class EdgeType(Enum):
+    # Core Relationships
+    IS_A = "IS_A"
+    PART_OF = "PART_OF"
+    HAS_PROPERTY = "HAS_PROPERTY"
+    RELATED_TO = "RELATED_TO"
+
+    # Structural/Taxonomic
+    IN_CATEGORY = "IN_CATEGORY"
+    USES_MECHANISM = "USES_MECHANISM"
+    MACRO_FOR = "MACRO_FOR"  # Alias/Wrapper relationship
+
+    # Contracts & Safety
+    HAS_INVARIANT = "HAS_INVARIANT"
+    HAS_PRECONDITION = "HAS_PRECONDITION"
+    HAS_POSTCONDITION = "HAS_POSTCONDITION"
+    HAS_INPUT = "HAS_INPUT"
+    HAS_OUTPUT = "HAS_OUTPUT"
+    HAS_PARAMETER = "HAS_PARAMETER"
+
+    # Functionality
+    SOLVES_PROBLEM = "SOLVES_PROBLEM"
+    PRODUCES_OUTCOME = "PRODUCES_OUTCOME"
+    REQUIRES_INPUT = "REQUIRES_INPUT"
+    FOLLOWS_PRINCIPLE = "FOLLOWS_PRINCIPLE"
+    HAS_FAILURE_MODE = "HAS_FAILURE_MODE"
+    HAS_CRITICISM = "HAS_CRITICISM"
+    HAS_JUSTIFICATION = "HAS_JUSTIFICATION"
+    CLAIMS_NOVELTY = "CLAIMS_NOVELTY"
+    SOLVES_SCENARIO = "SOLVES_SCENARIO"
+    COMPARED_TO_BASELINE = "COMPARED_TO_BASELINE"
+
+    # New Interface Standard (from "links" field)
+    ACCEPTS = "ACCEPTS"  # Input dependencies
+    YIELDS = "YIELDS"  # Output dependencies
+    COMPOSES_WITH = "COMPOSES_WITH"  # Patterns actively invoked
+    REFERENCES = "REFERENCES"  # Conceptual references (not invoked)
+    IMPLEMENTS = "IMPLEMENTS"  # Abstract interfaces (deprecated)
+    HAS_SIGNATURE = "HAS_SIGNATURE"  # Replaces IMPLEMENTS
+    DEPENDS_ON = "DEPENDS_ON"  # Deprecated: use specific link types instead
+
+    # Path-based taxonomy (0.2.0+)
+    IN_PATH = "IN_PATH"  # PATTERN → leaf TAXONOMY_PATH
+    PARENT_PATH = "PARENT_PATH"  # TAXONOMY_PATH → shorter TAXONOMY_PATH (toward root)
+
+    # Legacy — kept so old DBs load. Path-based migration replaces these.
+    IN_LAYER = "IN_LAYER"
+    TRIGGERED_BY = "TRIGGERED_BY"
+    SIMILAR_TO = "SIMILAR_TO"
+    OPPOSITE_TO = "OPPOSITE_TO"
+    ENABLES = "ENABLES"
+    OPERATES_ON = "OPERATES_ON"
+    ACCEPTS_PAYLOAD = "ACCEPTS_PAYLOAD"
+    PRODUCES = "PRODUCES"
+    CONFIGURES = "CONFIGURES"
+    ESCALATES_TO = "ESCALATES_TO"
+    HAS_MECHANISM = "HAS_MECHANISM"
+    AVOIDS = "AVOIDS"
+    HAS_PRINCIPLE = "HAS_PRINCIPLE"
+    PARENT_OF = "PARENT_OF"
+    IS_VERSION_OF = "IS_VERSION_OF"
+
+
+class Node(BaseModel):
+    id: str
+    node_type: NodeType
+    text: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
+    embedding: np.ndarray | None = None
+
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+
+class Edge(BaseModel):
+    id: str
+    source_id: str
+    target_id: str
+    edge_type: EdgeType
+    metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphStore:
+    """Persistent graph store with semantic search capabilities."""
+
+    SIMILARITY_THRESHOLD = 0.75  # For auto-linking (novelty rejection uses 0.92)
+
+    def __init__(self, db_path: str = "taxonomy.db", enable_embeddings: bool = True):
+        self.db_path = db_path
+        self.enable_embeddings = enable_embeddings
+        self.embedding_service = EmbeddingService(db_path) if enable_embeddings else None
+        # MultiDiGraph: a pattern can have multiple typed edges to the same
+        # target (e.g. `accepts: Task` AND `yields: Task`). DiGraph would
+        # silently collapse them to one edge.
+        self.graph = nx.MultiDiGraph()
+        # Handle → node_id cache for PATTERN nodes. Avoids O(N) scans of the
+        # whole graph on every pattern lookup (pull/cascade hit this
+        # hundreds of times per run). Maintained by create_node,
+        # delete_node_cascade, merge_nodes, and execute_transaction.
+        self._handle_to_id: dict[str, str] = {}
+        self._init_tables()
+        self._migrate_schema()
+        self._load_graph()
+
+    def _connect(self) -> sqlite3.Connection:
+        """Open a connection with integrity enforcement enabled.
+
+        SQLite foreign-key enforcement is PER CONNECTION — setting the
+        pragma once at init does nothing for later connections. Every
+        write path must come through here, or dangling-edge protection
+        is silently off (which is how it shipped for months).
+        """
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
+
+    def _init_tables(self):
+        """Create database tables if they don't exist."""
+        conn = self._connect()
+        cursor = conn.cursor()
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS nodes (
+                id TEXT PRIMARY KEY,
+                node_type TEXT NOT NULL,
+                text TEXT NOT NULL,
+                metadata TEXT DEFAULT '{}',
+                embedding BLOB
+            )
+        """
+        )
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS edges (
+                id TEXT PRIMARY KEY,
+                source_id TEXT NOT NULL,
+                target_id TEXT NOT NULL,
+                edge_type TEXT NOT NULL,
+                alias TEXT,
+                metadata TEXT DEFAULT '{}',
+                FOREIGN KEY (source_id) REFERENCES nodes(id),
+                FOREIGN KEY (target_id) REFERENCES nodes(id)
+            )
+        """
+        )
+
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_nodes_type ON nodes(node_type)
+        """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_edges_source ON edges(source_id)
+        """
+        )
+        cursor.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_edges_target ON edges(target_id)
+        """
+        )
+
+        conn.commit()
+        conn.close()
+
+    def _migrate_schema(self):
+        """Add columns/constraints to existing DBs that pre-date them. Idempotent."""
+        conn = self._connect()
+        cursor = conn.cursor()
+        cursor.execute("PRAGMA table_info(edges)")
+        cols = {row[1] for row in cursor.fetchall()}
+        if "alias" not in cols:
+            cursor.execute("ALTER TABLE edges ADD COLUMN alias TEXT")
+
+        # ── Schema hardening (issue #29) ─────────────────────────────────
+        # `sema apply` (and every other write path) checks these invariants
+        # in Python, but nothing stopped a direct SQL write, migration bug,
+        # or crashed half-mint from violating them silently. The schema is
+        # the backstop for identity invariants; Python keeps owning the
+        # semantic ones (hash correctness, layer rules).
+        #
+        # Each step is tolerant: a legacy DB that already violates an
+        # invariant (or an old SQLite without generated-column support)
+        # keeps working, with a loud warning instead of a hard failure.
+        # 1. At most one PATTERN row per handle.
+        try:
+            cursor.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_nodes_pattern_handle "
+                "ON nodes(text) WHERE node_type = 'PATTERN'"
+            )
+        except sqlite3.IntegrityError:
+            print(
+                f"Warning: {self.db_path} contains duplicate pattern handles; "
+                "handle-uniqueness constraint NOT installed. Run a dedupe.",
+                file=sys.stderr,
+            )
+        except sqlite3.OperationalError:
+            # Read-only DB file (e.g. root-owned install) — constraints
+            # can't be installed; Python-level checks still apply.
+            conn.close()
+            return
+
+        # 2. At most one PATTERN row per sema_id. The sema_id lives inside
+        #    the metadata JSON, so expose it as a virtual generated column
+        #    first (queryable + indexable, no data rewrite).
+        cursor.execute("PRAGMA table_info(nodes)")
+        node_cols = {row[1] for row in cursor.fetchall()}
+        if "sema_id" not in node_cols:
+            try:
+                cursor.execute(
+                    "ALTER TABLE nodes ADD COLUMN sema_id TEXT "
+                    "GENERATED ALWAYS AS (json_extract(metadata, '$.pattern.sema_id')) VIRTUAL"
+                )
+            except sqlite3.OperationalError:
+                # SQLite < 3.31 (no generated columns) — skip quietly; the
+                # Python-level checks still apply.
+                pass
+        try:
+            cursor.execute(
+                "CREATE UNIQUE INDEX IF NOT EXISTS idx_nodes_pattern_sema_id "
+                "ON nodes(sema_id) WHERE node_type = 'PATTERN' AND sema_id IS NOT NULL"
+            )
+        except sqlite3.OperationalError:
+            pass  # generated column unavailable above
+        except sqlite3.IntegrityError:
+            print(
+                f"Warning: {self.db_path} contains duplicate sema_ids; "
+                "sema_id-uniqueness constraint NOT installed. Run a dedupe.",
+                file=sys.stderr,
+            )
+
+        conn.commit()
+        conn.close()
+
+    def _load_graph(self):
+        """Load graph from database into memory."""
+        conn = self._connect()
+        cursor = conn.cursor()
+
+        cursor.execute("SELECT id, node_type, text, metadata, embedding FROM nodes")
+        for row in cursor.fetchall():
+            node_id, node_type, text, metadata_json, embedding_blob = row
+            embedding = np.frombuffer(embedding_blob, dtype=np.float32) if embedding_blob else None
+            nt = NodeType(node_type)
+            self.graph.add_node(
+                node_id,
+                node_type=nt,
+                text=text,
+                metadata=json.loads(metadata_json),
+                embedding=embedding,
+            )
+            if nt == NodeType.PATTERN:
+                self._handle_to_id[text] = node_id
+
+        cursor.execute("SELECT id, source_id, target_id, edge_type, alias, metadata FROM edges")
+        for row in cursor.fetchall():
+            edge_id, source_id, target_id, edge_type, alias, metadata_json = row
+            self.graph.add_edge(
+                source_id,
+                target_id,
+                key=edge_id,
+                id=edge_id,
+                edge_type=EdgeType(edge_type),
+                alias=alias,
+                metadata=json.loads(metadata_json),
+            )
+
+        conn.close()
+
+    def create_node(
+        self,
+        node_type: NodeType,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+        compute_embedding: bool = True,
+        embedding_text: str | None = None,
+    ) -> str:
+        """Create a new node in the graph."""
+        node_id = str(uuid.uuid4())
+        metadata = metadata or {}
+
+        embedding = None
+        embedding_blob = None
+        if compute_embedding and self.enable_embeddings:
+            # Use specific embedding text if provided, else label text
+            content = embedding_text or text
+            assert self.embedding_service is not None
+            embedding = self.embedding_service.get_embedding(content)
+            embedding_blob = embedding.tobytes()
+
+        conn = self._connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO nodes (id, node_type, text, metadata, embedding) VALUES (?, ?, ?, ?, ?)",
+            (node_id, node_type.value, text, json.dumps(metadata), embedding_blob),
+        )
+        conn.commit()
+        conn.close()
+
+        self.graph.add_node(
+            node_id, node_type=node_type, text=text, metadata=metadata, embedding=embedding
+        )
+        if node_type == NodeType.PATTERN:
+            self._handle_to_id[text] = node_id
+
+        return node_id
+
+    def create_edge(
+        self,
+        source_id: str,
+        target_id: str,
+        edge_type: EdgeType,
+        metadata: dict[str, Any] | None = None,
+        alias: str | None = None,
+    ) -> str:
+        """Create a new edge in the graph.
+
+        For dependency edges, `alias` preserves the original key from the
+        pattern's dependencies dict (e.g. "my_alias" → Target). Without it,
+        we'd have to regenerate keys from target handles, dropping author
+        intent and breaking patterns that use multiple aliases for one type.
+        """
+        edge_id = str(uuid.uuid4())
+        metadata = metadata or {}
+
+        conn = self._connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT INTO edges (id, source_id, target_id, edge_type, alias, metadata) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (edge_id, source_id, target_id, edge_type.value, alias, json.dumps(metadata)),
+        )
+        conn.commit()
+        conn.close()
+
+        self.graph.add_edge(
+            source_id,
+            target_id,
+            key=edge_id,
+            id=edge_id,
+            edge_type=edge_type,
+            alias=alias,
+            metadata=metadata,
+        )
+
+        return edge_id
+
+    # ── MultiDiGraph helpers ────────────────────────────────────────────────
+    # Multi-graphs allow many parallel edges between the same (src, tgt).
+    # NetworkX returns these as `{key: attrs}` from get_edge_data; these
+    # helpers wrap that so callers can filter by edge_type cleanly.
+
+    def _edges_between(self, src: str, tgt: str) -> list[dict]:
+        """All edge attribute dicts between src and tgt (empty if none)."""
+        edges = self.graph.get_edge_data(src, tgt) or {}
+        return list(edges.values())
+
+    def _edge_keys_between(self, src: str, tgt: str) -> list[tuple[str, dict]]:
+        """List of (key, attrs) for all parallel edges between src and tgt."""
+        edges = self.graph.get_edge_data(src, tgt) or {}
+        return list(edges.items())
+
+    def has_edge_of_type(self, src: str, tgt: str, edge_type: EdgeType) -> bool:
+        """True if at least one edge of given type exists between src and tgt."""
+        return any(e.get("edge_type") == edge_type for e in self._edges_between(src, tgt))
+
+    def sweep_related_edges(self) -> int:
+        """Second-pass sweep: create RELATED_TO edges that the per-pattern
+        apply loop couldn't create because the target hadn't been minted yet.
+
+        Topological sort during apply orders by hard dependencies only;
+        `_meta.related` is a soft/metadata link and doesn't participate in
+        ordering. When pattern A declares `related: [B]` but B is minted
+        after A, the edge-creation check at A's apply time returns None
+        (B not in _handle_to_id) and silently skips. This sweep fixes that
+        once the full DB is loaded.
+
+        Call after a batch apply or rebuild. Idempotent — only creates
+        missing edges. Refs to handles that don't exist (stale / pointing
+        to experimental shelf) are silently skipped.
+
+        Returns: number of edges created.
+        """
+        from ..core.hashing import extract_handle_from_ref
+
+        created = 0
+        for nid, data in self.get_nodes_by_type(NodeType.PATTERN):
+            pattern = data.get("metadata", {}).get("pattern", {}) or {}
+            related = (pattern.get("_meta") or {}).get("related") or []
+            for item in related:
+                if not isinstance(item, str):
+                    continue
+                target_handle = extract_handle_from_ref(item)
+                target_id = self._handle_to_id.get(target_handle)
+                if not target_id:
+                    continue  # stale ref or off-shelf target
+                if self.has_edge_of_type(nid, target_id, EdgeType.RELATED_TO):
+                    continue
+                self.create_edge(nid, target_id, EdgeType.RELATED_TO)
+                created += 1
+        return created
+
+    def remove_edges_of_type(self, src: str, tgt: str, edge_type: EdgeType) -> list[str]:
+        """Remove all parallel edges of `edge_type` between src and tgt.
+        Returns list of edge_ids removed (for DB cleanup by caller)."""
+        removed_ids = []
+        for key, attrs in self._edge_keys_between(src, tgt):
+            if attrs.get("edge_type") == edge_type:
+                removed_ids.append(attrs.get("id"))
+                self.graph.remove_edge(src, tgt, key=key)
+        return removed_ids
+
+    def _reconcile_edges_of_type(
+        self,
+        source_id: str,
+        edge_type: EdgeType,
+        desired_targets: set[str],
+        edge_metadata: dict[str, Any] | None = None,
+    ) -> None:
+        """Replace one typed relationship set without disturbing parallel edges."""
+        removed_edge_ids: list[str] = []
+        for target_id in list(self.graph.successors(source_id)):
+            if target_id not in desired_targets:
+                removed_edge_ids.extend(self.remove_edges_of_type(source_id, target_id, edge_type))
+
+        if removed_edge_ids:
+            conn = self._connect()
+            conn.executemany(
+                "DELETE FROM edges WHERE id = ?", [(edge_id,) for edge_id in removed_edge_ids]
+            )
+            conn.commit()
+            conn.close()
+
+        for target_id in desired_targets:
+            if not self.has_edge_of_type(source_id, target_id, edge_type):
+                self.create_edge(source_id, target_id, edge_type, metadata=edge_metadata)
+            elif edge_metadata is not None:
+                # Some typed edges carry a version-specific claim even though the
+                # graph node is indexed by human handle. Keep that exact identity on
+                # the edge and refresh it when the authored claim changes.
+                for key, attrs in self._edge_keys_between(source_id, target_id):
+                    if attrs.get("edge_type") != edge_type:
+                        continue
+                    if attrs.get("metadata") == edge_metadata:
+                        continue
+                    attrs["metadata"] = edge_metadata
+                    edge_id = attrs.get("id") or key
+                    conn = self._connect()
+                    conn.execute(
+                        "UPDATE edges SET metadata = ? WHERE id = ?",
+                        (json.dumps(edge_metadata), edge_id),
+                    )
+                    conn.commit()
+                    conn.close()
+
+    def _find_pattern_id(self, handle: str) -> str | None:
+        """O(1) handle → node_id lookup for PATTERN nodes.
+
+        Backed by self._handle_to_id, kept in sync by create_node,
+        delete_node_cascade, merge_nodes, and execute_transaction.
+        A missing entry means the handle does not exist.
+        """
+        return self._handle_to_id.get(handle)
+
+    def get_nodes_by_type(self, node_type: NodeType) -> list[tuple[str, dict]]:
+        """Get all nodes of a specific type."""
+        return [
+            (node_id, data)
+            for node_id, data in self.graph.nodes(data=True)
+            if data.get("node_type") == node_type
+        ]
+
+    def find_similar_node(
+        self, node_type: NodeType, text: str, threshold: float | None = None
+    ) -> tuple[str, float] | None:
+        """Find existing node semantically similar to text.
+
+        Returns:
+            (node_id, similarity) if found above threshold, else None
+        """
+        if not self.enable_embeddings:
+            for node_id, data in self.get_nodes_by_type(node_type):
+                if data.get("text") == text:
+                    return node_id, 1.0
+            return None
+
+        threshold = threshold or self.SIMILARITY_THRESHOLD
+        assert self.embedding_service is not None
+        query_embedding = self.embedding_service.get_embedding(text)
+
+        candidates = []
+        for node_id, data in self.get_nodes_by_type(node_type):
+            if data.get("embedding") is not None:
+                candidates.append((node_id, data["embedding"]))
+
+        if not candidates:
+            return None
+
+        results = self.embedding_service.find_similar(
+            query_embedding, candidates, threshold, top_k=1
+        )
+
+        if results:
+            return results[0]
+        return None
+
+    def find_or_create_node(
+        self,
+        node_type: NodeType,
+        text: str,
+        metadata: dict[str, Any] | None = None,
+        threshold: float | None = None,
+    ) -> tuple[str, bool]:
+        """Find existing similar node or create new one.
+
+        Returns:
+            (node_id, is_new) - node_id and whether it was newly created
+        """
+        similar = self.find_similar_node(node_type, text, threshold)
+
+        if similar:
+            node_id, _ = similar
+            return node_id, False
+
+        node_id = self.create_node(node_type, text, metadata)
+        return node_id, True
+
+    # Required schema: field_name -> (NodeType, EdgeType)
+    #
+    # WHAT THIS ACTUALLY INDEXES, measured 2026-07-28 against the 455-card corpus:
+    # only `invariants`, `preconditions` and `postconditions`. Nothing else in this
+    # map produces a node, and the reasons differ:
+    #
+    #   - `core_mechanism` names a field no card has; cards carry `mechanism`. So the
+    #     corpus has 455 mechanisms and ZERO MECHANISM nodes, and any audit that looks
+    #     for redundant mechanisms via the graph is not finding few — it is looking at
+    #     nothing.
+    #   - `parameters` is a list of DICTS on every card, and the reconcile loop below
+    #     skips non-string items, so no PARAMETER node is ever created (108 cards).
+    #   - `data_schema` is not mapped at all (114 cards).
+    #   - `long_term_vision`, `design_principles`, `why_it_fails`, `why_it_works`,
+    #     `what_is_new`, `scenario`, `without_this`, `inputs` and `outputs` name fields
+    #     from an older card shape that no current card carries.
+    #
+    # Repairing this is NOT a one-line rename, and the blocker is not what it looks
+    # like. Renaming to `mechanism` is measured safe on its own — 60 sampled mechanisms
+    # give 0 of 1770 pairs at or above the 0.75 auto-link threshold (max 0.652, mean
+    # 0.231), so mechanisms are distinctive enough not to false-merge, unlike short
+    # invariant clauses which do collapse. But `parameters` and `data_schema` cannot be
+    # added without first deciding what text their node carries, and that decides what
+    # the node MEANS. Adding nodes also changes `get_graph_skeleton`, which walks the
+    # whole graph for degrees and Louvain communities, so it is a visible change to a
+    # shipped tool.
+    #
+    # Left as-is deliberately. See the review ledger's 2026-07-28 entries.
+    REQUIRED_SCHEMA = {
+        "core_mechanism": (NodeType.MECHANISM, EdgeType.USES_MECHANISM),
+        "long_term_vision": (NodeType.OUTCOME, EdgeType.PRODUCES_OUTCOME),
+        "design_principles": (NodeType.PRINCIPLE, EdgeType.FOLLOWS_PRINCIPLE),
+        "why_it_fails": (NodeType.CRITICISM, EdgeType.HAS_CRITICISM),
+        "why_it_works": (NodeType.JUSTIFICATION, EdgeType.HAS_JUSTIFICATION),
+        "what_is_new": (NodeType.NOVELTY, EdgeType.CLAIMS_NOVELTY),
+        "scenario": (NodeType.SCENARIO, EdgeType.SOLVES_SCENARIO),
+        "without_this": (NodeType.COUNTERFACTUAL, EdgeType.COMPARED_TO_BASELINE),
+        # Formal Contract Fields
+        "invariants": (NodeType.INVARIANT, EdgeType.HAS_INVARIANT),
+        "preconditions": (NodeType.PRECONDITION, EdgeType.HAS_PRECONDITION),
+        "postconditions": (NodeType.POSTCONDITION, EdgeType.HAS_POSTCONDITION),
+        "inputs": (NodeType.INPUT, EdgeType.HAS_INPUT),
+        "outputs": (NodeType.OUTPUT, EdgeType.HAS_OUTPUT),
+        "parameters": (NodeType.PARAMETER, EdgeType.HAS_PARAMETER),
+    }
+
+    def add_pattern(
+        self,
+        solution: dict[str, Any],
+        field_mappings: dict[str, str] | None = None,
+        skip_cascade: bool = False,
+        validated_extends_batch: bool = False,
+    ) -> dict[str, Any]:
+        """Add a pattern with strict enforcement that EVERY schema field is mapped.
+
+        ALL fields are required (unless they are optional lists like invariants).
+        For each field, agent explicitly decides:
+        - 'NEW' or None → Create a new node with the text content
+        - '<existing_node_id>' → Link to that existing node
+
+        SAFE MERGE: If a solution with the same label exists, it updates/merges
+        instead of creating a duplicate.
+
+        MERKLE DAG: Dependencies are stored as handles only (no hashes).
+        Hashes are computed fresh using the cascade system.
+
+        Args:
+            solution: Solution dict with 'label' and required field texts.
+                      Fields can be strings or lists of strings.
+            field_mappings: Dict mapping field_name -> 'NEW' or existing node_id.
+                           For list fields, this applies to ALL items (usually 'NEW').
+            validated_extends_batch: Permit moving a parent with inbound IS_A
+                claims only after a caller has validated the full projected batch.
+
+        Returns:
+            Dict with solution_id, created nodes, linked nodes
+            On failure: {"success": False, "error": "..."}
+        """
+        from ..core.hashing import (
+            extract_handle_from_ref,
+            generate_sema_hash,
+            validate_json_domain,
+            validate_semantic_hash_input,
+        )
+        from ..core.schema import FULL_SEMA_ID_PATTERN
+
+        field_mappings = field_mappings or {}
+
+        # GraphStore is also a public write boundary. Reject values that cannot
+        # be represented by canonicalization v2 before creating any node or edge,
+        # even when a caller bypasses mint_pattern's schema validation.
+        try:
+            validate_json_domain(solution)
+        except ValueError as exc:
+            return {"success": False, "error": f"Invalid canonical JSON: {exc}"}
+
+        if not isinstance(solution, dict):
+            return {"success": False, "error": "Pattern must be a JSON object"}
+
+        # 1. Validate 'handle' is present (patterns use 'handle', not 'label')
+        handle = solution.get("handle") or solution.get("label")
+        if not handle:
+            return {"success": False, "error": "Missing required field: handle or label"}
+        if not isinstance(handle, str):
+            return {"success": False, "error": "Pattern handle must be a string"}
+
+        # 2. Extract dependencies for edge creation
+        #    Dependencies are stored as graph edges, NOT in pattern JSON content
+        #    Note: We use .get() not .pop() to preserve the original dict for callers
+        input_deps = solution.get("dependencies", {})
+        existing_handles = set(self._handle_to_id)
+
+        # 3. Validate all dependency references exist before creating edges
+        if isinstance(input_deps, dict):
+            for _, items in input_deps.items():
+                if isinstance(items, dict):
+                    for _, ref in items.items():
+                        if not isinstance(ref, str):
+                            return {
+                                "success": False,
+                                "error": "Dependency references must be strings",
+                            }
+                        dep_handle = extract_handle_from_ref(ref)
+                        if dep_handle not in existing_handles and dep_handle != handle:
+                            return {
+                                "success": False,
+                                "error": f"Missing dependency target: {dep_handle}",
+                            }
+
+        # `extends` is not stored in the dependency buckets, but it is equally
+        # load-bearing: silently omitting IS_A would leave the hashed card and
+        # graph disagreeing. The active parent handle must be minted first; the
+        # exact version claimed by the child is retained on the edge metadata.
+        # Legacy `derived_from` remains opaque for hash compatibility: pre-0.4
+        # did not validate it as a relation or emit an edge for it.
+        if "extends" in solution and "derived_from" in solution:
+            return {
+                "success": False,
+                "error": "Pattern cannot contain both extends and legacy derived_from",
+            }
+        extends_ref = solution.get("extends")
+        if "extends" in solution:
+            if not isinstance(extends_ref, str) or not FULL_SEMA_ID_PATTERN.fullmatch(extends_ref):
+                return {
+                    "success": False,
+                    "error": "Invalid extends reference: expected full sema_id",
+                }
+            parent_handle = extract_handle_from_ref(extends_ref)
+            if parent_handle == handle:
+                return {"success": False, "error": f"Pattern '{handle}' cannot extend itself"}
+            if parent_handle not in existing_handles:
+                return {
+                    "success": False,
+                    "error": f"Missing extends target: {parent_handle}",
+                }
+            parent_id = self._handle_to_id[parent_handle]
+            parent_pattern = (self.graph.nodes[parent_id].get("metadata") or {}).get(
+                "pattern"
+            ) or {}
+            active_parent_ref = parent_pattern.get("sema_id")
+            if extends_ref != active_parent_ref:
+                return {
+                    "success": False,
+                    "error": (
+                        f"Unresolvable extends target: {extends_ref} is not "
+                        f"the active definition of {parent_handle}. Preserve that exact parent "
+                        "in a version store before pinning it."
+                    ),
+                }
+
+        # Direct mint does not pass through apply's full-corpus cycle check.
+        # Validate every proposed dependency graph change, not only `extends`,
+        # before mutating the node or its edges. Otherwise ordinary dependency
+        # pairs can enter through the MCP path even though `sema apply --check`
+        # rejects the same cycle.
+        if input_deps or extends_ref:
+            from ..core.dependencies import validate_acyclic
+
+            committed_patterns: dict[str, dict[str, Any]] = {}
+            for _node_id, node in self.get_nodes_by_type(NodeType.PATTERN):
+                committed_handle = node.get("text")
+                if not committed_handle:
+                    continue
+                committed = dict(((node.get("metadata") or {}).get("pattern")) or {})
+                committed_dependencies = self.get_dependencies_from_edges(committed_handle)
+                if committed_dependencies:
+                    committed["dependencies"] = committed_dependencies
+                committed_patterns[committed_handle] = committed
+            try:
+                validate_acyclic({handle: solution}, committed_patterns)
+            except ValueError as exc:
+                return {"success": False, "error": str(exc)}
+
+        # Schema and relation errors above retain their established messages.
+        # Before any graph mutation, independently prove that the actual
+        # handle-free semantic object has a canonical Merkle representation.
+        try:
+            validate_semantic_hash_input(solution, self.get_pattern_hash)
+        except ValueError as exc:
+            return {"success": False, "error": f"Invalid canonical JSON: {exc}"}
+
+        # Direct mint callers do not have the CLI/pull projection. Prevent them
+        # from replacing an active parent while an exact IS_A child still pins its
+        # current definition. Batch callers may opt through only after validating
+        # the complete projected corpus and including every necessary child edit.
+        specializing_children = self.get_specializing_children(handle)
+        if specializing_children and not validated_extends_batch:
+            current_parent_ref = None
+            existing_parent_id = self._handle_to_id.get(handle)
+            if existing_parent_id:
+                current_parent = (self.graph.nodes[existing_parent_id].get("metadata") or {}).get(
+                    "pattern"
+                ) or {}
+                current_parent_ref = current_parent.get("sema_id")
+            prospective_parent_ref = generate_sema_hash(solution, self.get_pattern_hash)["full_id"]
+            if prospective_parent_ref != current_parent_ref:
+                return {
+                    "success": False,
+                    "error": (
+                        f"Parent update would strand exact `extends` claim(s) from: "
+                        f"{', '.join(sorted(specializing_children))}. Apply a validated "
+                        "batch containing reviewed child retargets."
+                    ),
+                }
+
+        # 4. Validate all explicit link IDs exist and have correct type
+        for field_name, link_id in field_mappings.items():
+            if field_name not in self.REQUIRED_SCHEMA:
+                return {"success": False, "error": f"Unknown field in mapping: {field_name}"}
+
+            if link_id and link_id.upper() != "NEW":
+                # Agent wants to link to existing node
+                if link_id not in self.graph:
+                    return {
+                        "success": False,
+                        "error": f"Cannot link {field_name}: node {link_id} does not exist",
+                    }
+                expected_type, _ = self.REQUIRED_SCHEMA[field_name]
+                actual_type = self.graph.nodes[link_id].get("node_type")
+                if actual_type != expected_type:
+                    return {
+                        "success": False,
+                        "error": (
+                            f"Type mismatch for {field_name}: expected {expected_type.name}, "
+                            f"got {actual_type.name if actual_type else 'None'}"
+                        ),
+                    }
+
+        # Find/Create the container Pattern node
+        pattern_id = None
+
+        # Create a copy of solution WITHOUT dependencies for storage
+        # Dependencies are stored as edges only (Merkle DAG design)
+        stored_pattern = {k: v for k, v in solution.items() if k != "dependencies"}
+
+        # Derive path + legacy layer/category from _meta. Path is canonical
+        # post-0.2.0; layer/category are kept as derived fields on the node
+        # metadata so existing queries/API routes keep working.
+        meta_block = solution.get("_meta", {}) or {}
+        path_segments = list(meta_block.get("path") or [])
+        if not path_segments:
+            # Graceful fallback for pre-migration data: reconstruct a path
+            # from legacy layer/category so old DBs still load.
+            _legacy_layer = meta_block.get("layer") or solution.get("sema_layer")
+            _legacy_cat = meta_block.get("category") or solution.get("sema_category")
+            if _legacy_layer:
+                path_segments = [_legacy_layer]
+                if _legacy_cat:
+                    path_segments.append(_legacy_cat)
+        derived_layer = path_segments[0] if path_segments else "Unknown"
+        derived_category = path_segments[1] if len(path_segments) >= 2 else ""
+
+        # Check for existing pattern with same handle
+        existing_nid = self._find_pattern_id(handle)
+        if existing_nid is not None:
+            pattern_id = existing_nid
+            data = self.graph.nodes[existing_nid]
+            if "metadata" in data:
+                previous_pattern = data["metadata"].get("pattern", {}) or {}
+
+                # Carry the previous hash fields through this first write.
+                # The fresh hash is only computed (and written) after the
+                # dependency edges exist; without the carry-over, a crash in
+                # between leaves a hashless pattern. Aggregate-root producers
+                # now reject that state, so the vocabulary would be unavailable
+                # for handshakes until repaired. Carrying the prior identity
+                # preserves a complete, stale-but-detectable snapshot instead.
+                for hash_field in ("sema_id", "sema_ref", "sema_stub"):
+                    if hash_field not in stored_pattern and hash_field in previous_pattern:
+                        stored_pattern[hash_field] = previous_pattern[hash_field]
+
+                data["metadata"]["pattern"] = stored_pattern
+                # Promote path + derived layer/category to top-level node
+                # metadata for indexing and legacy query compatibility.
+                data["metadata"]["path"] = path_segments
+                data["metadata"]["layer"] = derived_layer
+                data["metadata"]["category"] = derived_category
+
+                # Refresh the embedding when the searchable text changed —
+                # otherwise semantic search keeps ranking the pattern by its
+                # pre-update gloss/mechanism indefinitely.
+                embedding_blob = None
+                embedding_changed = False
+                old_text = (
+                    f"{handle}: {previous_pattern.get('gloss', '')} "
+                    f"{previous_pattern.get('mechanism', '')}"
+                )
+                new_text = (
+                    f"{handle}: {stored_pattern.get('gloss', '')} "
+                    f"{stored_pattern.get('mechanism', '')}"
+                )
+                if new_text != old_text:
+                    if self.enable_embeddings:
+                        assert self.embedding_service is not None
+                        embedding = self.embedding_service.get_embedding(new_text)
+                        if embedding is not None:
+                            embedding_changed = True
+                            embedding_blob = embedding.tobytes()
+                            data["embedding"] = embedding
+                    else:
+                        embedding_changed = True
+                        data["embedding"] = None
+
+                # Persist metadata (and embedding, if refreshed)
+                conn = self._connect()
+                if embedding_changed:
+                    conn.execute(
+                        "UPDATE nodes SET metadata = ?, embedding = ? WHERE id = ?",
+                        (json.dumps(data["metadata"]), embedding_blob, existing_nid),
+                    )
+                else:
+                    conn.execute(
+                        "UPDATE nodes SET metadata = ? WHERE id = ?",
+                        (json.dumps(data["metadata"]), existing_nid),
+                    )
+                conn.commit()
+                conn.close()
+
+        if not pattern_id:
+            # Construct rich text for embedding: "Handle: Gloss"
+            rich_text = f"{handle}: {solution.get('gloss', '')} {solution.get('mechanism', '')}"
+
+            # Note: stored_pattern already excludes dependencies (created above)
+            node_meta = {
+                "pattern": stored_pattern,
+                "path": path_segments,
+                "layer": derived_layer,
+                "category": derived_category,
+            }
+
+            pattern_id = self.create_node(
+                NodeType.PATTERN,
+                handle,
+                metadata=node_meta,
+                compute_embedding=True,
+                embedding_text=rich_text,
+            )
+
+        # =====================================================================
+        # 4a. AUTO-LINKING: Taxonomy path, Dependencies, Signatures
+        # =====================================================================
+
+        # A. Taxonomy path
+        # For a path ["Physics", "Primitives"], create/reuse two TAXONOMY_PATH
+        # nodes — one per prefix — with PARENT_PATH edges linking them toward
+        # the root, then one IN_PATH edge from this pattern to the leaf.
+        # Each node's text is the full prefix string ("Physics", "Physics/
+        # Primitives"), unambiguous across layers.
+        leaf_path_id: str | None = None
+        if path_segments:
+            # Promote to solution so the Registry & downstream tooling still
+            # see sema_layer / sema_category. These are derived, not source.
+            solution["sema_layer"] = derived_layer
+            solution["sema_category"] = derived_category
+
+            prev_path_id: str | None = None
+            for depth in range(1, len(path_segments) + 1):
+                prefix_segs = path_segments[:depth]
+                prefix_text = "/".join(prefix_segs)
+
+                # Find/reuse TAXONOMY_PATH node by its full path text.
+                tax_id = None
+                for nid, ndata in self.get_nodes_by_type(NodeType.TAXONOMY_PATH):
+                    if ndata["text"] == prefix_text:
+                        tax_id = nid
+                        break
+                if not tax_id:
+                    tax_id = self.create_node(
+                        NodeType.TAXONOMY_PATH,
+                        prefix_text,
+                        metadata={"segments": prefix_segs, "depth": depth},
+                        compute_embedding=False,
+                    )
+
+                # Link child path → parent path (toward root).
+                if prev_path_id is not None:
+                    if not self.has_edge_of_type(tax_id, prev_path_id, EdgeType.PARENT_PATH):
+                        self.create_edge(tax_id, prev_path_id, EdgeType.PARENT_PATH)
+
+                prev_path_id = tax_id
+                if depth == len(path_segments):
+                    leaf_path_id = tax_id
+
+            # Link pattern → leaf path node (idempotent).
+            # Prune any stale IN_PATH edges from this pattern that don't
+            # point at the current leaf — supports re-categorization.
+            for succ in list(self.graph.successors(pattern_id)):
+                if succ == leaf_path_id:
+                    continue
+                edge_ids = self.remove_edges_of_type(pattern_id, succ, EdgeType.IN_PATH)
+                for eid in edge_ids:
+                    conn = self._connect()
+                    conn.execute("DELETE FROM edges WHERE id = ?", (eid,))
+                    conn.commit()
+                    conn.close()
+
+            if leaf_path_id and not self.has_edge_of_type(
+                pattern_id, leaf_path_id, EdgeType.IN_PATH
+            ):
+                self.create_edge(pattern_id, leaf_path_id, EdgeType.IN_PATH)
+
+        # B. Dependencies (accepts, yields, composes_with, references)
+        #    Use input_deps (extracted earlier) - NOT stored in pattern, only as edges
+        if isinstance(input_deps, dict):
+            # Map dependency keys to EdgeTypes
+            dep_map = {
+                "accepts": EdgeType.ACCEPTS,
+                "yields": EdgeType.YIELDS,
+                "composes_with": EdgeType.COMPOSES_WITH,
+                "references": EdgeType.REFERENCES,
+            }
+
+            # Map EdgeTypes back to dependency categories for reverse lookup if needed
+            edge_type_set = set(dep_map.values())
+
+            # Handle→id is already cached on self; no graph scan needed.
+            all_patterns = self._handle_to_id
+
+            # 1. Calculate DESIRED edges from input_deps
+            # Key: (target_id, edge_type, alias) — alias preserves the
+            # original dep key (e.g. "my_alias" → Target) so round-trips
+            # through get_dependencies_from_edges restore the same key.
+            desired_edges = set()
+
+            for cat, edge_type in dep_map.items():
+                if cat in input_deps and isinstance(input_deps[cat], dict):
+                    for alias, val in input_deps[cat].items():
+                        # Handle parsing: "sema:Handle#hash" -> "Handle"
+                        if not isinstance(val, str):
+                            continue
+
+                        target_handle = val
+                        if "sema:" in val:
+                            target_handle = val.split(":")[1].split("#")[0]
+                        else:
+                            target_handle = val.split("#")[0]
+                        target_handle = target_handle.strip()
+
+                        target_id = all_patterns.get(target_handle)
+                        if target_id:
+                            desired_edges.add((target_id, edge_type, alias))
+
+            # 2. Identify EXISTING dependency edges (multi-edge aware)
+            existing_dep_edges = []  # (target_id, edge_type, alias, edge_id, key)
+
+            for succ in self.graph.successors(pattern_id):
+                for key, edge_data in self._edge_keys_between(pattern_id, succ):
+                    e_type = edge_data.get("edge_type")
+                    if e_type in edge_type_set:
+                        existing_dep_edges.append(
+                            (
+                                succ,
+                                e_type,
+                                edge_data.get("alias"),
+                                edge_data.get("id"),
+                                key,
+                            )
+                        )
+
+            existing_set = {(t, e, a) for t, e, a, _, _ in existing_dep_edges}
+
+            # 3. Prune OBSOLETE edges (target+type+alias not in desired)
+            for target_id, e_type, alias, edge_id, key in existing_dep_edges:
+                if (target_id, e_type, alias) not in desired_edges:
+                    conn = self._connect()
+                    conn.execute("DELETE FROM edges WHERE id = ?", (edge_id,))
+                    conn.commit()
+                    conn.close()
+                    self.graph.remove_edge(pattern_id, target_id, key=key)
+
+            # 4. Add NEW edges (multi-edge: same target may have multiple edges
+            # of different types or different aliases — all valid)
+            for target_id, edge_type, alias in desired_edges:
+                if (target_id, edge_type, alias) not in existing_set:
+                    self.create_edge(pattern_id, target_id, edge_type, alias=alias)
+
+        # C. Signatures (Interfaces)
+        signatures = solution.get("signature", [])
+        desired_signature_targets: set[str] = set()
+        for sig in signatures if isinstance(signatures, list) else []:
+            if not isinstance(sig, str):
+                continue
+            # "Deep(Research)" -> Link to 'Deep' and 'Research'
+            for match in re.findall(r"\w+", sig):
+                target_id = self._handle_to_id.get(match)
+                if target_id:
+                    desired_signature_targets.add(target_id)
+        self._reconcile_edges_of_type(pattern_id, EdgeType.HAS_SIGNATURE, desired_signature_targets)
+
+        # C2. Specialisation (`extends` -> IS_A)
+        #
+        # Cannot ride the dep_map above: that iterates the dicts inside
+        # `dependencies`, and `extends` is a top-level string. This reconcile is
+        # modelled on the signature one directly above for that reason.
+        #
+        # Conformance to an abstract surface set is NOT this edge — it goes through
+        # `signature` and lands on HAS_SIGNATURE. IS_A means "is a kind of".
+        # Do not emit this edge for legacy `derived_from`; migration to `extends`
+        # is the explicit act that adopts the new relation semantics.
+        desired_parent_targets: set[str] = set()
+        extends_ref = solution.get("extends")
+        if isinstance(extends_ref, str) and extends_ref:
+            parent_handle = extract_handle_from_ref(extends_ref)
+            parent_id = self._handle_to_id.get(parent_handle)
+            if parent_id and parent_id != pattern_id:
+                desired_parent_targets.add(parent_id)
+        self._reconcile_edges_of_type(
+            pattern_id,
+            EdgeType.IS_A,
+            desired_parent_targets,
+            edge_metadata={
+                "parent_sema_id": extends_ref,
+                "source_field": "extends",
+            }
+            if desired_parent_targets
+            else None,
+        )
+
+        # D. Related (Metadata links)
+        related = meta_block.get("related", [])
+        desired_related_targets: set[str] = set()
+        for item in related if isinstance(related, list) else []:
+            if not isinstance(item, str):
+                continue
+            # Accept both bare-handle ("Decompose") and full
+            # ("sema:Decompose#mh:SHA-256:...") formats.
+            target_handle = extract_handle_from_ref(item)
+            target_id = self._handle_to_id.get(target_handle)
+            if target_id:
+                desired_related_targets.add(target_id)
+        self._reconcile_edges_of_type(pattern_id, EdgeType.RELATED_TO, desired_related_targets)
+
+        created_nodes = {}
+        linked_nodes = {}
+
+        # 5. Reconcile every schema field. Pattern updates replace their
+        # structural claims; retaining old edges would make the graph assert
+        # both the superseded and current contracts.
+        stale_schema_targets: set[str] = set()
+        for field_name, (node_type, edge_type) in self.REQUIRED_SCHEMA.items():
+            content = solution.get(field_name)
+            items = content if isinstance(content, list) else ([content] if content else [])
+            link_id = field_mappings.get(field_name)
+            desired_targets: set[str] = set()
+
+            # Prepare result containers
+            if items:
+                created_nodes[field_name] = []
+                linked_nodes[field_name] = []
+
+            for text_item in items:
+                if not isinstance(text_item, str):
+                    continue  # Skip non-string items
+
+                if link_id and link_id.upper() != "NEW":
+                    # Case A: Explicit link (agent provided ID)
+                    target_id = link_id
+                    linked_nodes[field_name].append(
+                        {"id": target_id, "existing_text": self.graph.nodes[target_id]["text"][:80]}
+                    )
+                else:
+                    # Case B: Auto-link if similar exists, otherwise create new
+                    similar = self.find_similar_node(node_type, text_item)
+
+                    if similar:
+                        target_id, sim = similar
+                        linked_nodes[field_name].append(
+                            {
+                                "id": target_id,
+                                "similarity": sim,
+                                "existing_text": self.graph.nodes[target_id]["text"][:80],
+                            }
+                        )
+                    else:
+                        target_id = self.create_node(node_type, text_item)
+                        created_nodes[field_name].append({"id": target_id, "text": text_item[:80]})
+
+                desired_targets.add(target_id)
+
+                # MultiDiGraph supports multiple typed edges between the same
+                # (src, tgt). We only create a new edge of `edge_type` if no
+                # edge of that exact type already exists between this pair.
+                if not self.has_edge_of_type(pattern_id, target_id, edge_type):
+                    self.create_edge(pattern_id, target_id, edge_type)
+
+            # Remove schema links no longer present in the authored field.
+            # Dependency, taxonomy, signature, and related edges use separate
+            # edge types and are unaffected.
+            removed_edge_ids: list[str] = []
+            for target_id in list(self.graph.successors(pattern_id)):
+                if target_id in desired_targets:
+                    continue
+                edge_ids = self.remove_edges_of_type(pattern_id, target_id, edge_type)
+                if edge_ids:
+                    removed_edge_ids.extend(edge_ids)
+                    stale_schema_targets.add(target_id)
+
+            if removed_edge_ids:
+                conn = self._connect()
+                conn.executemany(
+                    "DELETE FROM edges WHERE id = ?", [(eid,) for eid in removed_edge_ids]
+                )
+                conn.commit()
+                conn.close()
+
+        # Schema facets have no independent lifecycle. Delete superseded ones
+        # once no pattern or other graph node references them; shared facets
+        # remain intact.
+        schema_node_types = {node_type for node_type, _ in self.REQUIRED_SCHEMA.values()}
+        for target_id in stale_schema_targets:
+            if (
+                target_id in self.graph
+                and self.graph.nodes[target_id].get("node_type") in schema_node_types
+                and self.graph.degree(target_id) == 0
+            ):
+                self.delete_node_cascade(target_id)
+
+        # Compute hash AFTER edges exist (dependencies derived from edges)
+        hash_info = self.compute_pattern_hash(solution)
+        solution["sema_id"] = hash_info["full_id"]
+        solution["sema_ref"] = hash_info["reference"]
+        solution["sema_stub"] = hash_info["stub"]
+
+        # Update stored_pattern with computed hash (kept without dependencies)
+        stored_pattern["sema_id"] = hash_info["full_id"]
+        stored_pattern["sema_ref"] = hash_info["reference"]
+        stored_pattern["sema_stub"] = hash_info["stub"]
+        # Also copy promoted fields
+        stored_pattern["sema_layer"] = solution.get("sema_layer")
+        stored_pattern["sema_category"] = solution.get("sema_category")
+
+        # Update the stored pattern metadata (without dependencies)
+        self._update_pattern_metadata(handle, stored_pattern)
+
+        # Trigger cascade unless caller will run a single sweep at the end
+        # (e.g. sema pull, which walks the DAG topologically and would
+        # otherwise rewrite top-level patterns hundreds of times).
+        if skip_cascade:
+            cascade_result = {"updated": []}
+        else:
+            cascade_result = self._cascade_dependents(handle)
+
+        return {
+            "success": True,
+            "solution_id": pattern_id,
+            "created": created_nodes,
+            "linked": linked_nodes,
+            "cascade": cascade_result,
+            "sema_ref": hash_info["reference"],
+        }
+
+    def merge_nodes(self, node_id_keep: str, node_id_remove: str) -> bool:
+        """Merge two nodes, redirecting all edges to the kept node.
+
+        Multi-edge aware: dedupes by (edge_type, alias) tuple, not just by
+        edge_type. Otherwise multiple parallel edges of the same type but
+        with distinct aliases (e.g. accepts: {"task1": T, "task2": T})
+        would collapse to one — silent data loss on merge.
+        """
+        if node_id_keep not in self.graph or node_id_remove not in self.graph:
+            return False
+
+        # Snapshot the removed node's handle (if it's a PATTERN) so we can
+        # evict it from the index after the final graph.remove_node call.
+        removed_data = self.graph.nodes[node_id_remove]
+        removed_handle = (
+            removed_data.get("text") if removed_data.get("node_type") == NodeType.PATTERN else None
+        )
+
+        def _has_exact(src, tgt, e_type, alias):
+            return any(
+                e.get("edge_type") == e_type and e.get("alias") == alias
+                for e in self._edges_between(src, tgt)
+            )
+
+        for pred in list(self.graph.predecessors(node_id_remove)):
+            for edge_data in self._edges_between(pred, node_id_remove):
+                e_type = edge_data.get("edge_type")
+                alias = edge_data.get("alias")
+                if e_type and not _has_exact(pred, node_id_keep, e_type, alias):
+                    self.create_edge(
+                        pred,
+                        node_id_keep,
+                        e_type,
+                        edge_data.get("metadata"),
+                        alias=alias,
+                    )
+
+        for succ in list(self.graph.successors(node_id_remove)):
+            for edge_data in self._edges_between(node_id_remove, succ):
+                e_type = edge_data.get("edge_type")
+                alias = edge_data.get("alias")
+                if e_type and not _has_exact(node_id_keep, succ, e_type, alias):
+                    self.create_edge(
+                        node_id_keep,
+                        succ,
+                        e_type,
+                        edge_data.get("metadata"),
+                        alias=alias,
+                    )
+
+        conn = self._connect()
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM edges WHERE source_id = ? OR target_id = ?",
+            (node_id_remove, node_id_remove),
+        )
+        cursor.execute("DELETE FROM nodes WHERE id = ?", (node_id_remove,))
+        conn.commit()
+        conn.close()
+
+        self.graph.remove_node(node_id_remove)
+        if removed_handle is not None and self._handle_to_id.get(removed_handle) == node_id_remove:
+            del self._handle_to_id[removed_handle]
+
+        return True
+
+    def stats(self) -> dict[str, int]:
+        """Get basic graph statistics."""
+        return {
+            "nodes": self.graph.number_of_nodes(),
+            "edges": self.graph.number_of_edges(),
+            "patterns": len(self.get_nodes_by_type(NodeType.PATTERN)),
+            "mechanisms": len(self.get_nodes_by_type(NodeType.MECHANISM)),
+            "outcomes": len(self.get_nodes_by_type(NodeType.OUTCOME)),
+            "principles": len(self.get_nodes_by_type(NodeType.PRINCIPLE)),
+            "criticisms": len(self.get_nodes_by_type(NodeType.CRITICISM)),
+            "justifications": len(self.get_nodes_by_type(NodeType.JUSTIFICATION)),
+            "novelties": len(self.get_nodes_by_type(NodeType.NOVELTY)),
+            "counterfactuals": len(self.get_nodes_by_type(NodeType.COUNTERFACTUAL)),
+            "invariants": len(self.get_nodes_by_type(NodeType.INVARIANT)),
+            "preconditions": len(self.get_nodes_by_type(NodeType.PRECONDITION)),
+            "postconditions": len(self.get_nodes_by_type(NodeType.POSTCONDITION)),
+            "inputs": len(self.get_nodes_by_type(NodeType.INPUT)),
+            "outputs": len(self.get_nodes_by_type(NodeType.OUTPUT)),
+            "parameters": len(self.get_nodes_by_type(NodeType.PARAMETER)),
+        }
+
+    # =========================================================================
+    # MERKLE DAG: Content-Addressed Hashing with Cascade
+    # =========================================================================
+
+    def get_pattern_hash(self, handle: str) -> str | None:
+        """Get the current hash for a pattern by handle.
+
+        Returns the raw hash (not full sema_id), or None if not found.
+        """
+        for _, data in self.get_nodes_by_type(NodeType.PATTERN):
+            if data["text"] == handle:
+                pattern = data.get("metadata", {}).get("pattern", {})
+                sema_id = pattern.get("sema_id", "")
+                if "SHA-256:" in sema_id:
+                    return sema_id.split("SHA-256:")[1]
+        return None
+
+    def get_all_pattern_hashes(self) -> dict[str, str]:
+        """Get a map of handle -> current hash for all patterns.
+
+        Used for batch hash resolution.
+        """
+        hashes = {}
+        for _, data in self.get_nodes_by_type(NodeType.PATTERN):
+            handle = data["text"]
+            pattern = data.get("metadata", {}).get("pattern", {})
+            sema_id = pattern.get("sema_id", "")
+            if "SHA-256:" in sema_id:
+                hashes[handle] = sema_id.split("SHA-256:")[1]
+        return hashes
+
+    def get_dependents(self, handle: str) -> list[str]:
+        """Find all patterns that depend on the given handle.
+
+        Uses graph edges (REFERENCES, COMPOSES_WITH, ACCEPTS, etc.)
+        to find patterns that have this handle as a dependency.
+
+        Returns list of dependent handles.
+        """
+        target_node_id = self._find_pattern_id(handle)
+        if not target_node_id:
+            return []
+
+        # Find all patterns that have edges pointing TO this node
+        dependents = []
+        dep_edge_types = {
+            EdgeType.REFERENCES,
+            EdgeType.COMPOSES_WITH,
+            EdgeType.ACCEPTS,
+            EdgeType.YIELDS,
+        }
+
+        for pred in self.graph.predecessors(target_node_id):
+            pred_data = self.graph.nodes[pred]
+            if pred_data.get("node_type") == NodeType.PATTERN:
+                if any(
+                    e.get("edge_type") in dep_edge_types
+                    for e in self._edges_between(pred, target_node_id)
+                ):
+                    dependents.append(pred_data["text"])
+
+        return dependents
+
+    def get_specializing_children(self, handle: str) -> list[str]:
+        """Return patterns with an inbound exact `extends` / IS_A claim.
+
+        Specialization is intentionally separate from ``get_dependents`` because
+        parent updates do not hash-cascade through exact version pins. Callers that
+        remove a parent must nevertheless treat these children as blockers.
+        """
+        target_node_id = self._find_pattern_id(handle)
+        if not target_node_id:
+            return []
+
+        children = []
+        for pred in self.graph.predecessors(target_node_id):
+            pred_data = self.graph.nodes[pred]
+            if pred_data.get("node_type") != NodeType.PATTERN:
+                continue
+            if any(
+                edge.get("edge_type") == EdgeType.IS_A
+                for edge in self._edges_between(pred, target_node_id)
+            ):
+                children.append(pred_data["text"])
+        return children
+
+    def get_dependencies_from_edges(self, handle: str) -> dict[str, dict[str, str]]:
+        """Get dependencies for a pattern by reading graph edges.
+
+        This is the source of truth for dependencies - edges in the graph,
+        not a JSON field in the pattern content.
+
+        Returns:
+            {
+                "references": {"key": "TargetHandle", ...},
+                "composes_with": {"key": "TargetHandle", ...},
+                ...
+            }
+        """
+        node_id = self._find_pattern_id(handle)
+        if not node_id:
+            return {}
+
+        # Map edge types to dependency categories
+        edge_to_dep = {
+            EdgeType.REFERENCES: "references",
+            EdgeType.COMPOSES_WITH: "composes_with",
+            EdgeType.ACCEPTS: "accepts",
+            EdgeType.YIELDS: "yields",
+        }
+
+        deps = {}
+        for succ in self.graph.successors(node_id):
+            for edge_data in self._edges_between(node_id, succ):
+                edge_type = edge_data.get("edge_type")
+
+                if edge_type not in edge_to_dep:
+                    continue
+
+                dep_category = edge_to_dep[edge_type]
+                if dep_category not in deps:
+                    deps[dep_category] = {}
+
+                target_data = self.graph.nodes[succ]
+                target_handle = target_data.get("text", "")
+                target_meta = target_data.get("metadata", {})
+                target_pattern = target_meta.get("pattern", {})
+                target_ref = target_pattern.get(
+                    "sema_id", target_pattern.get("sema_ref", target_handle)
+                )
+
+                # Prefer the alias stored on the edge (preserves the
+                # original key the author used). Fall back to snake_case
+                # of the handle for legacy edges that pre-date alias storage.
+                alias = edge_data.get("alias")
+                if not alias:
+                    s1 = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", target_handle)
+                    alias = re.sub("([a-z0-9])([A-Z])", r"\1_\2", s1).lower()
+                deps[dep_category][alias] = target_ref
+
+        # Sort keys deterministically. NetworkX successors() iteration
+        # order is not stable across fresh graph loads, so without this
+        # sort the JSON export would reshuffle dep keys on every rebuild
+        # even when the underlying data is bit-identical. Sorting here
+        # gives downstream callers (export, hashing) a stable surface.
+        return {cat: dict(sorted(items.items())) for cat, items in sorted(deps.items())}
+
+    def compute_pattern_hash(self, pattern: dict[str, Any]) -> dict[str, Any]:
+        """Compute hash for a pattern, resolving dependencies to current hashes.
+
+        Dependencies are derived from graph edges (source of truth),
+        not from the pattern's JSON content.
+
+        This is the Merkle DAG property: a pattern's hash includes
+        the current hashes of all its dependencies.
+        """
+        from ..core.hashing import generate_sema_hash
+
+        # Get dependencies from graph edges (not from pattern JSON)
+        handle = pattern.get("handle")
+        if handle:
+            graph_deps = self.get_dependencies_from_edges(handle)
+            if graph_deps:
+                pattern = pattern.copy()
+                pattern["dependencies"] = graph_deps
+
+        # Create a hash lookup function that uses current DB state
+        def hash_lookup(dep_handle: str) -> str | None:
+            return self.get_pattern_hash(dep_handle)
+
+        return generate_sema_hash(pattern, hash_lookup)
+
+    def _cascade_dependents(self, handle: str, visited: set | None = None) -> dict[str, Any]:
+        """Update hashes of all patterns that transitively depend on the given handle.
+
+        This is called AFTER a pattern has been updated, to propagate hash changes
+        to all dependents in the Merkle DAG.
+
+        Dependents are recomputed in dependency order (a pattern only after
+        every in-set pattern it depends on). A naive DFS with a visited set
+        corrupts diamond shapes: with A depending on both B and C, and both
+        depending on the updated pattern, DFS reaches A through B while C
+        still has its old hash — and the visited set then blocks the second,
+        correct recompute of A.
+
+        Args:
+            handle: The already-updated pattern whose dependents need rehashing.
+            visited: Optional set of handles to exclude from the cascade.
+
+        Returns:
+            {"updated": [list of handles that were updated]}
+        """
+        excluded = {handle} if visited is None else set(visited) | {handle}
+
+        # Collect every transitive dependent (BFS over reverse dep edges).
+        affected: set[str] = set()
+        queue = [handle]
+        while queue:
+            for dep_handle in self.get_dependents(queue.pop()):
+                if dep_handle not in affected and dep_handle not in excluded:
+                    affected.add(dep_handle)
+                    queue.append(dep_handle)
+
+        # Kahn's algorithm over the in-set dependency relation: an edge
+        # Q -> P (P depends on Q) means Q must be recomputed before P.
+        in_degree = dict.fromkeys(affected, 0)
+        dependents_of: dict[str, list[str]] = {h: [] for h in affected}
+        for h in affected:
+            for dep_handle in self.get_dependents(h):
+                if dep_handle in affected:
+                    dependents_of[h].append(dep_handle)
+                    in_degree[dep_handle] += 1
+
+        ready = sorted(h for h, deg in in_degree.items() if deg == 0)
+        order: list[str] = []
+        while ready:
+            current = ready.pop(0)
+            order.append(current)
+            for dep_handle in dependents_of[current]:
+                in_degree[dep_handle] -= 1
+                if in_degree[dep_handle] == 0:
+                    ready.append(dep_handle)
+        # Cyclic leftovers (invalid vocabularies) get appended in a stable
+        # order so the cascade still terminates and touches every node once.
+        if len(order) < len(affected):
+            order.extend(sorted(affected - set(order)))
+
+        updated = []
+        for dep_handle in order:
+            dep_content = self._get_pattern_content(dep_handle)
+            if not dep_content:
+                continue
+
+            old_hash = self.get_pattern_hash(dep_handle)
+            new_hash_info = self.compute_pattern_hash(dep_content)
+
+            # Only update if hash actually changed
+            if old_hash != new_hash_info["hash"]:
+                dep_content["sema_id"] = new_hash_info["full_id"]
+                dep_content["sema_ref"] = new_hash_info["reference"]
+                dep_content["sema_stub"] = new_hash_info["stub"]
+                self._update_pattern_metadata(dep_handle, dep_content)
+                updated.append(dep_handle)
+
+        return {"updated": updated}
+
+    def update_pattern_with_cascade(
+        self, handle: str, new_content: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Update a pattern and cascade hash changes to all dependents.
+
+        This is the core Merkle DAG operation:
+        1. Normalize dependencies to handles only
+        2. Compute new hash for this pattern
+        3. Update the pattern
+        4. Cascade to all dependents
+
+        Returns:
+            {
+                "success": True/False,
+                "updated": [list of handles that were updated],
+                "error": "..." (if failed)
+            }
+        """
+        from ..core.hashing import normalize_dependencies_to_handles
+
+        try:
+            # Normalize dependencies to handles only
+            if "dependencies" in new_content:
+                new_content["dependencies"] = normalize_dependencies_to_handles(
+                    new_content["dependencies"]
+                )
+
+            # Compute new hash using THE hashing function
+            new_hash_info = self.compute_pattern_hash(new_content)
+
+            # Update the pattern
+            new_content["sema_id"] = new_hash_info["full_id"]
+            new_content["sema_ref"] = new_hash_info["reference"]
+            new_content["sema_stub"] = new_hash_info["stub"]
+            self._update_pattern_metadata(handle, new_content)
+
+            # Cascade to dependents using shared helper
+            cascade_result = self._cascade_dependents(handle)
+            updated = [handle] + cascade_result.get("updated", [])
+
+            return {"success": True, "updated": updated}
+        except Exception as e:
+            return {"success": False, "error": f"Cascade failed: {e}"}
+
+    def _get_pattern_content(
+        self, handle: str, include_deps: bool = False
+    ) -> dict[str, Any] | None:
+        """Get the current content of a pattern by handle.
+
+        Args:
+            handle: Pattern handle to get
+            include_deps: If True, reconstructs dependencies from edges for export
+
+        Returns:
+            Pattern dict, optionally with dependencies reconstructed from edges
+        """
+        nid = self._find_pattern_id(handle)
+        if nid is None:
+            return None
+        data = self.graph.nodes[nid]
+        content = data.get("metadata", {}).get("pattern", {}).copy()
+        if include_deps:
+            # Reconstruct dependencies from edges for export
+            edge_deps = self.get_dependencies_from_edges(handle)
+            if edge_deps:
+                content["dependencies"] = edge_deps
+        return content
+
+    def _update_pattern_metadata(self, handle: str, new_pattern: dict[str, Any]):
+        """Update a pattern's metadata in both graph and DB."""
+        nid = self._find_pattern_id(handle)
+        if nid is None:
+            return
+        data = self.graph.nodes[nid]
+        # Update in-memory
+        data["metadata"]["pattern"] = new_pattern
+
+        # Update in DB
+        conn = self._connect()
+        conn.execute(
+            "UPDATE nodes SET metadata = ? WHERE id = ?",
+            (json.dumps(data["metadata"]), nid),
+        )
+        conn.commit()
+        conn.close()
+
+    def validate_dependency_refs(self, pattern: dict[str, Any]) -> list[str]:
+        """Validate that all dependency references exist.
+
+        Returns list of missing handles (empty if all valid).
+        """
+        from ..core.hashing import extract_handle_from_ref
+
+        missing = []
+        deps = pattern.get("dependencies", {})
+
+        if not isinstance(deps, dict):
+            return missing
+
+        existing_handles = set(self._handle_to_id)
+
+        for _, items in deps.items():
+            if isinstance(items, dict):
+                for _, ref in items.items():
+                    if isinstance(ref, str):
+                        dep_handle = extract_handle_from_ref(ref)
+                        if dep_handle not in existing_handles:
+                            missing.append(dep_handle)
+
+        return missing
+
+    # =========================================================================
+    # TRANSACTIONAL RESTRUCTURING
+    # =========================================================================
+
+    def delete_node_cascade(self, node_id: str) -> dict[str, Any]:
+        """Delete a node and cascade-delete its edges.
+
+        Manually since FK lacks ON DELETE CASCADE.
+        """
+        if node_id not in self.graph:
+            return {"success": False, "error": "Node not found"}
+
+        # Count edges being removed
+        edges_removed = self.graph.in_degree(node_id) + self.graph.out_degree(node_id)
+
+        # Snapshot node attrs before removal so we can evict from the
+        # handle index after the in-memory graph has been mutated.
+        node_data = self.graph.nodes[node_id]
+        handle_to_evict = (
+            node_data.get("text") if node_data.get("node_type") == NodeType.PATTERN else None
+        )
+
+        # Delete from DB - manually delete edges first (no CASCADE in schema)
+        conn = self._connect()
+        conn.execute("DELETE FROM edges WHERE source_id = ? OR target_id = ?", (node_id, node_id))
+        conn.execute("DELETE FROM nodes WHERE id = ?", (node_id,))
+        conn.commit()
+        conn.close()
+
+        # Remove from in-memory graph
+        self.graph.remove_node(node_id)
+        if handle_to_evict is not None and self._handle_to_id.get(handle_to_evict) == node_id:
+            del self._handle_to_id[handle_to_evict]
+
+        return {"success": True, "edges_removed": edges_removed}

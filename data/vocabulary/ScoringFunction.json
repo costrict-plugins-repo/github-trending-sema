@@ -1,0 +1,65 @@
+{
+  "handle": "ScoringFunction",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "function_id",
+      "input_type",
+      "output_range"
+    ],
+    "properties": {
+      "function_id": {
+        "type": "string",
+        "description": "Unique identifier for this scoring function"
+      },
+      "input_type": {
+        "type": "string",
+        "description": "Expected input schema or type"
+      },
+      "output_range": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          }
+        },
+        "description": "Valid output range"
+      },
+      "logic": {
+        "type": "string",
+        "description": "Description or reference to scoring logic"
+      }
+    }
+  },
+  "mechanism": "A deterministic logical unit that maps an input artifact to a scalar {{value}} (Score). Encapsulates ranking and evaluation criteria as a first-class Noun, so callers can pass the scoring logic as an input rather than embed it inline in their own mechanism.",
+  "gloss": "Deterministic valuation logic",
+  "invariants": [
+    "Determinism: same input always yields the same score.",
+    "Output falls within the declared `output_range`."
+  ],
+  "sema_id": "sema:ScoringFunction#mh:SHA-256:c6042940db8c3238b948c7851aa315defbe31e1639dba718fcce0e38523e8d50",
+  "sema_ref": "ScoringFunction#c604",
+  "sema_stub": "c604",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:ScoringFunction#mh:SHA-256:3de5b5abe572e4e8cd6c0d4ecc55889fd157f66fdab01b399c0eae0cbca0a99d",
+      "sema:ScoringFunction#mh:SHA-256:932eb89612c9b1e99ca1d6d66adf15bd8544505bc46059da946cb71aa52e23ec"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "dependencies": {
+    "references": {
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

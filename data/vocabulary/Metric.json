@@ -1,0 +1,50 @@
+{
+  "handle": "Metric",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "target_property",
+      "measurement_rule",
+      "value_schema"
+    ],
+    "properties": {
+      "target_property": {
+        "type": "string",
+        "description": "Property or construct whose quantity the Metric defines"
+      },
+      "measurement_rule": {
+        "type": "string",
+        "description": "Rule or procedure that derives a value from the target property"
+      },
+      "value_schema": {
+        "type": "object",
+        "description": "JSON Schema for quantitative outputs, including the units, range, or dimensions needed to interpret them"
+      }
+    }
+  },
+  "mechanism": "A definition of a quantitative property. It identifies the target property, the rule used to derive its values, and the value schema that makes those values interpretable. Applying the definition produces readings; observed values and their context are recorded separately rather than changing the definition.",
+  "gloss": "Definition of a quantitative property and its value semantics",
+  "invariants": [
+    "Quantitative Output: `value_schema` admits only numbers or finite structures whose leaves are numbers, and declares the units, range, or dimensions needed to interpret them."
+  ],
+  "_meta": {
+    "ring": 0,
+    "tier": 1,
+    "supersedes": [
+      "sema:Metric#mh:SHA-256:8895c946c0d9728fb06563d2294bde3fe9a3be817d3d50ed1a587fd604bc6b29",
+      "sema:Metric#mh:SHA-256:977d146c13043ccc85b4521399937dd3f3a067bfcc7c2cfdd446082b6d13ee2c"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "related": [
+      "Metricmirror#c7c5"
+    ]
+  },
+  "sema_id": "sema:Metric#mh:SHA-256:aa990383741b05e3b798abc7518d9e65c0cc7832b345d4cfed48714ef2501230",
+  "sema_ref": "Metric#aa99",
+  "sema_stub": "aa99",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

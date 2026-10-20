@@ -1,0 +1,48 @@
+{
+  "handle": "LivedProof",
+  "mechanism": "Recursive Validation. A rhetorical or epistemic structure where the `Process` used to generate an output serves as the primary `Evidence` for the output's validity. The agent does not just assert a claim; it enacts it during the generation. It requires the agent to {{dogfood_first}}, treating the execution process as a {{signal}} of validity.",
+  "gloss": "Process demonstrates thesis",
+  "failure_modes": [
+    "Performative Contradiction: The process contradicts the thesis (e.g., writing a 50-page essay on 'Brevity').",
+    "Staged Demo: The process looks like enactment but is actually a pre-canned script (loss of genuineness)."
+  ],
+  "invariants": [
+    "The process that produced the output is the evidence offered for it.",
+    "The demonstration occurs in the current execution context, not historically.",
+    "Output artifacts cryptographically reference their generation trace."
+  ],
+  "preconditions": [
+    "{{agent}} has capability to execute the process",
+    "Thesis allows for enactment"
+  ],
+  "postconditions": [
+    "Generation trace attached to the output",
+    "Performative consistency verified"
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:LivedProof#mh:SHA-256:5df54febd99338ca42e2d25983cdc0b1785a6f19a553be9b998b169041c7a828",
+      "sema:LivedProof#mh:SHA-256:ae2df3c960792c30d022bff87745721b39d9384ddc511993d610b68b6b526183",
+      "sema:LivedProof#mh:SHA-256:64226e5300ccfc6a1b94cc3b1524077ce7da1bc8c7893f9d3679423153da2fa2",
+      "sema:LivedProof#mh:SHA-256:85c2bf6aa7edaae45deb73f17b96d6917079f831b66e15b9b19840e26f711b64"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "sema_id": "sema:LivedProof#mh:SHA-256:4aa129d6bda1cedb369494469cce917dd75411ccb662860ab2ab467489f16c5e",
+  "sema_ref": "LivedProof#4aa1",
+  "sema_stub": "4aa1",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "dogfood_first": "sema:DogfoodFirst#mh:SHA-256:76eea0e77af92abe85e0dda7c20710ca3f9b2dd0e243f2f08c3468b6c1d96204",
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

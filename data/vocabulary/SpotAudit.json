@@ -1,0 +1,55 @@
+{
+  "handle": "SpotAudit",
+  "mechanism": "A probabilistic audit where a verifier requests a random sample of an agent's internal memory or logs. The agent must provide a Merkle proof for that specific slice. Keeps agents honest without full audits. Utilizes {{state_audit}}.",
+  "gloss": "Random sampling of internal state",
+  "failure_modes": [
+    "Privacy leakage from the sample."
+  ],
+  "invariants": [
+    "The {{audit}} target is unpredictable to the auditee before selection.",
+    "Proof is returned within `response_deadline`."
+  ],
+  "preconditions": [
+    "Auditor has authority key"
+  ],
+  "postconditions": [
+    "{{audit}} result published to ledger"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:SpotAudit#mh:SHA-256:66730b2af0aece3adb72ca9e81b48085fc3654642b14cf82f3d8d2ae4890396d",
+      "sema:SpotAudit#mh:SHA-256:c00cb4b5955cf4cefc126978f1c4f06d5f1a9b505ff0b92f50af1b047b82c3dc"
+    ],
+    "path": [
+      "Infrastructure",
+      "Verification"
+    ]
+  },
+  "sema_id": "sema:SpotAudit#mh:SHA-256:d3a9df6a57f06278d581310ad3f0cb57941311ced0fb7360a5041e9093231b8a",
+  "sema_ref": "SpotAudit#d3a9",
+  "sema_stub": "d3a9",
+  "parameters": [
+    {
+      "name": "response_deadline",
+      "type": "Duration",
+      "range": "unspecified",
+      "description": "How long the auditee has to return a proof. Referenced by the second invariant, which previously named a T_max nothing defined."
+    },
+    {
+      "name": "sample_size",
+      "type": "Integer",
+      "range": "[1, 1000]",
+      "description": "Slices requested per audit."
+    }
+  ],
+  "dependencies": {
+    "references": {
+      "audit": "sema:Audit#mh:SHA-256:be970add829f4f162533569b04c9ffd12ea4d070d53405a4993f0785d4074f77",
+      "state_audit": "sema:StateAudit#mh:SHA-256:63cfd2311667bd0cf3634a23d7c6bb15018d7903ec89e6f5453a827251d7a43c"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Verification"
+}

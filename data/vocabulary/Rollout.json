@@ -1,0 +1,77 @@
+{
+  "handle": "Rollout",
+  "mechanism": "Creates a durable {{rollout_manifest}} before enabling the {{ejection_seat}} or dispatching work, then executes the approved `operation_sequence` in an {{execution_manifest}} as state-changing {{act}}s inside a {{circuit_breaker}} envelope. Before dispatching any canary or forward state-changing action, Rollout creates a `prepared` manifest entry containing a discoverable idempotent inverse for {{compensate}} that is safe to invoke when the forward outcome is unknown. The entry becomes `armed` before the action is sent, and its `outcome: unknown` is replaced only when an outcome is observed. If no safe inverse can be prepared, Rollout refuses that action and enters the same terminal cleanup path as a breaker trip. Rollout first runs a bounded real-path {{canary}}. `proceed` is the sole authorization for full execution or commitment of canary progress. On `caution` or `abort`, unless preempted by {{ejection_seat}}, Rollout invokes {{break}}, invokes {{compensate}} for every armed canary entry whose outcome is effectful or `unknown`, records the result, permits only DESTROY or RECYCLE, freezes the manifest, and terminates this run; retry requires a new Rollout. An inverse-preparation failure or breaker trip, unless preempted by {{ejection_seat}}, invokes {{break}}, stops forward execution, invokes {{compensate}} for every armed entry whose outcome is effectful or `unknown`, records every per-inverse result, freezes the manifest, and terminates this run; neither breaker recovery nor retry resumes it, and either requires a new Rollout. A received {{ejection_seat}} signal always takes precedence over all cleanup paths: PAUSE suspends forward and compensation work and leaves the manifest open; TERMINATE stops new forward work, invokes {{break}}, permits best-effort {{compensate}} during graceful shutdown without allowing acknowledgement or cleanup to block termination, and then freezes the manifest; EMERGENCY halts immediately with no compensation and no final-write guarantee, so only an incomplete immutable prefix with no guaranteed final outcome entry is available. Outside EMERGENCY, Rollout freezes the manifest when the run terminates.",
+  "gloss": "Progressive deployment with canary gating and recorded compensation",
+  "failure_modes": [
+    "Canary false positive: The bounded real path returns `proceed`, but full execution encounters conditions the canary did not cover.",
+    "Dirty compensation: One or more recorded inverse actions fails, leaving partial state; the failure remains in the {{rollout_manifest}}.",
+    "Forward execution drift: An attempted forward action does not match the next authorized action in the approved {{execution_manifest}} operation sequence.",
+    "Audit drift: An armed canary or forward action, or any compensation action, is absent from the {{rollout_manifest}}.",
+    "Emergency residue: {{ejection_seat}} EMERGENCY mode halts without cleanup, so effects from already attempted actions can remain."
+  ],
+  "invariants": [
+    "No state-changing {{act}} is attempted before the {{rollout_manifest}} records its discoverable idempotent inverse, safe under an `unknown` outcome; otherwise it is refused as an inverse-preparation failure.",
+    "`proceed` alone authorizes full execution or committed {{canary}} progress.",
+    "`caution`, `abort`, inverse-preparation failure, or a {{circuit_breaker}} trip starts no further forward work and, absent {{ejection_seat}} preemption, enters ordinary terminal cleanup.",
+    "Ordinary terminal cleanup invokes {{break}}, then {{compensate}} for every effectful-or-`unknown` armed entry, records each inverse result, and terminates with the manifest frozen.",
+    "A terminated Rollout never resumes; retry and breaker recovery use a new Rollout.",
+    "A received {{ejection_seat}} signal preempts ordinary cleanup in favor of its selected mode.",
+    "PAUSE suspends forward and compensation work and leaves the Rollout and its manifest open.",
+    "TERMINATE starts no further forward work, invokes {{break}}, and permits best-effort {{compensate}}; Break acknowledgement and cleanup cannot block termination with a frozen manifest.",
+    "EMERGENCY halts immediately without cleanup or a final manifest write.",
+    "Outside EMERGENCY, the {{rollout_manifest}} records every armed action, compensation action, and observed inverse result; at freeze, each forward entry contains its observed outcome or `unknown` if unobserved."
+  ],
+  "preconditions": [
+    "{{execution_manifest}} is approved",
+    "{{circuit_breaker}} is configured for the operation target and CLOSED",
+    "{{canary}} telemetry collection is active for the bounded path",
+    "{{ejection_seat}} readiness has a recorded successful test and its dedicated channel, operator key, and operator are available"
+  ],
+  "postconditions": [
+    "If the run terminates without EMERGENCY, the {{rollout_manifest}} is frozen with each armed action and its observed or `unknown` outcome.",
+    "If EMERGENCY occurs, immediate halt is the only guaranteed outcome; the durable {{rollout_manifest}} may contain only an incomplete immutable prefix with no guaranteed final outcome entry."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "related": [
+      "BlueGreen"
+    ],
+    "supersedes": [
+      "sema:Rollout#mh:SHA-256:42389087ff9ffd73d3de5c71f8509cf2cd974795babc71e862ec139c92ad5c78",
+      "sema:Rollout#mh:SHA-256:54d7bac8171164fb66054c97570c030967e0d5f568763a69a103eec26ac0aeeb",
+      "sema:Rollout#mh:SHA-256:8fc16ddf8f7add799ac8b49f7894f508be0b8378f995e57540cab8ec028eb996",
+      "sema:Rollout#mh:SHA-256:e4717541319b2a51a4b78b1278fc14a1b3fd4f6daf6719eb70c08c7193dfb629"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:Rollout#mh:SHA-256:ea8c8bdf3303e53d240d6393a776de33ff7c0980a269539d6eb22a8b35e430b4",
+  "sema_ref": "Rollout#ea8c",
+  "sema_stub": "ea8c",
+  "signature": [
+    "Act(ExecutionManifest)"
+  ],
+  "dependencies": {
+    "accepts": {
+      "execution_manifest": "sema:ExecutionManifest#mh:SHA-256:fed57d4adcd6d9d1f82c57c3d22724485171672d77a34fdfaf7338a430f5f0b1"
+    },
+    "composes_with": {
+      "break": "sema:Break#mh:SHA-256:5003e128ac02e7835d2094d72dc929ce4c96819b56ef167c2ca8da9f16aa402a",
+      "canary": "sema:Canary#mh:SHA-256:d38cd019553857aa7518559542b5400b658f87eb08e6f4dae9be4fd496ce691e",
+      "circuit_breaker": "sema:CircuitBreaker#mh:SHA-256:3caa9c387c04bb2ac66ec35a6cfe2665e11339f0d47576b96d68229226580c76",
+      "compensate": "sema:Compensate#mh:SHA-256:4b87623f38564fcc95b87d2cbf5df2f5ff41ef27e617ccafd76c7b7896b144e7",
+      "ejection_seat": "sema:EjectionSeat#mh:SHA-256:a9d5ef5e3e70e5e4732543c2732e312f1efbd881a991b1521594e3b66257a8cb"
+    },
+    "references": {
+      "act": "sema:Act#mh:SHA-256:2dfedd75a396f2639ce949b9f5270766350b9c7404d404c11c57140fcf030455"
+    },
+    "yields": {
+      "rollout_manifest": "sema:RolloutManifest#mh:SHA-256:248df60c0a8d3d0e73d0dc29ee287c233c5761d610af135bc3baf96e1e556e10"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

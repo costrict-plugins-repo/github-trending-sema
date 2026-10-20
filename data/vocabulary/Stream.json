@@ -1,0 +1,57 @@
+{
+  "handle": "Stream",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "stream_id"
+    ],
+    "properties": {
+      "stream_id": {
+        "type": "string",
+        "description": "Unique stream identifier"
+      },
+      "messages": {
+        "type": "array",
+        "description": "Ordered sequence of messages"
+      },
+      "cursor": {
+        "type": "integer",
+        "description": "Current read position in the stream"
+      },
+      "bounded": {
+        "type": "boolean",
+        "description": "Whether the stream has a known end"
+      }
+    }
+  },
+  "mechanism": "An ordered, potentially unbounded sequence of Messages. Represents real-time data pipes, log feeds, or conversational histories. Streams support operations like mapping, filtering, and backpressure. Utilizes {{message}}.",
+  "gloss": "Continuous data flow",
+  "invariants": [
+    "Ordering: Messages M_n and M_n+1 maintain relative sequence.",
+    "Causality: Effects cannot precede causes in the stream."
+  ],
+  "preconditions": [
+    "A Source emitting Messages"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "supersedes": [
+      "sema:Stream#mh:SHA-256:6b47aafa55e0339455fa2d82d2077ffbf2c2dea744bd7034a99a3b77cfacfaec"
+    ]
+  },
+  "sema_id": "sema:Stream#mh:SHA-256:ffa6e636cc2ca9f13c23f5862e60aceb0885a35686fb60f12da157316b159b53",
+  "sema_ref": "Stream#ffa6",
+  "sema_stub": "ffa6",
+  "dependencies": {
+    "references": {
+      "message": "sema:Message#mh:SHA-256:bf6d3d4643c881a8c245617c3603b13ffef26026304fc7e7c384a80cf25fd237"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

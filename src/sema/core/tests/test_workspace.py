@@ -1,0 +1,450 @@
+import pytest
+
+from sema.core.hashing import catalog_root, vocabulary_root
+from sema.core.workspace import (
+    GraphWorkspace,
+    WorkspaceCatalog,
+    WorkspaceNotFoundError,
+    WorkspaceSession,
+    WorkspaceSource,
+)
+
+
+class StubRegistry:
+    source = "stub"
+    db_path = "/tmp/workspace.db"
+    vocab_dir = "/tmp/vocabulary"
+
+    def __init__(self):
+        self.registry = {
+            "Alpha": {
+                "handle": "Alpha",
+                "gloss": "Alpha gloss",
+                "mechanism": "Alpha mechanism",
+                "sema_id": "sema:Alpha#mh:SHA-256:" + ("a" * 64),
+                "sema_ref": "Alpha#aaaa",
+                "sema_stub": "aaaa",
+                "sema_layer": "Mind",
+                "sema_category": "Reasoning",
+            },
+            "Task": {
+                "handle": "Task",
+                "gloss": "Task gloss",
+                "mechanism": "Task mechanism",
+                "sema_id": "sema:Task#mh:SHA-256:" + ("b" * 64),
+                "sema_ref": "Task#bbbb",
+                "sema_stub": "bbbb",
+                "sema_layer": "Infrastructure",
+                "sema_category": "Data Structures",
+            },
+        }
+
+    def refresh(self):
+        pass
+
+    def search(self, query, use_semantic=True):
+        return [
+            {
+                "handle": "Alpha",
+                "sema_ref": "Alpha#aaaa",
+                "gloss": "Alpha gloss",
+                "mechanism": "Alpha mechanism",
+                "score": 1.0,
+            }
+        ]
+
+    def get_context(self, handle):
+        return {"dependencies": [], "used_by": []}
+
+    def resolve(self, handle, depth=1):
+        if handle == "Alpha":
+            return {"Alpha": self.registry["Alpha"], "Task": self.registry["Task"]}
+        return None
+
+    def get_pattern(self, handle):
+        return self.registry.get(handle)
+
+    def get_graph_skeleton(self):
+        return "stub skeleton"
+
+
+def make_workspace():
+    return GraphWorkspace(
+        WorkspaceSource(workspace_id="team-a", label="Team A", db_path="/tmp/workspace.db"),
+        registry_manager=StubRegistry(),
+    )
+
+
+def test_search_session_cache_is_per_session():
+    workspace = make_workspace()
+    first_session = WorkspaceSession()
+    second_session = WorkspaceSession()
+
+    first_seen = workspace.search("alpha", session=first_session)
+    first_compact = workspace.search("alpha", session=first_session)
+    second_seen = workspace.search("alpha", session=second_session)
+
+    assert "_seen" not in first_seen[0]
+    assert first_compact[0]["_seen"] is True
+    assert "_seen" not in second_seen[0]
+
+
+def test_search_limits_broad_results_and_compacts_after_top_three():
+    registry = StubRegistry()
+    broad_results = [
+        {
+            "handle": f"Pattern{index}#{index:04x}",
+            "sema_ref": f"Pattern{index}#{index:04x}",
+            "gloss": f"Pattern {index} gloss",
+            "mechanism": f"Pattern {index} detailed mechanism",
+            "score": 1 - (index / 100),
+        }
+        for index in range(25)
+    ]
+
+    def broad_search(query, use_semantic=True):
+        return broad_results
+
+    registry.search = broad_search
+    workspace = GraphWorkspace(registry_manager=registry)
+    session = WorkspaceSession()
+
+    results = workspace.search("broad", session=session, limit=10)
+
+    assert len(results) == 10
+    assert all("mechanism" in result for result in results[:3])
+    assert all(result.get("_summary") is True for result in results[3:])
+    assert all("mechanism" not in result for result in results[3:])
+    assert len(session.served_patterns) == 3
+
+    registry.search = lambda query, use_semantic=True: [broad_results[5]]
+    targeted = workspace.search("Pattern5", session=session, limit=10)
+
+    assert targeted[0]["mechanism"] == "Pattern 5 detailed mechanism"
+    assert "_summary" not in targeted[0]
+
+
+def test_resolve_marks_only_the_supplied_session():
+    workspace = make_workspace()
+    session = WorkspaceSession()
+
+    result = workspace.resolve("Alpha", session=session)
+
+    assert result["count"] == 2
+    assert "Alpha" in session.served_patterns
+    assert "Task" in session.served_patterns
+
+
+def test_validate_uses_workspace_known_handles():
+    workspace = make_workspace()
+    task_id = "sema:Task#mh:SHA-256:" + ("b" * 64)
+    pattern = {
+        "handle": "Consumer",
+        "mechanism": "Consumes {{task}}.",
+        "gloss": "Consumes task",
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+        "dependencies": {"references": {"task": task_id}},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is True
+    assert result["errors"] == []
+
+
+def test_validate_reports_missing_workspace_dependency():
+    workspace = make_workspace()
+    missing_id = "sema:Missing#mh:SHA-256:" + ("c" * 64)
+    pattern = {
+        "handle": "Consumer",
+        "mechanism": "Consumes {{missing}}.",
+        "gloss": "Consumes missing thing",
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+        "dependencies": {"references": {"missing": missing_id}},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is False
+    assert any("Missing" in error for error in result["errors"])
+
+
+def test_validate_reports_missing_workspace_extends_parent():
+    workspace = make_workspace()
+    pattern = {
+        "handle": "Consumer",
+        "mechanism": "A specialised consumer.",
+        "gloss": "Specialised consumer",
+        "extends": "sema:Missing#mh:SHA-256:" + ("c" * 64),
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is False
+    assert any("MISSING EXTENDS TARGET" in error for error in result["errors"])
+
+
+def test_validate_reports_unresolvable_workspace_extends_version():
+    workspace = make_workspace()
+    pattern = {
+        "handle": "Consumer",
+        "mechanism": "A specialised consumer.",
+        "gloss": "Specialised consumer",
+        "extends": "sema:Task#mh:SHA-256:" + ("c" * 64),
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is False
+    assert any("UNRESOLVABLE SPECIALIZATION" in error for error in result["errors"])
+
+
+def test_validate_rejects_extends_parent_without_active_sema_id():
+    workspace = make_workspace()
+    del workspace.registry["Task"]["sema_id"]
+    pattern = {
+        "handle": "Consumer",
+        "mechanism": "A specialised consumer.",
+        "gloss": "Specialised consumer",
+        "extends": "sema:Task#mh:SHA-256:" + ("b" * 64),
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is False
+    assert any("UNRESOLVABLE SPECIALIZATION" in error for error in result["errors"])
+
+
+def test_validate_keeps_legacy_derived_from_opaque():
+    workspace = make_workspace()
+    pattern = {
+        "handle": "LegacyConsumer",
+        "mechanism": "A pre-0.4 card.",
+        "gloss": "Legacy consumer",
+        "derived_from": "sema:RetiredParent",
+        "_meta": {"path": ["Mind", "Reasoning"], "ring": 1, "tier": 2},
+    }
+
+    result = workspace.validate_pattern(pattern)
+
+    assert result["valid"] is True
+    assert any("DEPRECATED FIELD" in warning for warning in result["warnings"])
+
+
+def test_vocabulary_root_exposes_semantic_and_catalog_commitments():
+    workspace = make_workspace()
+    expected = vocabulary_root(["a" * 64, "b" * 64])
+    expected_catalog = catalog_root([("Alpha", "a" * 64), ("Task", "b" * 64)])
+
+    root = workspace.vocabulary_root()
+
+    assert root["hash"] == expected
+    assert root["stub"] == expected[:16]
+    assert root["catalog_root"] == expected_catalog
+    assert root["pattern_count"] == 2
+
+
+def test_vocabulary_root_rejects_hashless_registry_entry():
+    workspace = make_workspace()
+    del workspace.registry_manager.registry["Alpha"]["sema_id"]
+
+    with pytest.raises(ValueError, match="Alpha.*invalid sema_id"):
+        workspace.vocabulary_root()
+
+
+def test_handshake_is_scoped_to_workspace():
+    workspace = make_workspace()
+
+    provide = workspace.handshake("Alpha")
+    proceed = workspace.handshake("Alpha", your_hash="aaaa")
+    halt = workspace.handshake("Alpha", your_hash="zzzz")
+
+    assert provide["verdict"] == "PROVIDE_HASH"
+    assert proceed["verdict"] == "PROCEED"
+    assert halt["verdict"] == "HALT"
+    assert halt["canonical_hash"] == "aaaa"
+
+
+def test_handshake_pattern_accepts_full_hash():
+    """An agent holding the full 64-char hash must not get a false HALT."""
+    workspace = make_workspace()
+
+    proceed = workspace.handshake("Alpha", your_hash="a" * 64)
+
+    assert proceed["verdict"] == "PROCEED"
+    assert proceed["assurance"] == "full_hash"
+
+
+def test_handshake_cooperative_stub_reports_prefix_assurance():
+    workspace = make_workspace()
+
+    proceed = workspace.handshake("Alpha", your_hash="aaaa")
+
+    assert proceed["verdict"] == "PROCEED"
+    assert proceed["assurance"] == "prefix"
+    assert proceed["mode"] == "cooperative"
+
+
+@pytest.mark.parametrize(
+    "ref",
+    [
+        "sema:Alpha#mh:SHA-256:" + "a" * 64,
+        "Alpha#mh:SHA-256:" + "a" * 64,
+        "SEMA:Alpha#MH:SHA-256:" + "A" * 64,
+    ],
+)
+def test_handshake_accepts_a_full_written_reference(ref):
+    """Pasting the full reference a document carries must verify, not halt."""
+    workspace = make_workspace()
+
+    result = workspace.handshake(ref, strict=True)
+
+    assert result["verdict"] == "PROCEED"
+    assert result["assurance"] == "full_hash"
+
+
+def test_handshake_full_reference_with_another_hash_halts():
+    workspace = make_workspace()
+
+    result = workspace.handshake("sema:Alpha#mh:SHA-256:" + "c" * 64, strict=True)
+
+    assert result["verdict"] == "HALT"
+    assert "DRIFT" in result["reason"]
+
+
+def test_handshake_short_reference_with_sema_prefix():
+    workspace = make_workspace()
+
+    result = workspace.handshake("sema:Alpha#aaaa")
+
+    assert result["verdict"] == "PROCEED"
+    assert result["handle"] == "Alpha"
+
+
+def test_handshake_your_hash_takes_precedence_over_the_reference():
+    workspace = make_workspace()
+
+    result = workspace.handshake("Alpha#aaaa", your_hash="zzzz")
+
+    assert result["verdict"] == "HALT"
+
+
+def test_handshake_accepts_a_full_vocab_reference():
+    workspace = make_workspace()
+    root = workspace.vocabulary_root()
+    ref = f"sema:vocab#mh:SHA-256:{root['hash']}"
+
+    without_scheme = workspace.handshake(ref, strict=True)
+    with_scheme = workspace.handshake(ref, strict=True, your_scheme=root["root_scheme"])
+
+    assert without_scheme["verdict"] == "HALT"
+    assert without_scheme["reason"] == "ROOT SCHEME REQUIRED"
+    assert with_scheme["verdict"] == "PROCEED"
+    assert with_scheme["assurance"] == "full_hash"
+
+
+def test_handshake_strict_stub_requests_full_hash():
+    workspace = make_workspace()
+
+    result = workspace.handshake("Alpha", your_hash="aaaa", strict=True)
+
+    assert result["verdict"] == "REQUIRE_FULL_HASH"
+    assert result["mode"] == "strict"
+    assert result["full_sema_id"].endswith("a" * 64)
+
+
+def test_handshake_strict_full_hash_proceeds():
+    workspace = make_workspace()
+
+    result = workspace.handshake("Alpha", your_hash="a" * 64, strict=True)
+
+    assert result["verdict"] == "PROCEED"
+    assert result["assurance"] == "full_hash"
+    assert result["mode"] == "strict"
+
+
+def test_handshake_pattern_normalizes_case_and_whitespace():
+    workspace = make_workspace()
+
+    proceed_stub = workspace.handshake("Alpha", your_hash="  AAAA  ")
+    proceed_full = workspace.handshake("Alpha", your_hash=("A" * 64))
+
+    assert proceed_stub["verdict"] == "PROCEED"
+    assert proceed_full["verdict"] == "PROCEED"
+
+
+def test_handshake_pattern_blank_hash_asks_for_hash():
+    workspace = make_workspace()
+
+    result = workspace.handshake("Alpha", your_hash="   ")
+
+    assert result["verdict"] == "PROVIDE_HASH"
+
+
+def test_handshake_pattern_full_hash_drift_still_halts():
+    workspace = make_workspace()
+
+    halt = workspace.handshake("Alpha", your_hash="f" * 64)
+
+    assert halt["verdict"] == "HALT"
+
+
+def test_workspace_description_exposes_hosted_identity_fields():
+    workspace = make_workspace()
+
+    description = workspace.describe()
+
+    assert description["workspace_id"] == "team-a"
+    assert description["label"] == "Team A"
+    assert description["pattern_count"] == 2
+    assert description["db_path"] == "/tmp/workspace.db"
+    assert description["data_source"] == "stub"
+
+
+def test_workspace_catalog_opens_each_tenant_lazily_once():
+    opened = []
+
+    def factory(source):
+        opened.append(source.workspace_id)
+        return GraphWorkspace(source, registry_manager=StubRegistry())
+
+    catalog = WorkspaceCatalog(
+        [
+            WorkspaceSource(workspace_id="team-a", db_path="/tmp/a.db"),
+            WorkspaceSource(workspace_id="team-b", db_path="/tmp/b.db"),
+        ],
+        workspace_factory=factory,
+    )
+
+    team_a = catalog.resolve("team-a")
+
+    assert catalog.resolve("team-a") is team_a
+    assert catalog.resolve("team-b") is not team_a
+    assert opened == ["team-a", "team-b"]
+
+
+def test_workspace_catalog_replacing_source_invalidates_cached_workspace():
+    catalog = WorkspaceCatalog(
+        [WorkspaceSource(workspace_id="team-a", label="Old")],
+        workspace_factory=lambda source: GraphWorkspace(source, registry_manager=StubRegistry()),
+    )
+    old_workspace = catalog.resolve("team-a")
+
+    catalog.register_source(WorkspaceSource(workspace_id="team-a", label="New"))
+    new_workspace = catalog.resolve("team-a")
+
+    assert new_workspace is not old_workspace
+    assert new_workspace.source.label == "New"
+
+
+def test_workspace_catalog_rejects_unknown_or_ambiguous_ids():
+    catalog = WorkspaceCatalog()
+
+    with pytest.raises(ValueError, match="surrounding whitespace"):
+        catalog.register_source(WorkspaceSource(workspace_id=" team-a "))
+
+    with pytest.raises(WorkspaceNotFoundError, match="missing"):
+        catalog.resolve("missing")

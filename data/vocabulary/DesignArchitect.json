@@ -1,0 +1,41 @@
+{
+  "handle": "DesignArchitect",
+  "mechanism": "The strategic agent responsible for formulating a {{mechanistic_design_proposal}}. It uses the adversarial method to robustify the design: defending it via {{steelman_check}} and attacking it via {{pre_mortem}}. It integrates with {{strategy}} to project future impact and uses {{translate}} and {{summarize}} to refine the final output for clarity.",
+  "gloss": "Agent that architects mechanistic design proposals",
+  "invariants": [
+    "Dialectic Rigor: Must apply both Steelman and PreMortem to the design.",
+    "Output Quality: Must produce a valid MechanisticDesignProposal."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "supersedes": [
+      "sema:DesignArchitect#mh:SHA-256:7f55e9a2e809f4c721e9c62db8a8582c9f6b2eca5d293649c328750583a09775",
+      "sema:DesignArchitect#mh:SHA-256:de8c02a7c8c3f29951d1df4265648ae84cea7039dc73f2c0e9403e8c1a199d04",
+      "sema:DesignArchitect#mh:SHA-256:ac154160ca214e889cce53f96e35798b9f290a9b512217fbc567282948c491a7",
+      "sema:DesignArchitect#mh:SHA-256:a4228704654ba9a8297638781f27175205c1febaf1779b2b4ccec476f5c093a4",
+      "sema:DesignArchitect#mh:SHA-256:7f6bef2156f06124719ed40031a6655516167875ce228905da35577a4d48b22f"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_ref": "DesignArchitect#48de",
+  "sema_id": "sema:DesignArchitect#mh:SHA-256:48deccf62675d6cbfb1bf2efa163b35f6141f8863563d08cb8ca52b0c80231ce",
+  "sema_stub": "48de",
+  "dependencies": {
+    "composes_with": {
+      "pre_mortem": "sema:PreMortem#mh:SHA-256:e4c24813f33aa41fdb183e380d05707fe1fd813c46b4127602449a8988f47964",
+      "steelman_check": "sema:SteelmanCheck#mh:SHA-256:b004eb6d85a184da7f9bb7fc06d011bc869f6eb6ad1061f30cbbbcc4c2b8f6aa",
+      "strategy": "sema:Strategy#mh:SHA-256:3dc598d0c6af12389df445c204e17df03950dbc886656b85700e6c87c31b2eef",
+      "summarize": "sema:Summarize#mh:SHA-256:98dbf6e131bc82331b818b0b8fe816580020629f334d12e7c4c51b3f93c1c2d5",
+      "translate": "sema:Translate#mh:SHA-256:31ed60a9638151e862227245e0d9a4752ce6c59ee6023ddd84222c2e7afb63ea"
+    },
+    "yields": {
+      "mechanistic_design_proposal": "sema:MechanisticDesignProposal#mh:SHA-256:930aebe1a8b00fcfcf7c585e7c49b53f84c39988069e6d8c1721d568afe1a292"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

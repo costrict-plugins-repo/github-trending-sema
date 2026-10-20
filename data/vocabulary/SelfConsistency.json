@@ -1,0 +1,40 @@
+{
+  "handle": "SelfConsistency",
+  "mechanism": "A variance-reduction technique where the same query is processed N times independently (with temperature > 0), producing N candidate answers. The final answer is selected by majority {{aggregate}} (Mode). Exploits the intuition that correct reasoning paths are more likely to converge on the same answer than incorrect ones. It aggregates multiple reasoning paths via {{aggregate}} to determine the most robust answer.",
+  "gloss": "Sample multiple reasoning chains, select by majority",
+  "failure_modes": [
+    "Consistent Wrongness: All N samples converge on the same incorrect answer (systematic bias).",
+    "Cost Explosion: N samples means N times the compute cost."
+  ],
+  "invariants": [
+    "Aggregation: Final answer determined by plurality or weighted aggregation",
+    "Independence: Each sample must be generated without knowledge of others",
+    "N >= 3: Minimum samples for meaningful convergence"
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:SelfConsistency#mh:SHA-256:543df3dae7e7343a60ce588b0dac22883ec50c8ae0816ea6b25cb697f238cd7d",
+      "sema:SelfConsistency#mh:SHA-256:2095d12c9020575e57fc798f2f5b9d0a112bc8827e2c015e0d894a456427efbd",
+      "sema:SelfConsistency#mh:SHA-256:a1cdf8b8b168783be68ae86cda126d7518a53f01a758a6a0df486f3cf0e7d9af"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ],
+    "related": [
+      "EvidenceDependence"
+    ]
+  },
+  "sema_id": "sema:SelfConsistency#mh:SHA-256:4f68cebc4f82197975d6098701b0431bafb1e79792d19cb69a8d9dbad5036b8a",
+  "sema_ref": "SelfConsistency#4f68",
+  "sema_stub": "4f68",
+  "dependencies": {
+    "references": {
+      "aggregate": "sema:Aggregate#mh:SHA-256:2db6858c061515fa2257c96f4a6e4392164e9a118adc6874c69cf2279b877077"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

@@ -1,0 +1,100 @@
+{
+  "handle": "MechanisticDesignProposal",
+  "mechanism": "A structured blueprint for a systemic {{solution}} that addresses a {{problem}} in a {{system}}. It goes beyond a standard proposal by requiring the definition of a core mechanism\u2014the specific leverage point and causal chain used to alter system behavior. The proposal integrates the 'Why it Works' (defense) and 'Why it Fails' (attack) dialectic, assessing attached {{risk}}s, along with medium-term implementation and long-term vision projections.",
+  "gloss": "Dialectic blueprint of a system mechanism with temporal projections",
+  "invariants": [
+    "`why_it_fails` names specific conditions under which the mechanism breaks, not a generic caveat.",
+    "`core_mechanism` states how A causes B, not that A and B move together.",
+    "`what_is_new` names the solutions or practice it is compared with and the contribution they lack.",
+    "Carries both `medium_term` and `long_term_vision`."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "supersedes": [
+      "sema:MechanisticDesignProposal#mh:SHA-256:8cf72275c6678ea0c57d497fff459f6f9c5259330524fe8f9bb3af63b7df9c06",
+      "sema:MechanisticDesignProposal#mh:SHA-256:4c393bee5b1d67791b93e4e3612ead726dac3874739f83625333244ab3d5ac6b",
+      "sema:MechanisticDesignProposal#mh:SHA-256:2f7a45b9f347ab3b11faf3ebf6351f61fcd23ce667951683247b0c0f6a700355",
+      "sema:MechanisticDesignProposal#mh:SHA-256:e36fcadd8c29f9e55375e8bf3085dbc9b4feecd2f0f3bd96918b3663af109cc6"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "label",
+      "design_principles",
+      "core_mechanism",
+      "how_it_works",
+      "what_is_new",
+      "why_it_works",
+      "why_it_fails",
+      "medium_term",
+      "long_term_vision"
+    ],
+    "properties": {
+      "label": {
+        "type": "string",
+        "description": "A concise, evocative name for the solution (e.g., 'Parametric Storm-Trigger Retirement')"
+      },
+      "design_principles": {
+        "type": "string",
+        "description": "The guiding philosophy behind the design. What mental model or heuristic drives this solution?"
+      },
+      "core_mechanism": {
+        "type": "string",
+        "description": "The specific leverage point and causal chain. What is the ONE thing that makes this work?"
+      },
+      "how_it_works": {
+        "type": "string",
+        "description": "Concrete operational description. Step-by-step: what happens when this is deployed?"
+      },
+      "what_is_new": {
+        "type": "string",
+        "description": "The novel contribution, stated against named existing solutions or practice. What does this do that they cannot? Why hasn't this been done before?"
+      },
+      "why_it_works": {
+        "type": "string",
+        "description": "The dialectic defense. Steel-man argument for why this mechanism will succeed."
+      },
+      "why_it_fails": {
+        "type": "string",
+        "description": "The dialectic attack. Pre-mortem: what are the failure modes, risks, and unintended consequences?"
+      },
+      "medium_term": {
+        "type": "string",
+        "description": "Implementation trajectory for 1-3 years. What does adoption look like? What ecosystem changes occur?"
+      },
+      "long_term_vision": {
+        "type": "string",
+        "description": "The end-state aspiration. If this succeeds fully, what does the world look like in 10+ years?"
+      }
+    }
+  },
+  "sema_ref": "MechanisticDesignProposal#930a",
+  "sema_id": "sema:MechanisticDesignProposal#mh:SHA-256:930aebe1a8b00fcfcf7c585e7c49b53f84c39988069e6d8c1721d568afe1a292",
+  "sema_stub": "930a",
+  "failure_modes": [
+    "Pro-forma dialectic: `why_it_fails` is filled with a token caveat, so the attack side is nominal.",
+    "Correlation as mechanism: `core_mechanism` names a co-movement rather than a causal chain, which makes the leverage point unactionable.",
+    "Unassessed {{risk}}: the attached risks are listed but not weighed against the projections.",
+    "Overclaimed novelty: `what_is_new` is set against a weak or outdated comparison, so the contribution looks larger than it is."
+  ],
+  "dependencies": {
+    "accepts": {
+      "problem": "sema:Problem#mh:SHA-256:2580c43677ec78ee7ee428d200662c6096e4eab38c2c5a868154979074cc0f08",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    },
+    "references": {
+      "risk": "sema:Risk#mh:SHA-256:e7f601ff0058d606ea87ab5f196f78f469a3133f8324617ff8a25d8072422e91"
+    },
+    "yields": {
+      "solution": "sema:Solution#mh:SHA-256:8d55004ffa8f61d6e7d12d588ae4baa9723296dd7fa501759b5e6b1b97e7c9ab"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

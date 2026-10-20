@@ -1,0 +1,55 @@
+{
+  "handle": "DeepResearch",
+  "mechanism": "An autonomous research pipeline with four stages: (1) Planning - decompose query into research questions, (2) Multi-Round Search - iteratively search, identify gaps, refine queries, (3) {{synthesis}} - integrate findings across sources, resolve contradictions, (4) Report - generate an analytical report with citations. Loops between search and synthesis until a round surfaces nothing new or the round bound is reached. Chains {{discover}} for breadth and {{retrieval_augment}} for depth, orchestrated by {{deep}}.",
+  "gloss": "Plan-search-synthesize-report research pipeline",
+  "failure_modes": [
+    "Source {{cognitive_bias}}: Over-relying on first sources found.",
+    "{{synthesis}} Hallucination: Inventing connections not in sources.",
+    "Premature Closure: Stopping search before finding contradicting evidence."
+  ],
+  "invariants": [
+    "Findings are synthesized across sources that do not derive from one another.",
+    "More than one search round; the value is in the gap-detection between them.",
+    "Every claim in the report names the sources it rests on.",
+    "The loop ends on a dry round or the round bound, and which one is recorded."
+  ],
+  "preconditions": [
+    "Access to external knowledge base",
+    "A question that one source cannot settle"
+  ],
+  "postconditions": [
+    "A report in which each claim names its sources",
+    "The reason the loop stopped is recorded"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:DeepResearch#mh:SHA-256:cbe339d17080d67469ea0b220f5142dc63862ea423da4a2253a89011696e1f8d",
+      "sema:DeepResearch#mh:SHA-256:a0583250bce8e627c58247bd2dba4de9d9fb9ffabf0a36c66eceb7ddebee4577",
+      "sema:DeepResearch#mh:SHA-256:52e2fdc1ac8c86d03f7ef1fb0c85eb3903d8c5f3769af094a61e6f028055ce0b",
+      "sema:DeepResearch#mh:SHA-256:c1f1dad991731eb1bbdef71a9fe0d7f81f96fec9acd4bee43419f800a67d4f92"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "sema_id": "sema:DeepResearch#mh:SHA-256:2e2ba9173185caffc282ebbbaad3c5717a3720f8b6e3625dc1b13f166e481879",
+  "sema_ref": "DeepResearch#2e2b",
+  "sema_stub": "2e2b",
+  "signature": [
+    "Deep(Discover)"
+  ],
+  "dependencies": {
+    "references": {
+      "cognitive_bias": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387",
+      "deep": "sema:Deep#mh:SHA-256:16b0cb8d6aa42a890215fb7a44e480c27360165de2249d205ee6c1b2d01896bb",
+      "discover": "sema:Discover#mh:SHA-256:f6e09de2a5b38c031651d22539fafaa46e32869b06dae8009bde18cb249da69b",
+      "retrieval_augment": "sema:RetrievalAugment#mh:SHA-256:6f840cc4134b302b712d8f59dcca0c1b446c255369a8cea11031e884c16f3052",
+      "synthesis": "sema:Synthesis#mh:SHA-256:4f1fecba4183e6a79bfb3bd8f1981a6b6fb9f3dced92a484a9aa466c93ae249b"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

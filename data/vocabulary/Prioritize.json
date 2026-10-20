@@ -1,0 +1,48 @@
+{
+  "handle": "Prioritize",
+  "mechanism": "Impact-Effort Ranking: List all options. Score each on impact ({{value}} if done) and effort (cost to do). Compute ratio. Sort by ratio descending. {{work}} top-down. Re-score periodically as information changes. Pareto principle: 20% of {{work}} yields 80% of {{value}}. It applies {{rank}} to the candidate set based on an Impact/Effort ratio.",
+  "gloss": "Ordering tasks by importance and urgency",
+  "failure_modes": [
+    "Priority Inversion: Low-priority {{task}} blocks high-priority {{task}} due to resource dependency."
+  ],
+  "invariants": [
+    "Completeness: output contains every input item.",
+    "Ordering: sorted by descending impact-to-effort ratio."
+  ],
+  "preconditions": [
+    "Items are comparable"
+  ],
+  "postconditions": [
+    "Set ordered"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:Prioritize#mh:SHA-256:dd165fed938b9e9d4072846d09081f3ac1ab5c278c5abc5e5b0b7bd84fafcd62",
+      "sema:Prioritize#mh:SHA-256:8028bf196f44e09cb60a59a1a067b57c3de28c2d41ad9a600a6797c335567458"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ],
+    "related": [
+      "StalledDirectionReview#aa6a"
+    ]
+  },
+  "sema_id": "sema:Prioritize#mh:SHA-256:99f0603f8984f4c94d02384248966603cf86d9ccf95ea62a7c481c3eccb694fd",
+  "sema_ref": "Prioritize#99f0",
+  "sema_stub": "99f0",
+  "dependencies": {
+    "composes_with": {
+      "rank": "sema:Rank#mh:SHA-256:67c6fb568c5fdcfbd0de64b8a5413e943378d421dee9d5614c827e3c539bde3f"
+    },
+    "references": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d",
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8",
+      "work": "sema:Work#mh:SHA-256:f0c3ba2d663c900244d2ed814ed3682c56a867aa32bc3c4dfd1b19fe311aa2c6"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

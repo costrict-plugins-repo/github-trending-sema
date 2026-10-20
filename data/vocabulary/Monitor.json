@@ -1,0 +1,56 @@
+{
+  "handle": "Monitor",
+  "gloss": "Continuous observation of state over time",
+  "mechanism": "A persistent process that uses a {{loop}} to repeatedly execute {{observe}} on a target {{system}} or {{state}} at defined intervals. It compares the observed state against a baseline or invariant, emitting a {{signal}} if a deviation ({{anomaly}}) is detected.",
+  "signature": [
+    "Loop(State)"
+  ],
+  "invariants": [
+    "Liveness: runs continuously or at `interval`.",
+    "Perturbs what it observes: repeated {{observe}} consumes resources at the target and leaves records there. The degree varies; the fact does not."
+  ],
+  "parameters": [
+    {
+      "name": "interval",
+      "type": "Duration",
+      "range": "unspecified",
+      "description": "Time between observation cycles"
+    }
+  ],
+  "_meta": {
+    "tier": 0,
+    "ring": 0,
+    "supersedes": [
+      "sema:Monitor#mh:SHA-256:9a8f8879765fe55f9ab79786671b7e4cf0aa0e61730e20897214b22fb6fa08bb",
+      "sema:Monitor#mh:SHA-256:72e04554c76cd2e06afaeb7284aaab96f37499b0ab3d58c76612819136447f2e"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ],
+    "related": [
+      "DetectorSelfTest#8d48"
+    ]
+  },
+  "failure_modes": [
+    "Monitoring load becomes the {{anomaly}}: the observation cost is large enough to shift the baseline it is measuring against.",
+    "Baseline drift: the target changes legitimately and the unchanged baseline reports it as deviation."
+  ],
+  "sema_id": "sema:Monitor#mh:SHA-256:d31621c43589a14a237d53b3ff53c360b841cea6fe8fa8b7dc90724a686fcf8f",
+  "sema_ref": "Monitor#d316",
+  "sema_stub": "d316",
+  "dependencies": {
+    "composes_with": {
+      "loop": "sema:Loop#mh:SHA-256:37f953c0b21b9b0c72a639c4e1a54354faa71f07905531d271f6bbf40c341603",
+      "observe": "sema:Observe#mh:SHA-256:4a04c0e91f072dc02a4be52bca921c38c1be46e88b1f2bcb375076fdb5103e96"
+    },
+    "references": {
+      "anomaly": "sema:Anomaly#mh:SHA-256:459522f7c0225dc99953dbd5cd6c9cbb558d914abbd9d4d979e103984e0739cc",
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

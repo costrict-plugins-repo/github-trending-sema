@@ -1,0 +1,72 @@
+{
+  "handle": "Ledger",
+  "mechanism": "An immutable record of {{value}} transfers, debts, and obligations between {{agent}}s, serving as the shared memory for economic coordination. Because entries are never edited, a wrong entry is corrected by appending an offsetting entry rather than by revision \u2014 the error and its correction both remain visible, which is the property an audit depends on.",
+  "gloss": "Immutable transactional history",
+  "invariants": [
+    "Immutability: Past entries cannot be modified.",
+    "Append-Only: New transactions are added to the end."
+  ],
+  "_meta": {
+    "ring": 0,
+    "tier": 1,
+    "supersedes": [
+      "sema:Ledger#mh:SHA-256:c363289733cce70a458481259762ae79a0419da4ed5c15ad942c4873181ba910",
+      "sema:Ledger#mh:SHA-256:bc308b35d2c0be6d4a9159ebe2b3c4989e559628145ba9fccb970d8ec2264b04",
+      "sema:Ledger#mh:SHA-256:625250939255c79bdf29aa6a7b455f0e339f63fd45dcc4222e765005a1db1c28"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Ledger#mh:SHA-256:4ddaf2792fd7283ceea0d6b9b01ddfff9b7274dfb1cea2bf23147c21520774e5",
+  "sema_ref": "Ledger#4dda",
+  "sema_stub": "4dda",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "ledger_id",
+      "entries"
+    ],
+    "properties": {
+      "ledger_id": {
+        "type": "string",
+        "description": "Unique identifier"
+      },
+      "entries": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "from_agent": {
+              "type": "string"
+            },
+            "to_agent": {
+              "type": "string"
+            },
+            "amount": {
+              "type": "number"
+            },
+            "timestamp": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        },
+        "description": "Immutable transaction history"
+      },
+      "balance_snapshot": {
+        "type": "object",
+        "description": "Current balances per agent"
+      }
+    }
+  },
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

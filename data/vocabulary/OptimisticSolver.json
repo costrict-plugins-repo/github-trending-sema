@@ -1,0 +1,54 @@
+{
+  "handle": "OptimisticSolver",
+  "mechanism": "A high-velocity implementation of {{polymorphic_solver}} designed for efficient multi-agent coordination. Requires a {{parallel}} runtime (Actor Model with Mailboxes) to prevent serial deadlock. It explicitly couples the standard Solver lifecycle (Reason -> Solution) with the {{atomic_bid}} protocol. Unlike the base abstraction, this pattern MANDATES that the agent plan and execute in a single turn. It relies on {{reflexion}} and {{compensate}} for error correction rather than pre-action permission. Use {{compute_budget}} to bound resource consumption. Contrast with {{rigorous_solver}} which prioritizes safety over speed. A {{pathway_memory}} accumulates across runs so the optimistic route-selection converges on strategies that historically succeeded under similar conditions.",
+  "gloss": "High-velocity solver requiring parallel runtime",
+  "preconditions": [
+    "Runtime supports Asynchronous/Parallel message delivery (Actor Model).",
+    "Message Bus is non-blocking (Mailbox pattern)."
+  ],
+  "invariants": [
+    "Turn Atomicity: Must output [BID] and [TOOL] in the same response.",
+    "Non-Blocking: Cannot wait for Orchestrator approval on standard tasks."
+  ],
+  "failure_modes": [
+    "Over-Eager Execution: Solving the wrong problem efficiently because feedback was skipped.",
+    "Serial Deadlock: If deployed on a single-threaded (Talking Stick) engine, multiple atomic outputs will be dropped, halting the swarm."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "caution": "Executes without pre-action verification. Ensure irreversible actions have compensation or sandboxing, or use RigorousSolver at those boundaries.",
+    "supersedes": [
+      "sema:OptimisticSolver#mh:SHA-256:ee29600346db4594152f7d653a9700b4682402249775f5b7f765fbf1759e592d",
+      "sema:OptimisticSolver#mh:SHA-256:0074aaa03aa80f73a3950535264a5512e6d6674d58bc9b3ac55a24699ac088b8",
+      "sema:OptimisticSolver#mh:SHA-256:18c043757659c13a56ceab6640765f6ecf4e24a9cfffc6cdf9e6ccf7f05c2e77",
+      "sema:OptimisticSolver#mh:SHA-256:f664c4e84cbf04e0c16b1fcac7c2662b4b35f4b474b76a2a47e129b36a3dc639",
+      "sema:OptimisticSolver#mh:SHA-256:0dcabc92d9b6bbac524d5e7445ecd0590872956e3e392304e6de24655dbea4f7",
+      "sema:OptimisticSolver#mh:SHA-256:e24845caf8d2f00f90715e2cbf5a5ed3525bfb8ee9e6d2c23731ada2427163b2"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "extends": "sema:PolymorphicSolver#mh:SHA-256:f7fe4635a7520f918c823f0047d6fed8e38fd820c1970ef4623cc8fd78d2b0bd",
+  "sema_id": "sema:OptimisticSolver#mh:SHA-256:63aaa2e083c615a967019ce3aa709f431ff624aafce8b90ed6229144c102fda8",
+  "sema_ref": "OptimisticSolver#63aa",
+  "sema_stub": "63aa",
+  "dependencies": {
+    "composes_with": {
+      "atomic_bid": "sema:AtomicBid#mh:SHA-256:5ac637b4b3d74bfaea558ee36b1ee6ffcaf46fe26ac988b524e46faf9821535e",
+      "compensate": "sema:Compensate#mh:SHA-256:4b87623f38564fcc95b87d2cbf5df2f5ff41ef27e617ccafd76c7b7896b144e7",
+      "compute_budget": "sema:ComputeBudget#mh:SHA-256:4091ac7c6677342920dc53808d02830e35c5849f2af1bb9ba7749c576d37478e",
+      "pathway_memory": "sema:PathwayMemory#mh:SHA-256:ce2e6ce822404fae0e60a43fc2c6fbe2e4d51ab9aefee1e7a9e21da75893e722",
+      "reflexion": "sema:Reflexion#mh:SHA-256:81eb9140703ea95f53556741df731af84c1cada66cc1e0f3a1d88e4de5fe54d8"
+    },
+    "references": {
+      "parallel": "sema:Parallel#mh:SHA-256:d58d6696be11be09651e71307f0ea6f42bb45fac137ed985a61e475144f687a5",
+      "polymorphic_solver": "sema:PolymorphicSolver#mh:SHA-256:f7fe4635a7520f918c823f0047d6fed8e38fd820c1970ef4623cc8fd78d2b0bd",
+      "rigorous_solver": "sema:RigorousSolver#mh:SHA-256:2203568438553dc7e6331a7336e2bf488fc99de0a39c601ca3f63ba3e8849038"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

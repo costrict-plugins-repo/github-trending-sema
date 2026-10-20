@@ -1,0 +1,33 @@
+{
+  "handle": "GlacialVault",
+  "mechanism": "Information is encrypted such that it physically cannot be decrypted until a certain amount of time has passed (using Verifiable Delay Functions). No keyholder can rush it. It incorporates a {{decay}} function into the encryption scheme, ensuring decryption is computationally impossible before the delay period.",
+  "gloss": "Time-locked storage",
+  "failure_modes": [
+    "Hardware speedups reduce the delay."
+  ],
+  "invariants": [
+    "Delay time immutable."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:GlacialVault#mh:SHA-256:f521c96b7e3037f39724b9a723f707ec195074f3099f6b0db122271de96d5677",
+      "sema:GlacialVault#mh:SHA-256:2b9fb3dcc823fcfb25fcf08b01812ecb31a9f584670c9978d0b81e3537ad578c"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:GlacialVault#mh:SHA-256:17355c2dc0e9ce3adeaa9062efb0a49d7c4b4f44c6921e4ce103d8e9e9bfbc99",
+  "sema_ref": "GlacialVault#1735",
+  "sema_stub": "1735",
+  "dependencies": {
+    "references": {
+      "decay": "sema:Decay#mh:SHA-256:482b97f7196f35c8c50be1b2537ec6e04410a4920fcd8409bec735db3278737a"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

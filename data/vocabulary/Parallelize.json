@@ -1,0 +1,58 @@
+{
+  "handle": "Parallelize",
+  "mechanism": "Runs multiple LLM calls simultaneously and aggregates results. Two modes: Sectioning (split {{task}} into independent subtasks, run in {{parallel}}, merge) and Voting (run same {{task}} multiple times, {{aggregate}} via majority {{mode}} or selection). Trades compute cost for speed and/or confidence. It spawns concurrent execution threads and employs {{aggregate}} to unify the results into a final {{result}}.",
+  "gloss": "Run subtasks simultaneously and aggregate",
+  "failure_modes": [
+    "Merge Conflicts: {{parallel}} outputs are incompatible and can't be combined.",
+    "Unanimous Wrong: All parallel paths make the same error.",
+    "Aggregation {{cognitive_bias}}: Merge {{strategy}} systematically favors certain outputs."
+  ],
+  "invariants": [
+    "Independence: no subtask reads another subtask's output.",
+    "Aggregation is chosen before fan-out, and subtasks are shaped to produce outputs it accepts."
+  ],
+  "preconditions": [
+    "Batch of tasks",
+    "Multiple workers"
+  ],
+  "postconditions": [
+    "All results aggregated, or the unaggregatable ones reported as such"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Parallelize#mh:SHA-256:d6b4208180c697dc25cab65f9b3ed028aeb1beb6f871adf615266d9b5eaf5391",
+      "sema:Parallelize#mh:SHA-256:f2bb19914f4cd3913989e6ca37275db8c50b7af50b4733184cf07fabca4a66bf",
+      "sema:Parallelize#mh:SHA-256:5b4bc9d0ea71c6b181cb02a81dd64c7767e5ccbd0769277ce5a841fe5c2c9b0d"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:Parallelize#mh:SHA-256:c1c795defd6f4f9cab2823cf832ae91f5f0651bef082108bb494047d91be04a1",
+  "sema_ref": "Parallelize#c1c7",
+  "sema_stub": "c1c7",
+  "signature": [
+    "Parallel(Task)",
+    "Aggregate(Result)"
+  ],
+  "dependencies": {
+    "accepts": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    },
+    "composes_with": {
+      "aggregate": "sema:Aggregate#mh:SHA-256:2db6858c061515fa2257c96f4a6e4392164e9a118adc6874c69cf2279b877077"
+    },
+    "references": {
+      "cognitive_bias": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387",
+      "mode": "sema:Mode#mh:SHA-256:29d368514a2a815e9790a384c2aec12bd20a30e1ee06288e0aa59fdcffea0800",
+      "parallel": "sema:Parallel#mh:SHA-256:d58d6696be11be09651e71307f0ea6f42bb45fac137ed985a61e475144f687a5",
+      "result": "sema:Result#mh:SHA-256:c02a8d6817c2f0e14d5a9360824240f135905e8be25fd659feb76d1f44e274c6",
+      "strategy": "sema:Strategy#mh:SHA-256:3dc598d0c6af12389df445c204e17df03950dbc886656b85700e6c87c31b2eef"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

@@ -1,0 +1,50 @@
+{
+  "handle": "Feedback",
+  "mechanism": "Information returned to a system about the effects of its actions, used to adjust future behavior. It closes the loop between output and input, enabling learning and error correction. The feedback {{signal}} contains a {{result}} and a {{metric_reading}} indicating deviation ({{incongruity}}) from the expected outcome.",
+  "gloss": "Error correction signal",
+  "failure_modes": [
+    "Signal Noise: Feedback is too noisy to extract actionable information.",
+    "Delayed Feedback: Signal arrives too late to correct the error.",
+    "Misattribution: Feedback is routed to the wrong solver."
+  ],
+  "invariants": [
+    "Directionality: indicates the direction of error, not just magnitude.",
+    "Attribution: traceable to a specific action.",
+    "Names what should change: feedback that identifies an error without indicating an adjustment is a report."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Feedback#mh:SHA-256:9b5c7eee86ff79389e6fc9a4cd4e318296ff3e74e3e67514f8193a45be917e15",
+      "sema:Feedback#mh:SHA-256:5e6d456e19d4b57377c23d33584271b255557c076b2611c23d23afd1e542eb37",
+      "sema:Feedback#mh:SHA-256:af70f56a4143af711facdbbe5f5c75387a45b522708609c988de2ceba4bf4cae"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ],
+    "related": [
+      "Correctionwelcome#25e5",
+      "Doubleloop#23ac"
+    ]
+  },
+  "signature": [
+    "Signal(Incongruity)"
+  ],
+  "sema_id": "sema:Feedback#mh:SHA-256:8821fbee51f9b6e495277b161e874a5ba2995bf7ce4fc6e9bc9801798a983c3d",
+  "sema_ref": "Feedback#8821",
+  "sema_stub": "8821",
+  "dependencies": {
+    "composes_with": {
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc"
+    },
+    "references": {
+      "incongruity": "sema:Incongruity#mh:SHA-256:479ed6c65501ca52ea6149d3e47638291f40158f4e73d8a5c2d71869da4006dc",
+      "metric_reading": "sema:MetricReading#mh:SHA-256:56a9f18faad70147312f12c1cdb1bcea9cb5d1d61042831d1fe6bfa11414ab26",
+      "result": "sema:Result#mh:SHA-256:c02a8d6817c2f0e14d5a9360824240f135905e8be25fd659feb76d1f44e274c6"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

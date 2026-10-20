@@ -1,0 +1,36 @@
+{
+  "handle": "GraphOfThought",
+  "mechanism": "The canonical implementation of graph-structured reasoning. Instantiates the {{think}} primitive with a {{d_a_g}} topology so that inference steps can have multiple predecessors and multiple successors \u2014 nodes that converge from different reasoning branches can unify mid-computation without forcing a tree shape. Complements ChainOfThought (linear), TreeOfThoughts (branching without merge), and SkeletonOfThought (outline-parallel expansion). Used when distinct lines of reasoning should feed into shared intermediate conclusions \u2014 common in proof assistants, complex debugging, and multi-hypothesis analysis where evidence from branch A refines node X shared with branch B.",
+  "gloss": "Graph-structured reasoning (Macro for Think(DAG))",
+  "invariants": [
+    "Acyclicity inherited from {{d_a_g}}: no reasoning step is its own ancestor.",
+    "Fan-in permitted: a node may have multiple parent inferences, modeling evidence convergence.",
+    "Each node applies {{think}} once; repeated re-evaluation is a caller concern, not a topology property."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "path": [
+      "Mind",
+      "Reasoning"
+    ],
+    "supersedes": [
+      "sema:GraphOfThought#mh:SHA-256:ccee7b6c5ea42d243d5921a7dfbf074ef9aba5212cff0714e4ce9019077c907d",
+      "sema:GraphOfThought#mh:SHA-256:d1d584dba2c12ecbe922171f0519cc97d54fd4b04ffe8d2810122480e64c38b9"
+    ]
+  },
+  "signature": [
+    "Think(DAG)"
+  ],
+  "sema_id": "sema:GraphOfThought#mh:SHA-256:aff044b7909bc26511c42ece0cf090bd4d1f82431a5728e94fedcd2ad9733160",
+  "sema_ref": "GraphOfThought#aff0",
+  "sema_stub": "aff0",
+  "dependencies": {
+    "composes_with": {
+      "d_a_g": "sema:DAG#mh:SHA-256:ed5b6bdbe8d785f1dceb6cc1c7020d9c2340be7b507a3678da2da58211e455aa",
+      "think": "sema:Think#mh:SHA-256:5177aa242fffd16d7ed24e5f8c3e0d5e86c5a26e299cc2d4b8a07f4756126025"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

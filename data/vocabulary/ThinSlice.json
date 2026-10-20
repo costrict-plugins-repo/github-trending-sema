@@ -1,0 +1,34 @@
+{
+  "handle": "ThinSlice",
+  "mechanism": "Sampling a tiny fraction of data (e.g., first 512 bytes) to make a high-confidence classification. Used for triage and routing where full processing is too expensive. Utilizes {{route}}, {{extended_thinking}}, {{somatic_marker}}.",
+  "gloss": "High-confidence classification from minimal data",
+  "invariants": [
+    "Fail-Safe: If classification low confidence, forward to full processor",
+    "Sample Limit: Input size <= Slice Size",
+    "Representative Sample: The slice must statistically resemble the whole for the target feature"
+  ],
+  "_meta": {
+    "tier": 3,
+    "ring": 2,
+    "supersedes": [
+      "sema:ThinSlice#mh:SHA-256:debb731893208ce6514504b1212e5d07cf60f1477f3c485b752a694822c3fb30",
+      "sema:ThinSlice#mh:SHA-256:c21b8dfeeb7e037d748843c7f998c2eab63dd31187325ecde13eebb00c867a99"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:ThinSlice#mh:SHA-256:b667556f36637931632fa2bc3739eade77dd14ad9f3a711f4de95edb10c6d9bc",
+  "sema_ref": "ThinSlice#b667",
+  "sema_stub": "b667",
+  "dependencies": {
+    "references": {
+      "extended_thinking": "sema:ExtendedThinking#mh:SHA-256:3a9046a74fa5ecf3f06526936caf2038c95be83b02f0fbfe15dc2c448f572a1a",
+      "route": "sema:Route#mh:SHA-256:186c9df2396591a9a71b80e50f3c323e5e0df6ddf64b6552435a0d555b6dbc85",
+      "somatic_marker": "sema:SomaticMarker#mh:SHA-256:25c9f71e623cfc2114e71c853ddea757abbfc319880ab654d2b875feec99973a"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

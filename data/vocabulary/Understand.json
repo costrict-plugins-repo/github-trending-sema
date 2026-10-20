@@ -1,0 +1,28 @@
+{
+  "handle": "Understand",
+  "mechanism": "The process of applying {{think}} to construct an internal model of an input's causal structure, semantics, and surrounding circumstances. It goes beyond simple parsing to model 'why' and 'how'. The caller judges the model's adequacy against its task and evidence standard.",
+  "gloss": "Deep semantic modeling",
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:Understand#mh:SHA-256:96d4533c4539cdd5036beadb506908d384e8f417449e02bbf8e6175e5bafc39b",
+      "sema:Understand#mh:SHA-256:4cabfb83049b7770e707c9b1c57e902818e74d8c6b98eed2e8fd40a2b2aca55a",
+      "sema:Understand#mh:SHA-256:f1fc5d9393f995d27a648ad6a8e4bcd81c7d117e5d64c535da706feac7e87334"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "sema_id": "sema:Understand#mh:SHA-256:9a6aeceb2c276db98b8f62227231f27f1478fccd32e47281c302047c2c806d7d",
+  "sema_ref": "Understand#9a6a",
+  "sema_stub": "9a6a",
+  "dependencies": {
+    "references": {
+      "think": "sema:Think#mh:SHA-256:5177aa242fffd16d7ed24e5f8c3e0d5e86c5a26e299cc2d4b8a07f4756126025"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

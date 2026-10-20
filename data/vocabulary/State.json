@@ -1,0 +1,50 @@
+{
+  "handle": "State",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "state_id",
+      "data"
+    ],
+    "properties": {
+      "state_id": {
+        "type": "string",
+        "description": "Unique identifier for this state snapshot"
+      },
+      "data": {
+        "type": "object",
+        "description": "The actual state values"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "When this state was captured"
+      }
+    }
+  },
+  "mechanism": "The stored information representing the current {{condition}} of a {{system}}.",
+  "gloss": "System condition at time T",
+  "invariants": [
+    "Persistence: State remains constant unless acted upon.",
+    "Uniqueness: At time T, the system has exactly one State."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+  "sema_ref": "State#4f25",
+  "sema_stub": "4f25",
+  "dependencies": {
+    "references": {
+      "condition": "sema:Condition#mh:SHA-256:b480f3c4da11ba6d86f6d14e0fb8521268f3c4bb38588460f7ff4253ad8d78d5",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

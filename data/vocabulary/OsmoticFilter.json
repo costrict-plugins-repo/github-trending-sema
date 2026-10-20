@@ -1,0 +1,55 @@
+{
+  "handle": "OsmoticFilter",
+  "mechanism": "Agents operate inside a semi-permeable membrane. Inbound messages are rejected unless they carry sufficient 'pressure' (stake, reputation, or relevance score) to overcome the membrane's current tension. The filter supports Multi-Solvent extraction, allowing different types of pressure (Money vs Trust) to be converted at defined rates per the {{accepted_solvents}} criteria. It uses {{hysteresis}} to prevent oscillation and {{canary}} messages to test permeability.",
+  "gloss": "Spam prevention via pressure thresholds",
+  "failure_modes": [
+    "Starvation of low-stake but high-importance messages (mitigated by Whitelist)."
+  ],
+  "invariants": [
+    "Normalized Pressure: Sum(Weighted_Solvents) > Membrane.tension",
+    "Permeability: If Queue < Capacity, tension must approach zero (membrane relaxes)",
+    "Snapback: If Queue drops rapidly, tension must reset instantly (anti-hysteresis)"
+  ],
+  "parameters": [
+    {
+      "name": "decay_rate",
+      "type": "Float",
+      "range": "[0.1, 0.9]",
+      "description": "Linear relaxation"
+    },
+    {
+      "name": "snapback_threshold",
+      "type": "Float",
+      "range": "[0.0, 0.2]",
+      "description": "Queue depth % triggering instant reset"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:OsmoticFilter#mh:SHA-256:5cf61dc7a3adf65d0ff6dab7a022402fd79095fe4e1cb420c0fbad1401b84f52",
+      "sema:OsmoticFilter#mh:SHA-256:36b5f762c178f196095cc38a5183326ac9183a3fe351b4b3e9dfeb44a2fac587",
+      "sema:OsmoticFilter#mh:SHA-256:d437b78f521165fd6c5dd408a22170e7ca0b75b43842fb70111f321c92be11ed",
+      "sema:OsmoticFilter#mh:SHA-256:f37de2d27a053113f433bb0db36f7d4f4ee92c1486e8cc79d0d0efd1a7d1514b"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:OsmoticFilter#mh:SHA-256:239a63d284e0676746b9ec3bd2e957eeec5d80d42e84b066e9b74f937cd5bd1e",
+  "sema_ref": "OsmoticFilter#239a",
+  "sema_stub": "239a",
+  "dependencies": {
+    "accepts": {
+      "accepted_solvents": "sema:Criteria#mh:SHA-256:92ab804441f5ff5307c6e45905818372e6159c4bd64d264ac7fddd6705de8acb"
+    },
+    "references": {
+      "canary": "sema:Canary#mh:SHA-256:d38cd019553857aa7518559542b5400b658f87eb08e6f4dae9be4fd496ce691e",
+      "hysteresis": "sema:Hysteresis#mh:SHA-256:c2d174f3fa513ed81bcd5b731aa651a3e4662a671748e514d758582657a5bf9a"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

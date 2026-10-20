@@ -1,0 +1,61 @@
+{
+  "handle": "StepBack",
+  "mechanism": "A meta-cognitive {{think}} operation that pauses direct problem-solving to ask a higher-level question. Instead of answering 'How do I X?', it asks 'What category of {{problem}} is X?' or 'What principles govern X?'. This abstraction reveals structural patterns invisible at the ground level. It is the precursor to {{reframe}}\u2014gaining altitude before choosing a new direction.",
+  "gloss": "Ascend abstraction to gain perspective",
+  "failure_modes": [
+    "Over-abstraction: Climbing so high the original problem becomes unrecognizable.",
+    "Analysis Paralysis: Endless stepping back without returning to action.",
+    "Premature Descent: Jumping back down before gaining useful perspective.",
+    "Abstraction Mismatch: Wrong principles retrieved for the task."
+  ],
+  "invariants": [
+    "Output is at a higher abstraction level than its input.",
+    "Ascends at most `max_ascent_depth` levels, then descends.",
+    "Returns to the object-level {{problem}}; the ascent is a pause, not an exit."
+  ],
+  "preconditions": [
+    "Specific question or problem"
+  ],
+  "postconditions": [
+    "Answer grounded in high-level concepts",
+    "Principles retrieved before details"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:StepBack#mh:SHA-256:b0799e81851e7cf503b84fcf260b81fa235cc829410fb0da67d5b8a4c1a4305a",
+      "sema:StepBack#mh:SHA-256:03a2c92c8a3ac767de7605363cb7948513e4a8a018f8995dc34176fa03794f00"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ],
+    "related": [
+      "MandatoryAbstraction"
+    ]
+  },
+  "signature": [
+    "Think(Problem)"
+  ],
+  "parameters": [
+    {
+      "name": "max_ascent_depth",
+      "type": "PositiveInteger",
+      "range": "[1, 5]",
+      "description": "Levels of abstraction this may climb before descent is forced."
+    }
+  ],
+  "sema_id": "sema:StepBack#mh:SHA-256:f3457758c4422538953f065b630718b766104ce13d0979c573fe55e5d1ad27b1",
+  "sema_ref": "StepBack#f345",
+  "sema_stub": "f345",
+  "dependencies": {
+    "references": {
+      "problem": "sema:Problem#mh:SHA-256:2580c43677ec78ee7ee428d200662c6096e4eab38c2c5a868154979074cc0f08",
+      "reframe": "sema:Reframe#mh:SHA-256:cbfd4fadde729367ef8f32a68951e5852535b7f7c3edc68a502d9187b8c1d54a",
+      "think": "sema:Think#mh:SHA-256:5177aa242fffd16d7ed24e5f8c3e0d5e86c5a26e299cc2d4b8a07f4756126025"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

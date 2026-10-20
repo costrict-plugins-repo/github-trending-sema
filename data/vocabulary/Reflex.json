@@ -1,0 +1,27 @@
+{
+  "handle": "Reflex",
+  "mechanism": "Immediate Automatic Response: Stimulus S triggers response R without deliberation. Reflex arc hardcoded. Response latency minimal. No override possible once triggered. Used for safety-critical reactions. It bypasses the slow reasoning entirely, mapping stimulus directly to a pre-computed response.",
+  "gloss": "Hardcoded fast-path responses bypassing deliberation",
+  "failure_modes": [
+    "Reflex Hijack: Adversary triggers reflex to override deliberate reasoning."
+  ],
+  "invariants": [
+    "Stimulus-response mapping immutable at runtime."
+  ],
+  "_meta": {
+    "tier": 2,
+    "related": [
+      "sema:HeuristicSnap#mh:SHA-256:6f2b735d0b7733162773dd6f40559acbd482e1fdeebae179b2ed9cc61d2307a7"
+    ],
+    "ring": 2,
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:Reflex#mh:SHA-256:c1f28a51e99b52c8c0596e8b11ad307874780ab663847369e2333ee667e20893",
+  "sema_ref": "Reflex#c1f2",
+  "sema_stub": "c1f2",
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

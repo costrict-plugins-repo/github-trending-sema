@@ -1,0 +1,53 @@
+{
+  "handle": "Outcome",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "outcome_id",
+      "value"
+    ],
+    "properties": {
+      "outcome_id": {
+        "type": "string",
+        "description": "Unique identifier for this outcome"
+      },
+      "value": {
+        "description": "The actual result achieved"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time",
+        "description": "When the outcome was realized"
+      },
+      "deviation": {
+        "type": "object",
+        "description": "Difference between actual and expected (if applicable)"
+      }
+    }
+  },
+  "mechanism": "The actual result that occurs in reality. It may differ from the {{plan}} due to external factors, noise, or execution error.",
+  "gloss": "Realized state after an action, captured for Plan-vs-reality comparison",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Outcome#mh:SHA-256:38e079f2323ce9cf3d1022624f693bbb02b3e0e25d7eb42abc4d06c75548b53a",
+      "sema:Outcome#mh:SHA-256:bac20a1c92f4883e971592d642911e215370afbb56ea8afa18313a1f2959d683",
+      "sema:Outcome#mh:SHA-256:ac55da2e51aaab185174d9e8edba137536b1ff90a2f6a1d6e1ab634bf7429ef0"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Outcome#mh:SHA-256:753768dae28040f1291ee2849d2aac2a08bbffd836cfab679bdbea9a6ff7ec03",
+  "sema_ref": "Outcome#7537",
+  "sema_stub": "7537",
+  "dependencies": {
+    "references": {
+      "plan": "sema:Plan#mh:SHA-256:246db278c5db286fcd78d824d85054fafb3348565ef584599b63900000c43b32"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

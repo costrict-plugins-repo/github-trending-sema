@@ -1,0 +1,50 @@
+{
+  "handle": "ToolInvoke",
+  "mechanism": "The actor emits a structured tool call (function name + arguments), validated by {{input_guard}}, execution is delegated to an external runtime, and the observation (result or error) is fed back into the actor's {{context}}. This is the atomic unit of agent-environment interaction. The pattern enables capabilities beyond text generation: code execution, API calls, file operations, web search.",
+  "gloss": "Execute external tool and observe result",
+  "failure_modes": [
+    "Hallucinated Tools: Actor invokes a tool that doesn't exist.",
+    "Argument Mismatch: Tool call has wrong parameter types or missing required fields.",
+    "Observation Blindness: Actor ignores or misinterprets tool output."
+  ],
+  "invariants": [
+    "{{context}} Inheritance: Tool Execution {{context}} permissions MUST be <= {{task}} Constraints. Elevation forbidden.",
+    "Observation Integration: Result must be incorporated into subsequent reasoning",
+    "Sandboxing: Tool execution must respect the capability boundary of its {{sandbox}} \u2014 the boundary is what makes the permission ceiling enforceable rather than advisory",
+    "Schema Conformance: Tool call must match declared function signature"
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 0,
+    "related": [
+      "AgentSandbox"
+    ],
+    "supersedes": [
+      "sema:ToolInvoke#mh:SHA-256:643c8651a44f1d33cb98580b8b456c5ec1cdb3b94f3d6ae30e3465fc0e6d45b2",
+      "sema:ToolInvoke#mh:SHA-256:cf0ae58828cde9f495b09af3e4519c3f05162066991d34d5f2505d13c32ba416",
+      "sema:ToolInvoke#mh:SHA-256:011f50770f2599f5017df648ad5920ddb732f7681a9a3b7576cdcf3798ce6baa",
+      "sema:ToolInvoke#mh:SHA-256:aafcc41012592030d7d1e83e91115fbaff1d238b5fc88827efda1649c7a7b502",
+      "sema:ToolInvoke#mh:SHA-256:75cc12a769885fb63993dbb0ffbf0b0878c7e780fe89d6a0d49bd0bc550e60b5"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ],
+    "caution": "Tool results are untrusted input \u2014 text inside an observation can carry instructions that steer the agent; treat it as data, never as commands."
+  },
+  "sema_id": "sema:ToolInvoke#mh:SHA-256:1096039316801cc8ef6e2855a6300574bb8596bb8e57c2764fd3bee741fa217e",
+  "sema_ref": "ToolInvoke#1096",
+  "sema_stub": "1096",
+  "dependencies": {
+    "composes_with": {
+      "input_guard": "sema:InputGuard#mh:SHA-256:0ba715e91627fa1f6759a739da0d4159cac6404c8b45b6e97910d98ef0e8a079"
+    },
+    "references": {
+      "context": "sema:Context#mh:SHA-256:c1b72256dc4732033ee42cc07ff5d9fb60a7f1a3e5634449c343692a33340756",
+      "sandbox": "sema:Sandbox#mh:SHA-256:7106e315b4bf7c5bd418fbab5c18e54be940367f77b8bde4756d1cb95beaa16b",
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

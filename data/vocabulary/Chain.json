@@ -1,0 +1,52 @@
+{
+  "handle": "Chain",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "nodes",
+      "edges",
+      "root_id"
+    ],
+    "properties": {
+      "nodes": {
+        "type": "array"
+      },
+      "edges": {
+        "type": "array"
+      },
+      "root_id": {
+        "type": "string"
+      }
+    }
+  },
+  "mechanism": "A concrete sequential data structure: a list of linked nodes where each node (except the last) points to exactly one successor. Chain is the instantiated storage object \u2014 distinct from the more abstract {{sequence}} (which describes temporal ordering semantics) and from the branching {{tree}} topology. Chain is the canonical spatial form for strictly sequential, non-branching data.",
+  "gloss": "Sequential data container (linked list)",
+  "invariants": [
+    "Connectivity: Node(N) must point to Node(N+1).",
+    "Acyclicity: No loops permitted."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:Linear#mh:SHA-256:81affcd5f7c1ea56b7572799fc235cf95d4e3c692de77c9eb8c01930b8e1d41c",
+      "sema:Chain#mh:SHA-256:57119a990ff1c50eda6cb301dfec09450d2cbb21659ca541560b6bbb2ece0332",
+      "sema:Chain#mh:SHA-256:0bd807adb8a1d11a55f3971e7b6c079301039c8707b9106d871662d25e915e09"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Chain#mh:SHA-256:3ba084dba5cf36bbdd43d03306c187ca75a2e3f448b555e257c26aab9b71c4fb",
+  "sema_ref": "Chain#3ba0",
+  "sema_stub": "3ba0",
+  "dependencies": {
+    "references": {
+      "sequence": "sema:Sequence#mh:SHA-256:0cae6b0951c4e93742259ff81ded009a85283d250c948f97cce3b9b3b8e58e1a",
+      "tree": "sema:Tree#mh:SHA-256:dd927c24f8165bd3ddc75b29cc96c1e43eb45bdaf084ba1e2bce2b0a71ab05ec"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

@@ -1,0 +1,65 @@
+{
+  "handle": "Resonate",
+  "mechanism": "Agents expose observable {{signal}}s through their actions and adjust subsequent actions in response to what they observe, without negotiating an explicit agreement. Compatible responses reinforce the observed signal; active counter-signals may {{dampen}} it, and unreinforced alignment strength undergoes {{decay}}. Alignment is inferred from the resulting pattern of repeated mutual adjustment.",
+  "gloss": "Implicit coordination via signal amplification",
+  "failure_modes": [
+    "False Resonance: Apparent alignment that is actually random {{noise}}.",
+    "Echo Chamber: Feedback {{loop}} amplifies error instead of {{signal}}.",
+    "Adversarial imitation: agents emit actions or {{signal}}s crafted to mimic compatibility without corresponding alignment.",
+    "Precise-coordination mismatch: RESONATE only achieves approximate alignment; high-stakes actions requiring precision need a different coordination primitive.",
+    "{{signal}} {{noise}} drowns real patterns.",
+    "Oscillation between conflicting patterns."
+  ],
+  "invariants": [
+    "Each reinforcing or dampening adjustment responds to a previously observed {{signal}}.",
+    "Repeated compatible responses increase alignment strength; for the same responses, a larger `amplification_factor` cannot produce a smaller increase.",
+    "Absent reinforcement, alignment strength does not increase; its attenuation follows `signal_decay`."
+  ],
+  "preconditions": [
+    "At least two agents",
+    "Shared signal medium (Environment)"
+  ],
+  "postconditions": [
+    "Local alignment cluster formed OR dispersed"
+  ],
+  "parameters": [
+    {
+      "name": "amplification_factor",
+      "type": "Float",
+      "range": "(1.0, 2.0]",
+      "description": "How much repeated alignment signals boost coordination strength"
+    },
+    {
+      "name": "signal_decay",
+      "type": "Float",
+      "range": "[0.1, 0.9]",
+      "description": "Rate at which unconfirmed alignment signals weaken over time"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "supersedes": [
+      "sema:Resonate#mh:SHA-256:99d9c2629e862fb9f647bb98e30eba4a47b9204bea6e61f79709b65f8fac55b4",
+      "sema:Resonate#mh:SHA-256:70c7680619d6b0158d3bddfaf9fb17e4e4bfb135995d9425fd7b1e6eb410c3d3"
+    ],
+    "path": [
+      "Society",
+      "Coordination"
+    ]
+  },
+  "sema_id": "sema:Resonate#mh:SHA-256:786d8bf55b013d0405e49f2cab6a084e45fdc4507f7394fd6cff99354bc87aad",
+  "sema_ref": "Resonate#786d",
+  "sema_stub": "786d",
+  "dependencies": {
+    "references": {
+      "dampen": "sema:Dampen#mh:SHA-256:c07e9b7b22cbda8523effcfd455f554578e47081f0d07bf9001e45f2a871b831",
+      "decay": "sema:Decay#mh:SHA-256:482b97f7196f35c8c50be1b2537ec6e04410a4920fcd8409bec735db3278737a",
+      "loop": "sema:Loop#mh:SHA-256:37f953c0b21b9b0c72a639c4e1a54354faa71f07905531d271f6bbf40c341603",
+      "noise": "sema:Noise#mh:SHA-256:fd120b472352611acc251c4c87b08d06ae1187f9f4775d8a69b4ff9b326d2569",
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Coordination"
+}

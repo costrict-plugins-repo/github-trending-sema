@@ -1,0 +1,56 @@
+{
+  "handle": "Summary",
+  "mechanism": "A compressed representation of a {{datum}} or {{artifact}} that retains high-{{value}} (salient) information while discarding redundancy.",
+  "gloss": "Condensed information",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Summary#mh:SHA-256:310e68dd2e7016cbc97e43f87f5aa17631699e4ca49e65d0b43c6d8811a401de",
+      "sema:Summary#mh:SHA-256:7b63fff5bd05b2c584fcb5f0da4af60d5d6bf01baaf07c2e688054250c9e226e"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "source_ref"
+    ],
+    "properties": {
+      "source_ref": {
+        "type": "string",
+        "description": "sema_id of the source being summarized"
+      },
+      "compression_ratio": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0,
+        "description": "Size ratio (summary_len/source_len)"
+      },
+      "preserves": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Semantic dimensions preserved (e.g., 'thesis', 'timeline', 'constraints')"
+      }
+    }
+  },
+  "sema_ref": "Summary#105b",
+  "sema_id": "sema:Summary#mh:SHA-256:105bfe88ac0e033c2e4ca8ecb4e748cec0d9716818329fdf40de9be0a06a0acf",
+  "sema_stub": "105b",
+  "dependencies": {
+    "composes_with": {
+      "artifact": "sema:Artifact#mh:SHA-256:b533ad2674ec00c5e9a5f1e3920f1097e2bc1eea7263f89e8f46563fa319a0ee",
+      "datum": "sema:Datum#mh:SHA-256:f90456c1067ac5db4e9825a82a22bc58086022f8acd0d0f63fdfeaeb6be2e937"
+    },
+    "references": {
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

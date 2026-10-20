@@ -1,0 +1,64 @@
+{
+  "handle": "ScopeFreeze",
+  "mechanism": "Phase {{transition}} Control. Defines a discrete point (T_freeze) after which the `{{accept_spec}}` and `Goal` of a {{task}} become Immutable. Any new requirements discovered after T_freeze must be rejected or moved to a 'Backlog' object for future execution. It locks the {{task}} requirements, forcing the agent to {{satisfice}} within the remaining {{timebox_think}} rather than {{decompose}} further.",
+  "gloss": "Lock requirements to prevent scope creep",
+  "failure_modes": [
+    "Feature Creep: {{agent}} discovers 'nice to have' sub-tasks and attempts to execute them during the closing phase.",
+    "Perfectionism Spiral: Continuous refinement of the {{accept_spec}} prevents task completion."
+  ],
+  "invariants": [
+    "Immutability: After freeze, {{task}}.{{accept_spec}} cannot be modified.",
+    "Rejection: New SubTasks created after freeze must serve EXISTING goals only (no new features)."
+  ],
+  "preconditions": [
+    "Initial requirements defined",
+    "{{task}} is active"
+  ],
+  "postconditions": [
+    "New requirements routed to Backlog",
+    "{{task}} marked as Frozen (Read-Only Requirements)"
+  ],
+  "parameters": [
+    {
+      "name": "exception_policy",
+      "type": "Enum",
+      "range": "{Reject, Queue, CostAnalysis}",
+      "description": "Default: Queue"
+    },
+    {
+      "name": "freeze_trigger",
+      "type": "Enum",
+      "range": "{Time, Progress, Manual}",
+      "description": "Default: Manual"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:ScopeFreeze#mh:SHA-256:d8c15a8a91ccbfcdb54d00cb1c4a386969867716b402ae638e5822742cd1d2d4",
+      "sema:ScopeFreeze#mh:SHA-256:939dd7b6c88e74dc272db73678bb54612061126969e3a08a960c45189b1a7cfd",
+      "sema:ScopeFreeze#mh:SHA-256:a5fba4646fccc10c48b48fd440def9dc483ddd9c143d2468181c1063103ca707"
+    ],
+    "path": [
+      "Mind",
+      "Inference"
+    ]
+  },
+  "sema_id": "sema:ScopeFreeze#mh:SHA-256:548e48a88048b5383250dbf480e0b52ed61ed9cc2fd947d89fac68edc9737d21",
+  "sema_ref": "ScopeFreeze#548e",
+  "sema_stub": "548e",
+  "dependencies": {
+    "references": {
+      "accept_spec": "sema:AcceptSpec#mh:SHA-256:37fa28b93d390f8c8eb171eaab54ff4f9e57a95ef67af024422f823545a291cc",
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "decompose": "sema:Decompose#mh:SHA-256:69942e7e0dcdc7781144da58c8f09b2e8a17c247be435dadf3325cb0d0bbb22b",
+      "satisfice": "sema:Satisfice#mh:SHA-256:29ce1b5967705cc8c613f750d35c2481d311a1c9308c1959cfd812635e2faf0e",
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d",
+      "timebox_think": "sema:TimeboxThink#mh:SHA-256:20182c7afcb60ec0d13507de50123012afb9c590297d0e3b650ccfcdd58bfaf3",
+      "transition": "sema:Transition#mh:SHA-256:9b62398c6edcd43ad2af8ec1df8186ece2b4f697772b3872227f4d9d8390e328"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Inference"
+}

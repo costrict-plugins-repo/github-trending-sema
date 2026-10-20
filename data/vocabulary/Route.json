@@ -1,0 +1,48 @@
+{
+  "handle": "Route",
+  "mechanism": "A classifier that examines a {{task}} input and directs it to a specialized downstream handler. Enables separation of concerns\u2014different query types get different prompts, tools, or models. Routes based on type tags, metadata fields, token weight, or configurable dispatch rules (simple queries to small models, complex to large).",
+  "gloss": "Classify input and direct to specialized handler",
+  "failure_modes": [
+    "Misrouting: Input sent to wrong specialist, causing errors.",
+    "Ambiguous Classification: Input matches multiple routes or none.",
+    "Routing Bottleneck: Classifier becomes slower than just handling directly."
+  ],
+  "invariants": [
+    "Input directed to best-fit handler",
+    "No dropped requests"
+  ],
+  "preconditions": [
+    "Input query",
+    "Router logic configured"
+  ],
+  "postconditions": [
+    "Query dispatched"
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "sema:Select#mh:SHA-256:b37174cf130148f0e486f85d892b6fd42d27a35d8493ff826602c0bbdc2fbde5",
+      "Labelsqueeze#5363"
+    ],
+    "ring": 0,
+    "supersedes": [
+      "sema:Switch#mh:SHA-256:e7f9f7fba998e74e83165b23f0328643be83117559cd4d1a8711043955f6d6b0",
+      "sema:Route#mh:SHA-256:96986e6c4fccc6496d735394acf1f4c7c5a4ae72cee77e0686fbaf3a8b9021b6",
+      "sema:Route#mh:SHA-256:b3c18cb6ceba97e12a792ed7f916cd4832c2a7aa941bf6f2646a18511bd8a7ae"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ]
+  },
+  "sema_id": "sema:Route#mh:SHA-256:186c9df2396591a9a71b80e50f3c323e5e0df6ddf64b6552435a0d555b6dbc85",
+  "sema_ref": "Route#186c",
+  "sema_stub": "186c",
+  "dependencies": {
+    "accepts": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

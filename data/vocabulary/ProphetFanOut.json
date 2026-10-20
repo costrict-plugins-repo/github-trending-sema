@@ -1,0 +1,39 @@
+{
+  "handle": "ProphetFanOut",
+  "mechanism": "Given a contemplated action, its starting context, and a declared breadth or stopping rule, branch on alternative assumptions, events, or responses to generate multiple future scenarios. Record each branch's assumptions and causal path. Return the scenario set without explicit value judgment, desirability ranking, recommendation, or aggregation; those operations are downstream.",
+  "gloss": "Branching future-scenario generation",
+  "failure_modes": [
+    "Fan-out Explosion: The breadth or stopping rule admits more branches than available resources can examine.",
+    "False Diversity: Scenarios differ only in wording or surface detail while preserving the same causal path."
+  ],
+  "invariants": [
+    "Descriptive Separation: Scenarios record possible states and causal paths without explicit value judgment, desirability ranking, or action recommendation.",
+    "Causal Traceability: Each scenario records the starting context, branch assumptions, and causal path from the contemplated action to its resulting states.",
+    "Branch Distinction: Every scenario differs from every other in at least one recorded causal assumption, event, or transition.",
+    "Bounded Generation: Generation obeys the declared breadth or stopping rule."
+  ],
+  "preconditions": [
+    "A contemplated action, starting context, and breadth or stopping rule are declared."
+  ],
+  "postconditions": [
+    "Either two or more causally distinct future scenarios are returned with branch assumptions and paths, or an explicit result records why no second causally distinct branch was found under the declared rule."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:ProphetFanOut#mh:SHA-256:2d8110366b23afc261111d62bb567f6b88fc45f1019b9ba96b249ded6f6232fa",
+      "sema:ProphetFanOut#mh:SHA-256:54eeea3c9e18631b46237c2d099934261af0b849d52d9d7cdc9ca7938bf9afdf",
+      "sema:ProphetFanOut#mh:SHA-256:d47b1a26c9627e3a31433c130549fcbc96ac37bca1bd17536a15230f94dd5095"
+    ],
+    "path": [
+      "Mind",
+      "Inference"
+    ]
+  },
+  "sema_id": "sema:ProphetFanOut#mh:SHA-256:8711a210c6c58ed39519c2b470b5dde7b20dc5175dd903764105ba37360776cc",
+  "sema_ref": "ProphetFanOut#8711",
+  "sema_stub": "8711",
+  "sema_layer": "Mind",
+  "sema_category": "Inference"
+}

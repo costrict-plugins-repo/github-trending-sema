@@ -1,0 +1,79 @@
+{
+  "handle": "Rally",
+  "mechanism": "Ad-hoc group-formation {{protocol}}. An initiator broadcasts RALLY with group requirements encoded as an {{accept_spec}}, participant {{selection_criteria}}, `deadline`, `min_participants`, and `max_participants`. Responders submit tentative ENLIST messages. Before `deadline`, the initiator closes ENLIST intake, executes {{select}} over the responders using the participant criteria with `limit = max_participants`, sends MUSTER to those selected, and collects confirmations. Confirmation closes when every selected responder has replied or at `deadline`; only selected responders who confirm by then count toward `min_participants`. Rally then yields one {{outcome}} whose `outcome_id` identifies this Rally run. If fewer than `min_participants` confirmed, `outcome.value` records `{status: dissolved, confirmed_participants}` and no `context_id`. Otherwise the initiator mints a fresh `context_id`; `outcome.value` records `{status: formed, confirmed_participants, context_id}`, and every confirmed participant receives that same `context_id`.",
+  "gloss": "Enable ad-hoc multi-party coordination",
+  "failure_modes": [
+    "Flaking: Responders ENLIST tentatively but selected responders fail to confirm at MUSTER before `deadline`.",
+    "Under-quorum: Fewer than `min_participants` selected responders confirm before MUSTER confirmation closes, so no group forms."
+  ],
+  "invariants": [
+    "`2 <= min_participants <= max_participants <= 10000`.",
+    "Exactly one {{outcome}} is yielded per Rally run, and its `outcome_id` identifies that run.",
+    "`outcome.value.confirmed_participants` contains exactly the responders selected under {{selection_criteria}} who confirmed before MUSTER confirmation closed.",
+    "`outcome.value.status` is `formed` if and only if at least `min_participants` selected responders confirmed before confirmation closed.",
+    "A formed {{outcome}} carries exactly one `context_id`, fresh to that Rally run and shared with every confirmed participant; a dissolved outcome carries none."
+  ],
+  "preconditions": [
+    "Broadcast channel available",
+    "Initiator can mint and communicate a shared group context identifier"
+  ],
+  "postconditions": [
+    "A formed or dissolved {{outcome}} is yielded"
+  ],
+  "parameters": [
+    {
+      "name": "deadline",
+      "type": "Duration",
+      "range": "(0s, unbounded)",
+      "description": "Duration from Rally start by which ENLIST intake, selection, and MUSTER confirmation complete",
+      "default": "5m"
+    },
+    {
+      "name": "max_participants",
+      "type": "PositiveInteger",
+      "range": "[min_participants, 10000]",
+      "description": "Most responders that may be selected and confirmed",
+      "default": 10
+    },
+    {
+      "name": "min_participants",
+      "type": "PositiveInteger",
+      "range": "[2, max_participants]",
+      "description": "Fewest selected responders who must confirm at MUSTER for group formation"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "supersedes": [
+      "sema:Rally#mh:SHA-256:8d0401a21776e9a4d44b60bd1c7a8d7af1c9d275c3d209ef12432c892f435cec",
+      "sema:Rally#mh:SHA-256:c284735a8954e84a3b4ce89a685b304490cac103dc3abaf14f9d7a035a3e2dc5",
+      "sema:Rally#mh:SHA-256:48a037eb8da9aa05db6d44c4827ed1a243eb07ff0be810b8b8792b05e0419430",
+      "sema:Rally#mh:SHA-256:f2d67002a3d5ca0f6e0e61343ba41b800d3211249f3ab513984af2699df7d8d5"
+    ],
+    "path": [
+      "Society",
+      "Coordination"
+    ]
+  },
+  "sema_id": "sema:Rally#mh:SHA-256:9ee797cd797df62b9883ead618c35eb8d8a5e86c171630cdc8f8ecc6066d6a89",
+  "sema_ref": "Rally#9ee7",
+  "sema_stub": "9ee7",
+  "dependencies": {
+    "accepts": {
+      "accept_spec": "sema:AcceptSpec#mh:SHA-256:37fa28b93d390f8c8eb171eaab54ff4f9e57a95ef67af024422f823545a291cc",
+      "selection_criteria": "sema:Criteria#mh:SHA-256:92ab804441f5ff5307c6e45905818372e6159c4bd64d264ac7fddd6705de8acb"
+    },
+    "composes_with": {
+      "select": "sema:Select#mh:SHA-256:decf9c05490dc5e6b372c5dbb7d89d2285fdd832714fc992b10fdbd6b7c2c2e3"
+    },
+    "references": {
+      "protocol": "sema:Protocol#mh:SHA-256:f583ad96f598ecf0c9068f5c1390bdf247d2eb67bd7a14c7ce615c357b957b46"
+    },
+    "yields": {
+      "outcome": "sema:Outcome#mh:SHA-256:753768dae28040f1291ee2849d2aac2a08bbffd836cfab679bdbea9a6ff7ec03"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Coordination"
+}

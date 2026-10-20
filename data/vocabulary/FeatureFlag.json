@@ -1,0 +1,30 @@
+{
+  "handle": "FeatureFlag",
+  "mechanism": "A toggle point in the code that allows functionality to be enabled or disabled at runtime based on a {{condition}}. It decouples deployment from release, enabling safer rollouts and A/B testing.",
+  "gloss": "Runtime functionality toggle",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:FeatureFlag#mh:SHA-256:9464b708479fc75cc5d825850393199c41c35e06f20a2861954e98f8edcfa8a8"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:FeatureFlag#mh:SHA-256:dd1786602a5f6a608ac5a4ee986715239a7ee218ef831eb350d9f1dcf563da3b",
+  "sema_ref": "FeatureFlag#dd17",
+  "sema_stub": "dd17",
+  "failure_modes": [
+    "Flag outlives its purpose, accumulating unused conditional branches.",
+    "Flag state inconsistent across distributed evaluators."
+  ],
+  "dependencies": {
+    "references": {
+      "condition": "sema:Condition#mh:SHA-256:b480f3c4da11ba6d86f6d14e0fb8521268f3c4bb38588460f7ff4253ad8d78d5"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

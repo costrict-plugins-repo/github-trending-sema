@@ -1,0 +1,55 @@
+{
+  "handle": "Transition",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "from_state",
+      "to_state"
+    ],
+    "properties": {
+      "from_state": {
+        "type": "string",
+        "description": "Origin state ID"
+      },
+      "to_state": {
+        "type": "string",
+        "description": "Destination state ID"
+      },
+      "trigger_event": {
+        "type": "object",
+        "description": "What caused the progression, where anything did. Absent for timeout-driven or spontaneous transitions."
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "mechanism": "The progression from an origin {{state}} to a destination {{state}}, adhering to {{system}} transition rules.",
+  "gloss": "State change",
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "supersedes": [
+      "sema:Transition#mh:SHA-256:a7b4277599c68a617b43f1d0c52d807837717913731aec1463caccdcd568cfe3"
+    ]
+  },
+  "sema_id": "sema:Transition#mh:SHA-256:9b62398c6edcd43ad2af8ec1df8186ece2b4f697772b3872227f4d9d8390e328",
+  "sema_ref": "Transition#9b62",
+  "sema_stub": "9b62",
+  "invariants": [
+    "Legal under the governing rules: a progression the rules do not permit is not a Transition."
+  ],
+  "dependencies": {
+    "references": {
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

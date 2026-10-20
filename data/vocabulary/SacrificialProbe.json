@@ -1,0 +1,57 @@
+{
+  "handle": "SacrificialProbe",
+  "mechanism": "A Generalized Pattern where an {{agent}} sends a low-cost 'probe' into a {{system}} expecting it to fail, but designs the failure to be instructive. The probe must be cheap relative to the main payload, and the failure {{mode}} must update the {{strategy}} for the main payload. Common in startups (landing pages), immunology (dendritic cells), and warfare (reconnaissance). It wraps the concept of a staked probe in a higher-order strategy where the probe's destruction is the intended {{signal}}.",
+  "gloss": "Learning via cheap, instructive failure",
+  "failure_modes": [
+    "Probe too expensive: breaks the Cost Asymmetry invariant, making the sacrifice unaffordable.",
+    "Silent probe failure: {{probe}} fails but produces no observable signal, destroying the Instructive Failure property."
+  ],
+  "invariants": [
+    "Cost Asymmetry: Cost({{probe}}) << Cost(MainPayload)",
+    "Instructive Failure: InfoGain(Failure) > EntropyReductionThreshold",
+    "{{strategy}} Update: MainPayload parameters are a function of ProbeResult"
+  ],
+  "preconditions": [
+    "{{system}} failure {{mode}}s are observable"
+  ],
+  "postconditions": [
+    "{{strategy}} updated"
+  ],
+  "parameters": [
+    {
+      "name": "cost_ratio",
+      "type": "Float",
+      "range": "[0.0, 0.1]",
+      "description": "Probe cost relative to payload"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:SacrificialProbe#mh:SHA-256:e235bde0b859ae1c6db86c1a89037765c45cdaae2bbcac7e3bae000063d65e99",
+      "sema:SacrificialProbe#mh:SHA-256:1e1674548e3438a28f913e340d956e5178aeb8710176e56251ef9370de28e544",
+      "sema:SacrificialProbe#mh:SHA-256:aca76b887e6c1c71ebc1549f2204c362657b7e141fc775f597471308b7f7f8ee",
+      "sema:SacrificialProbe#mh:SHA-256:350f4c88bc6dfea05a4374a3face788a8dcf11422b3fa47aa4911aaf5a2eed40"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:SacrificialProbe#mh:SHA-256:e90170affcabeb97b9a1bcac9a9350b17fecf3eba173169bf2d46696a589b412",
+  "sema_ref": "SacrificialProbe#e901",
+  "sema_stub": "e901",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "mode": "sema:Mode#mh:SHA-256:29d368514a2a815e9790a384c2aec12bd20a30e1ee06288e0aa59fdcffea0800",
+      "probe": "sema:Probe#mh:SHA-256:2bb8a26d43ba0b1975fe2ce4051cfb219a9507140f12e72b819265f4ef98f224",
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc",
+      "strategy": "sema:Strategy#mh:SHA-256:3dc598d0c6af12389df445c204e17df03950dbc886656b85700e6c87c31b2eef",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

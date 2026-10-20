@@ -1,0 +1,82 @@
+{
+  "handle": "Actor",
+  "mechanism": "A primitive entity capable of executing an {{act}}. Unlike an agent (which possesses intent and reasoning), an Actor is a pure execution container defined by its {{identity}}, {{nature}}, and capability set. It serves as the foundational subject for permissions and logging.",
+  "gloss": "A capability-bearing entity",
+  "_meta": {
+    "ring": 0,
+    "tier": 0,
+    "supersedes": [
+      "sema:Actor#mh:SHA-256:69261bc3b260a9235b8d5fbef8b0c53c9773e60ed6d4df04babfffffd2897a89",
+      "sema:Actor#mh:SHA-256:1ecd855bdf9fc33f99840af8b53729d917355fb151d36ff21947885fac5c5907"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "identity",
+      "nature",
+      "capabilities"
+    ],
+    "properties": {
+      "public_key": {
+        "type": "string",
+        "description": "Key material, where the Actor has any. Absent for physical actuators and other non-cryptographic executors."
+      },
+      "role": {
+        "type": "string",
+        "description": "Current active role/persona"
+      },
+      "status": {
+        "type": "string",
+        "enum": [
+          "Idle",
+          "Busy",
+          "Offline",
+          "Error"
+        ],
+        "description": "Availability state"
+      },
+      "capabilities": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of supported tool/protocol hashes"
+      },
+      "endpoint": {
+        "type": "string",
+        "description": "Communication address"
+      },
+      "identity": {
+        "type": "string",
+        "description": "The {{identity}} this Actor executes under."
+      },
+      "nature": {
+        "type": "string",
+        "description": "What kind of thing it is \u2014 process, service, device, person in a pure-execution role."
+      }
+    }
+  },
+  "sema_ref": "Actor#86fc",
+  "sema_id": "sema:Actor#mh:SHA-256:86fc0930b97ffb4fe85d4820af8e17a43166b745d181895f576edf39edde6aa8",
+  "sema_stub": "86fc",
+  "invariants": [
+    "Executes without intent: an Actor performs an {{act}} it is asked to perform and does not originate one.",
+    "Capability-bounded: an {{act}} outside the declared capability set is refused, not attempted."
+  ],
+  "dependencies": {
+    "composes_with": {
+      "act": "sema:Act#mh:SHA-256:2dfedd75a396f2639ce949b9f5270766350b9c7404d404c11c57140fcf030455"
+    },
+    "references": {
+      "identity": "sema:Identity#mh:SHA-256:b24a57fdd59ebf2ef019be30af8fa10fc127f61d346a74ab0b49f729b4e32093",
+      "nature": "sema:Nature#mh:SHA-256:9ac1fd9a3449747d2f605067023df9e13d7a60c15e556d376272266f95cfaf37"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

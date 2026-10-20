@@ -1,0 +1,67 @@
+{
+  "handle": "RealizationProtocol",
+  "mechanism": "A standardized {{solver_tree}} that orchestrates one lifecycle run for a user_request executed by a {{polymorphic_solver}}. It enforces a strict transition from Abstract to Concrete and evaluates feasibility before execution. 1. {{request_framing}} converts the request -> {{frame_spec}}. 2. {{manifest_planning}} converts the spec -> {{execution_manifest}}. Before execution, {{realizable}} judges the ExecutionManifest against the stated {{budget}}, and its Value rating must pass the declared {{criteria}}. 3. {{rollout}} executes the ExecutionManifest -> {{rollout_manifest}}. After execution, the protocol reports the resulting real-world effects as the {{outcome}}; the RolloutManifest remains the execution record rather than standing in for those effects.",
+  "gloss": "Standard Interpret-Plan-Rollout workflow to ensure realizability",
+  "failure_modes": [
+    "Bureaucracy: Blindly following all steps for trivial tasks.",
+    "Admission Rejection: A seam validation fails or the realizability rating does not pass {{criteria}}, and this run halts before the next phase.",
+    "Manifest-as-Outcome: The {{rollout_manifest}} is reported as the realized {{outcome}} even though it records actions rather than their real-world effects."
+  ],
+  "invariants": [
+    "Typed Seams: {{request_framing}} yields {{frame_spec}}, {{manifest_planning}} yields {{execution_manifest}}, and {{rollout}} yields {{rollout_manifest}}.",
+    "Realizability Admission: Before {{rollout}}, {{realizable}} judges the {{execution_manifest}} against the stated {{budget}}, and its Value rating passes the declared {{criteria}}.",
+    "Non-Compensatory: A failed seam validation or realizability criterion halts this run; iteration requires a new run or an enclosing loop."
+  ],
+  "preconditions": [
+    "user_request received",
+    "{{budget}} and realizability {{criteria}} declared"
+  ],
+  "postconditions": [
+    "On successful completion, {{outcome}} is reported separately from the frozen {{rollout_manifest}}.",
+    "On a rejected seam or failed realizability criterion, this run halts before the next phase."
+  ],
+  "_meta": {
+    "ring": 1,
+    "tier": 2,
+    "supersedes": [
+      "sema:RealizationProtocol#mh:SHA-256:ce28411f10fd62c3204a3dd2bf7079f7cc07eb24cce02b414491284297172d34",
+      "sema:RealizationProtocol#mh:SHA-256:24593e1b30dd1203d7c0bb73bf88e7687c24ef486e3d6c6ae5a4c34621981a3a",
+      "sema:RealizationProtocol#mh:SHA-256:663bfe23868f8e0897c443f113a37ea2a5565df6a61dec7f4110ea855e1db0d8",
+      "sema:RealizationProtocol#mh:SHA-256:61aeb4a13ae926423ff59fe2948599ab6eca8deb4713f4952d933b10d5acafc7",
+      "sema:RealizationProtocol#mh:SHA-256:02e81a7f17b2ed533765aa8a7e7b8cbe0568fb5e26a516d9a9e6cbd5ecfe5d21",
+      "sema:RealizationProtocol#mh:SHA-256:78f170ff700340d41bc9ced304bda7fee7e9c959f3948f965778514e856bb06d"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "signature": [
+    "SolverTree(Outcome)"
+  ],
+  "sema_id": "sema:RealizationProtocol#mh:SHA-256:68fbd05d6135b73ef53db0366e69f4927e5f92f9dd88fa7b79c0a6022e4962ca",
+  "sema_ref": "RealizationProtocol#68fb",
+  "sema_stub": "68fb",
+  "dependencies": {
+    "composes_with": {
+      "manifest_planning": "sema:ManifestPlanning#mh:SHA-256:8bd4fc5ad5c604cd4814a96d23565a07d890e78800281c81abdfeafe02473896",
+      "realizable": "sema:Realizable#mh:SHA-256:2ed7d7f05fe50ff38d46631e5334f2229c4c1f1118e0576d88388b23a586d622",
+      "request_framing": "sema:RequestFraming#mh:SHA-256:2280a35647a93cf3f8b03ee5fb63f8c2ec6faf19ec9627e1d9144ffa231f551e",
+      "rollout": "sema:Rollout#mh:SHA-256:ea8c8bdf3303e53d240d6393a776de33ff7c0980a269539d6eb22a8b35e430b4"
+    },
+    "references": {
+      "budget": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef",
+      "criteria": "sema:Criteria#mh:SHA-256:92ab804441f5ff5307c6e45905818372e6159c4bd64d264ac7fddd6705de8acb",
+      "execution_manifest": "sema:ExecutionManifest#mh:SHA-256:fed57d4adcd6d9d1f82c57c3d22724485171672d77a34fdfaf7338a430f5f0b1",
+      "frame_spec": "sema:FrameSpec#mh:SHA-256:3c202cc3416eadb2215857b542e4fc54660d5253fca9c2d42cb999929ad18c42",
+      "polymorphic_solver": "sema:PolymorphicSolver#mh:SHA-256:f7fe4635a7520f918c823f0047d6fed8e38fd820c1970ef4623cc8fd78d2b0bd",
+      "rollout_manifest": "sema:RolloutManifest#mh:SHA-256:248df60c0a8d3d0e73d0dc29ee287c233c5761d610af135bc3baf96e1e556e10",
+      "solver_tree": "sema:SolverTree#mh:SHA-256:e275a01a2ced22c7412f23780f4bfa84ca171e9184f29d65336c24baddcc4052"
+    },
+    "yields": {
+      "outcome": "sema:Outcome#mh:SHA-256:753768dae28040f1291ee2849d2aac2a08bbffd836cfab679bdbea9a6ff7ec03"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

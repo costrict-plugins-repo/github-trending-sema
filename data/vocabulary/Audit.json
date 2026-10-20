@@ -1,0 +1,77 @@
+{
+  "handle": "Audit",
+  "mechanism": "A structured record produced by a verification event: the artifact naming what was checked, who checked it, when, the inputs and outputs, and the decision reached. Distinct from the verb 'to audit' \u2014 this Noun is the durable output that downstream callers consume and reference. Used as {{state}}-grounded evidence when disputes over {{system}} behavior arise.",
+  "gloss": "Verification of conformance",
+  "invariants": [
+    "Immutability: Audit logs cannot be altered once written.",
+    "Completeness: All checked items must have a verdict."
+  ],
+  "preconditions": [
+    "Target {{system}} exists and is accessible"
+  ],
+  "postconditions": [
+    "Audit report generated",
+    "Pass/Fail status assigned"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Audit#mh:SHA-256:40447e5c9c68a79109ce76f564ca8c09c2c572f8deabcb92ed3d7db0b845b3c1"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "target_id",
+      "auditor_id",
+      "verdict",
+      "timestamp"
+    ],
+    "properties": {
+      "target_id": {
+        "type": "string",
+        "description": "Hash or ID of the system/artifact audited"
+      },
+      "auditor_id": {
+        "type": "string",
+        "description": "ID of the agent performing the check"
+      },
+      "verdict": {
+        "type": "string",
+        "enum": [
+          "Pass",
+          "Fail",
+          "Warn"
+        ],
+        "description": "Conformance result"
+      },
+      "evidence_log": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "List of checks performed"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "sema_id": "sema:Audit#mh:SHA-256:be970add829f4f162533569b04c9ffd12ea4d070d53405a4993f0785d4074f77",
+  "sema_ref": "Audit#be97",
+  "sema_stub": "be97",
+  "dependencies": {
+    "references": {
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

@@ -1,0 +1,70 @@
+{
+  "handle": "CounterfactualAnchor",
+  "mechanism": "Freezes a prediction BEFORE observation. 1. Instantiate immutable Anchor (Expectation). 2. {{observe}} Reality. 3. Learning {{signal}} = Delta(Anchor, Reality). Prevents Hindsight {{cognitive_bias}} by forcing updates based on genuine surprise. It creates the static reference point against which {{surprisal_update}} measures the magnitude of the learning delta.",
+  "gloss": "Freezing expectation to measure true surprise",
+  "failure_modes": [
+    "Hindsight Leakage: {{agent}} unconsciously adjusts the Anchor as data comes in.",
+    "Vague Anchor: Prediction is too broad to be falsified (e.g., 'Something will happen').",
+    "Anchor Abandonment: {{agent}} ignores the Anchor when the delta is too large (denial)."
+  ],
+  "invariants": [
+    "Anchor Immutability: The Anchor cannot be modified once the Observation phase begins",
+    "Delta Causality: Learning {{signal}} L = f(Anchor, Observation). No other inputs permitted during update",
+    "Temporal Ordering: Creation(Anchor) < Time(Observation)"
+  ],
+  "preconditions": [
+    "{{agent}} has a predictive model capable of generating specific expectations",
+    "Incoming observable event stream"
+  ],
+  "postconditions": [
+    "A quantified 'Surprisal' delta is recorded",
+    "Internal model weights/beliefs updated based on delta"
+  ],
+  "parameters": [
+    {
+      "name": "granularity",
+      "type": "Duration",
+      "range": "unspecified",
+      "description": "Temporal resolution for counterfactual comparison (e.g., hour, day, week)"
+    },
+    {
+      "name": "retention_policy",
+      "type": "Enum",
+      "range": "{Snapshot, Rolling, Permanent}",
+      "description": "How long to keep counterfactual baselines before expiry"
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "supersedes": [
+      "sema:CounterfactualAnchor#mh:SHA-256:f5845fee4dbe585ede4203b84b7eb46ae4e6ceb7a2a0edaae53471fad17d0ae5",
+      "sema:CounterfactualAnchor#mh:SHA-256:4d4acdb9ee21f5c41d45e40496a2879c5c8c79efcab7f389fb6f6f36588ac23c",
+      "sema:CounterfactualAnchor#mh:SHA-256:0d2b80d411934b06aeaca853ac89163d71f795c26aeff8e88766f18a829766b2",
+      "sema:CounterfactualAnchor#mh:SHA-256:e7accd6c44e6cfb43cb51af464c4b2edaef05e7405ec8dd5d417fe62a00ef28d",
+      "sema:CounterfactualAnchor#mh:SHA-256:47beed0df44f67298c1280151c25ed6f396e18dea5665ad650c5493501d8f548"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ],
+    "related": [
+      "Belongbend#31f2",
+      "Wonderdwell#d966"
+    ]
+  },
+  "sema_id": "sema:CounterfactualAnchor#mh:SHA-256:b8c3c5aca4a8adba07c19d0f6103387c6f7cf9b67ade40b412fa39e41fdb3adf",
+  "sema_ref": "CounterfactualAnchor#b8c3",
+  "sema_stub": "b8c3",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "cognitive_bias": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387",
+      "observe": "sema:Observe#mh:SHA-256:4a04c0e91f072dc02a4be52bca921c38c1be46e88b1f2bcb375076fdb5103e96",
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc",
+      "surprisal_update": "sema:SurprisalUpdate#mh:SHA-256:26e53ade88809ac3ba9293b45db768fdbdb384a53cda1217c3a0dfc61d5f8408"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

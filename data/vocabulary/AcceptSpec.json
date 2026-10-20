@@ -1,0 +1,85 @@
+{
+  "handle": "AcceptSpec",
+  "mechanism": "A strict, typed {{spec}} defining non-compensatory {{criteria}} and {{constraint}}s at solver boundaries. Each criterion is declared individually and carries a reframing hint for the FrameError emitted if it rejects. AcceptSpec is a Noun \u2014 it describes the contract. The active Verify surface of a Solver consumes the AcceptSpec, evaluates it against a Result, and yields either a Solution (on non-compensatory success) or a FrameError (on failure, carrying the specific rejecting gate and its reframing hint). A single AcceptSpec may be evaluated by multiple Verify surfaces. High quality in one dimension cannot compensate for failure in another.",
+  "gloss": "Non-compensatory acceptance contract; consumer Verify yields Solution or FrameError",
+  "failure_modes": [
+    "Over-constraining: Setting specs so tight that no solution can pass (Deadlock).",
+    "Spec Drift: The spec does not accurately reflect the true goal."
+  ],
+  "invariants": [
+    "Non-Compensatory: Score(A) = 0 if any(Criterion) == Fail",
+    "Typed Output: Result must match schema, not free text"
+  ],
+  "parameters": [
+    {
+      "name": "criterion_bar",
+      "type": "Enum",
+      "range": "{Lenient, Normal, Strict}",
+      "description": "How high each individual criterion's pass bar sits. Moves the bars; does not tolerate a failure once one is recorded, which the non-compensatory invariant forbids."
+    },
+    {
+      "name": "timeout",
+      "type": "Duration",
+      "range": "unspecified",
+      "description": "How long evaluation may run before yielding."
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 0,
+    "supersedes": [
+      "sema:AcceptSpec#mh:SHA-256:70ddc45d00abda5ec5b7475b080d252f01c3db589490498563621665444293f1",
+      "sema:AcceptSpec#mh:SHA-256:c1565bf022e5596a447f7c9d9687ac3cbf1e6960f871be16f386eec02b5df2c4",
+      "sema:AcceptSpec#mh:SHA-256:a72492b72aac16bd5598ec5bfb9e0dffd7a53039c3217105996fa5cf062568f5"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "criteria"
+    ],
+    "properties": {
+      "criteria": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "threshold": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0,
+              "description": "Minimum acceptable score for this criterion"
+            },
+            "comparator": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Non-compensatory acceptance criteria"
+      },
+      "timeout": {
+        "type": "string",
+        "description": "Max validation wait time"
+      }
+    }
+  },
+  "sema_id": "sema:AcceptSpec#mh:SHA-256:37fa28b93d390f8c8eb171eaab54ff4f9e57a95ef67af024422f823545a291cc",
+  "sema_ref": "AcceptSpec#37fa",
+  "sema_stub": "37fa",
+  "dependencies": {
+    "references": {
+      "constraint": "sema:Constraint#mh:SHA-256:70136d525260a10eedf156aad1fe6c50510eadb10a89d063c7a85575b15708fc",
+      "criteria": "sema:Criteria#mh:SHA-256:92ab804441f5ff5307c6e45905818372e6159c4bd64d264ac7fddd6705de8acb",
+      "spec": "sema:Spec#mh:SHA-256:c9537551b2bfa2639c15270994fdbb5a52a41d098f499c5ed5d61945a7c50da7"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

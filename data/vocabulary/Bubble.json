@@ -1,0 +1,49 @@
+{
+  "handle": "Bubble",
+  "mechanism": "Isolated sandbox where coordination is tried before committing to reality. Creator sends BUBBLE_CREATE: {participants, ttl (time-to-live), isolation_level, parent_bubble (for nesting)}. Participants JOIN to enter isolated context. Inside bubble: state changes are copy-on-write (snapshot isolation), resource acquisitions are soft-reservations (intent, not actual), messages to non-participants are queued (not sent). {{work}} proceeds normally but nothing affects real world. When ready, creator calls PREPARE (2-phase commit). Each participant responds READY (can commit) or ABORT (cannot). If ALL READY: COMMIT\u2014queued messages sent, state changes applied atomically, reservations converted to hard acquisitions. If ANY ABORT or TTL expires: ROLLBACK\u2014all tentative work discarded silently, no compensation needed. Nested bubbles commit to parent context, not real world; parent commit makes all nested work real. It enforces a {{constraint_first}} approach around the simulation context to ensure no side effects leak into the production environment.",
+  "gloss": "Sandboxed coordination trial with rollback on commit refusal",
+  "failure_modes": [
+    "Participant crashes after READY but before COMMIT (blocking\u2014use timeout and recovery).",
+    "Long-running bubbles hold soft-reservations too long (resource starvation).",
+    "{{state}} snapshot becomes stale (external world changed during bubble).",
+    "Nested bubble complexity (multiple isolation levels, commit ordering).",
+    "Commit overhead (2PC protocol is expensive).",
+    "Bubble escape (agent accidentally affects real world from inside bubble\u2014discipline required)."
+  ],
+  "invariants": [
+    "Information within bubble is isolated from outside",
+    "Internal consistency maintained"
+  ],
+  "preconditions": [
+    "Group of agents",
+    "Shared context"
+  ],
+  "postconditions": [
+    "Bubble dissolved or merged",
+    "Local consensus reached"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:Bubble#mh:SHA-256:eb9a8441896625edfa7d41935d88120a27bf53db353082e49b0c6027d45e6142",
+      "sema:Bubble#mh:SHA-256:710d656a6a86e5872807d12f25c9bcf616f4e75514cfaf6c4bd6449586cddcbc"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:Bubble#mh:SHA-256:dd4e6be4e6d2751c5ebbed88908b85ad05bc2ca5071d252cb2f883eb71b29968",
+  "sema_ref": "Bubble#dd4e",
+  "sema_stub": "dd4e",
+  "dependencies": {
+    "references": {
+      "constraint_first": "sema:ConstraintFirst#mh:SHA-256:7d699d6c7f5c44f16125377bb24781286e9fec56f46a307130e6c8ae13473b4d",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "work": "sema:Work#mh:SHA-256:f0c3ba2d663c900244d2ed814ed3682c56a867aa32bc3c4dfd1b19fe311aa2c6"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

@@ -1,0 +1,46 @@
+{
+  "handle": "ProtoPack",
+  "mechanism": "An {{artifact}} of a prototyping phase, containing a low-fidelity {{prototype}} simulation trace or model. It serves as evidence of feasibility before full resource commitment.",
+  "gloss": "Prototype verification artifact",
+  "invariants": [
+    "Feasibility Proof: Must demonstrate viability of critical path.",
+    "Low Fidelity: Should not be a production-ready artifact."
+  ],
+  "data_schema": {
+    "type": "object",
+    "properties": {
+      "simulation_trace": {
+        "type": "array"
+      },
+      "feasibility_score": {
+        "type": "number"
+      }
+    }
+  },
+  "_meta": {
+    "ring": 2,
+    "tier": 1,
+    "related": [
+      "Build"
+    ],
+    "supersedes": [
+      "sema:ProtoPack#mh:SHA-256:6597fa92b7426d373e1d05d6a7fd1f8c1416c00c78dfab8e35e5a6264c1453d6",
+      "sema:ProtoPack#mh:SHA-256:31f5f3d60bb4d26626e05c6fa6f903fef8ccda2371d149e7fc533f1a56e4db12"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:ProtoPack#mh:SHA-256:1e06217c0c49682367975c2e8c34b203bede700056aeb6779d2500ba51db3971",
+  "sema_ref": "ProtoPack#1e06",
+  "sema_stub": "1e06",
+  "dependencies": {
+    "references": {
+      "artifact": "sema:Artifact#mh:SHA-256:b533ad2674ec00c5e9a5f1e3920f1097e2bc1eea7263f89e8f46563fa319a0ee",
+      "prototype": "sema:Prototype#mh:SHA-256:1c44945a19114ab1c2a5d380f3b7cdc9d4def36732496309e44c070214517d6b"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

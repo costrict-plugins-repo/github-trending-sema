@@ -1,0 +1,40 @@
+{
+  "handle": "Meta",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "level",
+      "target"
+    ],
+    "properties": {
+      "level": {
+        "type": "integer",
+        "minimum": 1,
+        "description": "Abstraction level (1 = meta, 2 = meta-meta, etc.)"
+      },
+      "target": {
+        "type": "string",
+        "description": "ID or type of the entity being abstracted over"
+      },
+      "description": {
+        "type": "string",
+        "description": "What aspect is being meta-analyzed"
+      }
+    }
+  },
+  "mechanism": "A higher-order modifier indicating self-reference or abstraction (Thinking about Thinking).",
+  "gloss": "Higher-order abstraction",
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Meta#mh:SHA-256:f277723b905f6c94549f27f7eb58597096f3052165f5ad90af8b273188cee079",
+  "sema_ref": "Meta#f277",
+  "sema_stub": "f277",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

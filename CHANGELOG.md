@@ -1,0 +1,1409 @@
+# Changelog
+
+All notable changes to this project are documented in this file.
+
+The format is based on [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). Dates are ISO 8601 (`YYYY-MM-DD`).
+
+This file records vocabulary-level changes between versions — additions, renames, relocations, mechanism rewrites, retirements, and governance updates that a downstream consumer would want to know about when running `sema pull` — as well as tooling changes that affect how consumers interact with the protocol (CLI flags, MCP tool changes, behavioral defaults).
+
+---
+
+## [Unreleased]
+
+## [0.10.0] - 2026-10-10
+
+### Added
+
+`sema_search`, `sema search` and the local server's `/api/search` take an optional
+layer and category (`--layer` and `--category` on the command line). Both the
+keyword and the semantic pass are restricted to that scope, so a search returns the
+closest patterns inside a category rather than whichever overall matches fall in it.
+Inside a scope, weak semantic matches below the usual 0.2 cut-off are kept, ranked by
+score, so a scoped search shows the category's nearest patterns instead of nothing.
+Names are case-insensitive, and an unknown one returns an error listing the valid
+names. New results in `sema_search`'s compact summaries now name their layer and
+category. A scoped search complements an unscoped one rather than replacing it, since a
+category guessed from the top results is often the wrong one.
+
+`SolverDecomposition` keeps the solver-bound definition that `ConceptualDecomposition` had, and `extends` it:
+every sub-concept exposes at least the Manifest and Execute surfaces of the `Solver` contract, and it states the
+general method's claim frame and location among broader kinds itself, since `extends` confers no contract.
+`FractalIntelligence` and `MandatoryAbstraction` now depend on it. The seven protocols that used the general
+method stay on `ConceptualDecomposition`: `CollaborativeWritingProtocol`, `DiscoveryProtocol`,
+`EthicalReasoningProtocol`, `GeneralProblemSolvingProtocol`, `HumanEmulatorProtocol`,
+`TemporalEnsembleForecasting` and `TruthseekingProtocol`. Ten patterns rehash, each listing its 0.9.1 identity in
+`_meta.supersedes`, and the vocabulary has 617 patterns.
+
+### Changed
+
+Keyword search matches each meaningful query word, not only the whole query. It used
+to find a pattern only when its text contained the query verbatim, so a question such
+as "make a failing test case smaller" found nothing in an installed library, which has
+no embeddings. Each word is now matched against the name, signatures, gloss and
+mechanism with light suffix stripping, rarer words count for more, and a pattern keeps
+the better of its whole-query and per-word score. A whole name still ranks above a
+longer name that contains it. Multi-word keyword matches are capped at the best 50.
+
+`ConceptualDecomposition` now names the general method in one card: state the claim frame, locate the concept
+among broader kinds, test candidate dimensions with `DecompositionGate`, search for what is missing, route real
+cases through the carve with `RoutingSanityCheck`, declare the `Synthesis`, and carve each dimension again where the
+`MarginalValueRule` says depth pays. Its parts are the dimensions every case the concept claims has, which serves the
+reasoning protocols and world modelling as well as solver trees; where cases fall into mutually exclusive kinds,
+those kinds are specializations rather than parts. The card now also says what it adds to generic `Decompose`,
+which already requires independent subproblems that combine into the whole: the claim frame, the location among
+broader kinds, the Necessity and Universality tests, the search for missing dimensions and the routing of real
+cases. The previous card bound every part to the `Solver` contract, which the Occupancy Test flags as squatting on a
+general handle. `_meta.supersedes` keeps every earlier version, from the first through 0.9.1's
+`ConceptualDecomposition#d0fc`, as predecessors of `#f1f4`.
+
+### Fixed
+
+The local server's `/api/search` (`sema serve`) kept its name boost but replaced every
+result's score with 1 plus that boost, so a weak semantic match and a strong one looked
+the same, and any query word, even "a", could lift an unrelated name. It now keeps the
+registry's score and source and boosts a name only for an exact name, a prefix or part
+of at least three letters, or a name containing every meaningful query word.
+
+`sema_handshake` accepts a full written reference such as
+`sema:StateLock#mh:SHA-256:<hash>`, with or without `sema:`, for patterns and for the
+`vocab` and `catalog` roots. It used to report a valid current reference as not found
+(with the prefix) or as drift (without it). A hash given in `your_hash` still takes
+precedence over one inside the reference.
+
+## [0.9.1] - 2026-10-09
+
+### Added
+
+Ten patterns for verification, change management and triage bring the vocabulary to
+616 patterns:
+
+- `ClosureConservationCheck`, `ExpandContractMigration`, `FailurePreservingReduction`,
+  `FinalizedIntervalRead`, `FixPathTriage`, `MeaningChangeSweep`,
+  `MetamorphicTesting`, `ReleaseArtifactVerification`, `SpecBinding` and
+  `SpecIntentCheck`.
+
+`ExpandContractMigration` is the first pattern in `Infrastructure/Safety`, which the
+design manual now defines: authored procedures for changing a running system without
+breaking the parts that depend on it. Each pattern includes its design commentary and
+use boundaries. The existing 606 definitions retain their identities.
+
+Release builds now verify wheel and source archive contents against approved inputs,
+including the bundled vocabulary, database and complete viewer assets, before upload.
+
+### Changed
+
+Rebuilding the bundled database recomputed the search embeddings of 84 existing
+patterns from their current text. Identities are unchanged; semantic search results
+for those patterns may shift slightly.
+
+## [0.9.0] - 2026-10-08
+
+### Changed
+
+Every layer now has a `Dynamics` category for patterns that describe how a system
+behaves (a process, a regularity or a limit) and prescribe no response. A pattern
+filed there is a model to recognise in a case, not steps to follow. The rule runs one
+way: structures, primitives, judgment errors and states of the evidence also stay
+outside Dynamics, so a pattern outside it is not thereby a procedure. 43 patterns move
+there from categories that held procedures or topics:
+
+- Physics/Dynamics: `Brakefade`, `Ripplelag`, `Swayhold`, `Syncdrift`,
+  `VirginSoilEpidemic` and `WaveOfAdvance`.
+- Infrastructure/Dynamics: `Formelt`, `Limitblur` and `Regulapse`.
+- Mind/Dynamics: `Aimscatter`, `Capacitylag`, `Crossripening`, `Echohollow`,
+  `Echoverturn`, `Foundationfray`, `Futurefold`, `Identitylag`, `Labelloop`,
+  `Meaningthin`, `Mirrorbloom`, `Quietroot`, `Readyrise` and `RegressionToMean`.
+- Society/Dynamics: `CumulativeCulture`, `DemographicTransition`,
+  `DensityRatchet`, `DiminishingComplexityReturns`, `ExitCage`, `Focalpeer`,
+  `FreeRiderProblem`, `InnovationDiffusion`, `Linkfade`, `MalthusianTrap`,
+  `Quietsever`, `Recifluence`, `Scaleasynchrony`, `SecurityDilemma`,
+  `Sideinherit`, `StructuralDemographicCycle`, `Sunbound`, `SurplusBound`,
+  `Twinflow` and `Warsift`.
+
+No layer changes. The category is unhashed metadata, so every pattern keeps its
+identity and both vocabulary roots are unchanged. Patterns naming a judgment error or
+a state of the evidence stay with the inference and reasoning patterns, while
+`RegressionToMean`, a phenomenon that occurs whether or not anyone misjudges it,
+moves. Elementary concepts stay primitives as general building blocks, including
+those that describe change over time, such as `Decay` and `PhaseTransition`. The design manual states the rule, and the MCP
+server's instructions and the usage skill tell agents to apply a Dynamics pattern as
+a model to test against the case, not as steps to run.
+
+Clients from 0.8.1 and earlier reject patterns on the new Infrastructure, Mind and
+Society Dynamics paths wherever they validate patterns: in `sema pull --source` from
+this vocabulary, and when installing or updating a library that uses the new paths. A
+0.8.1 `sema pull --source` stops with validation errors and restores its database
+unchanged. Upgrade the client before taking the new vocabulary; a plain `sema pull`
+reads the vocabulary bundled with the installed client, so the two arrive together. A
+service that hosts the vocabulary, such as sema-web, must deploy this runtime first,
+then update its bootstrap vocabulary and refresh its caches; updating the bootstrap
+first fails validation.
+
+The suggested credit for reusing the vocabulary now names the shared project rather
+than an individual: *Vocabulary from Sema (https://github.com/emergent-wisdom/sema),
+licensed under CC BY 4.0*. The licence itself is unchanged, and contributors keep the
+copyright in their contributions. The GitHub release attaches the licence file next to
+the bootstrap package, which cannot carry it itself.
+
+## [0.8.1] - 2026-10-08
+
+### Added
+
+Sixteen patterns for population dynamics, cultural transmission, resource
+constraints and intergroup competition bring the vocabulary to 606 patterns:
+
+- `CumulativeCulture`, `DemographicTransition`, `DensityRatchet`,
+  `DiminishingComplexityReturns`, `ExitCage`, `FreeRiderProblem`,
+  `InnovationDiffusion`, `MalthusianTrap`, `SecurityDilemma`,
+  `StructuralDemographicCycle`, `Sunbound`, `SurplusBound`, `Twinflow`,
+  `VirginSoilEpidemic`, `Warsift` and `WaveOfAdvance`.
+
+Each pattern includes its design commentary and use boundaries. The existing
+590 definitions retain their identities.
+
+## [0.8.0] - 2026-10-07
+
+This release adds 133 bootstrap patterns, bringing the vocabulary to 590, and aligns
+five definitions with the September revision of the Fractal Intelligence paper,
+which gives twenty released patterns new identities. Existing 0.7.1 snapshots
+retain their original identities; consumers choosing to upgrade should use the new
+definitions and vocabulary roots. The MCP server's instructions now point agents
+to patterns when a task needs reasoning.
+
+### Added
+
+New patterns extend the vocabulary's coverage of reasoning, coordination and
+changing processes. The library now contains 590 patterns.
+
+Tranche 1:
+
+- `Callshort` reads a perceived shortfall in the thinking a situation calls for. The
+  reading is unwilling, unable, or deliberately undeclared, and it is held as a
+  hypothesis about that situation.
+- `Twoledger` adopts a perspective for what it opens and keeps its claims on a
+  separate assurance ledger.
+- `Sunsetkind` extends `Category` with a retirement condition that someone other
+  than the category's author can check.
+- `Disputelift` records how a disagreement improved the protocol its parties disagree
+  under, whether or not the disagreement was resolved.
+- `Lossprint` compares what several lossy renderings of one source each lose, and
+  states a pattern in the differences between those losses.
+
+Tranche 2:
+
+- `Lucence` makes a hard account clearer for a named reader, keeping every
+  load-bearing distinction.
+- `Farsimple` explains in two phases: it shows the complexity first, then gives a
+  simpler account that keeps it.
+- `Revisance` revises a view while naming what the old view got right.
+- `Reasonfade` holds a judgment whose reasons are lost as an assumption until the
+  reasons are restored.
+- `Coflourish` records an exchange in which every party names a gain of its own.
+- `Costeer` adopts a joint direction only when it answers every party's stated
+  reasons.
+- `Jointscape` records the options that need several parties' combined
+  contributions.
+- `Situfit` checks whether a moment has the features its intended handling as a
+  category depends on.
+- `Askwiden` records when another perspective adds an askable question.
+- `Twinread` keeps two mutually correcting interpretations without merging them.
+- `Labelsqueeze` flags a one-label classification forced onto an object that spans
+  several categories.
+- `Analogysnap` reads the first failing relation of an analogy as information.
+- `Brakegrow` makes each step of progress add a sign that going further would do harm.
+
+Tranche 3, on group behaviour. Each handle names a failure or practice, and each card
+defines the guard against it:
+
+- `Meaningpause` establishes a contested word's meaning before the claim that uses
+  it is judged.
+- `Doubtshelter` asks for doubts before agreement and makes voicing a doubt or asking
+  cost no standing.
+- `Reasoncommons` keeps a shared decision's reasons readable by everyone it binds.
+- `Statuslens` assesses checkable reasoning without regard to the speaker.
+- `Prestigeloan` counts standing only inside its demonstrated domain.
+- `Correctionwelcome` credits corrections that hold, whoever they challenge.
+- `Canonseal` scores established options on the same criteria as alternatives.
+- `Belongbend` records private judgments before discussion, so that shifts toward
+  the group view can be reviewed for conformity.
+- `Silencevote` counts only explicit assent as acceptance.
+- `Certaintyclap` credits claims by calibration, not by confident delivery.
+- `Complexitytax` asks what a distinction changes before dropping it for length.
+- `Nuancefilter` makes a relayed message record what it left out.
+- `Motivejump` examines an argument before motives are raised.
+- `Dissentflatten` records and answers distinct objections separately.
+- `Critiquedrift` keeps criticism on the action, not the person.
+- `Framecapture` sets an agenda from every participant's framing.
+- `Premisebridge` compares the premises behind a disagreement before blaming
+  effort or ability.
+- `Normance` marks how far a belief rests on social default.
+
+Tranche 4, meta-concepts named as transparent compounds:
+
+- `Crossborn` credits a distinction that no perspective held alone to the
+  interaction that produced it.
+- `Edgehold` uses a framework only inside its known edge when no replacement
+  exists.
+- `Labelloop`: a classification changes those it classifies, altering the fit
+  of later classifications. `ClassificationReview` re-checks such a
+  classification.
+- `Morphproof` extends `Category` with the transformations its members survive.
+- `Almostnot` learns a pattern from near misses.
+- `Gainmark` lists the meaning a translation adds.
+- `Roundtrace` renders a source into another representation and back, and traces
+  each difference to an assumption.
+- `Blindmark` makes a representation state what it cannot express.
+- `Valueprobe` picks routes that could change the criteria for picking routes.
+- `Mosaicmap` maps an understanding no member holds whole.
+- `Cocapacity` records the joint capacity an exchange created.
+- `Doubleloop` lets a feedback loop review its standard on recorded triggers, and
+  revise it when the review warrants.
+- `Spiralback` makes a return to an idea name what is new, or records it as a
+  repetition.
+- `Ladderdrop` withdraws a tool when its stated success sign appears.
+
+Tranche 5, governance, filed under Society/Governance:
+
+- `Mandatune` revisits a mandate when the circumstances it was granted under
+  change.
+- `Consentrenew` asks for fresh consent when an initiative outgrows what consent
+  covered.
+- `Promisehinge` states, when a public commitment is made, the evidence that would
+  revise it.
+- `Powerreturn` returns concentrated authority when its stated reason ends.
+- `Dissentkeep` keeps a route open for challenging a policy after adoption.
+- `Hearshift` answers each consultation input in the decision record.
+- `Burdenlight` lists who bears a decision's costs and who receives its benefits.
+- `Absentseat` represents affected parties who cannot take part.
+- `Futureclaim` treats future people's needs as claims to be answered.
+- `Repairmand` involves those harmed in defining the repair.
+- `Reasonbridge` explains a decision in each value set's own terms.
+- `Goalweave` agrees on actions that serve distinct purposes.
+- `Trialhaven` bounds a departure from rules, with review points and a checked
+  exit.
+- `Metricmirror` reviews a metric for gaming and for blind spots.
+- `Localhinge` links decisions across scales through correction routes.
+- `Coursecandor` admits a mistaken direction and sets a check on the correction.
+- `Successiongift` moves everything that depends on a departing party to others
+  before they leave.
+
+Tranche 6, fading capacity, drifting meaning and backfiring rules. Where a
+handle names a process, its card describes the process, and a plainly named
+card holds a practice that guards against it:
+
+- `Aimscatter`: effort disperses among competing directions until none
+  advances. `StalledDirectionReview` gives more effort to, or pauses,
+  directions that produced nothing.
+- `Meaningthin`: an activity continues while its connection to a valued purpose
+  weakens. `PurposeLinkReview` keeps each activity tied to evidence that it
+  serves its goal.
+- `Echohollow`: a recurring practice keeps its form while its responsiveness
+  fades. `PracticeResponseReview` reviews a practice that has stopped
+  responding.
+- `Regulapse`: a process keeps operating while its capacity to detect or
+  correct deviations weakens. `DetectorSelfTest` tests its detectors with known
+  faults.
+- `Brakefade`: an activity continues while the ability to slow, stop or reverse
+  it diminishes. `StopDrill` drills the stop of a running activity.
+- `Quietsever`: communication diminishes as the connection between parties
+  weakens. `ChannelCheck` checks in when a channel goes quiet.
+- `Endsettle` settles every open obligation before something is declared ended.
+- `Limitblur`: stated boundaries lose consistency in practice. `BoundaryReview`
+  tests stated limits against practice.
+- `Futurefold`: planning contracts toward immediate demands. `HorizonReview`
+  keeps one far-horizon item in every planning cycle.
+- `Termdrift` tracks a key term's meaning through a text.
+- `Ruleflip` states, before rollout, how a rule could backfire, and watches for
+  it.
+- `Leapdebt` records what a skipped stage would have provided.
+
+Tranche 7, growth, situation and reach:
+
+- `Plateauturn` changes method when improvement stalls.
+- `Futurestretch` practises just beyond what can be done alone, withdrawing
+  support as skill grows.
+- `Leapsettle` makes an advance reliable before anything is built on it.
+- `Ripplelag`: a change reaches connected systems only after a delay.
+  `EffectDelayCheck` waits out the stated delays before judging a change's
+  effects.
+- `Nestmap` names the situations a moment sits inside.
+- `Wonderdwell` dwells on the familiar with its expectation frozen.
+- `Lensweave` carries each lens's findings into the next.
+- `Webtrace` places a concept by its neighbours before it is relied on.
+- `Reachsense` lists what is reachable now before planning.
+- `Limitlisten` measures present limits before a demanding step.
+
+Tranche 8, processes, each described without a prescribed response:
+
+- `Quietroot`: development continues while the visible result stays still.
+- `Readyrise`: earlier preparation surfaces as an apparently sudden advance.
+- `Crossripening`: development in one area makes development in another
+  possible.
+- `Capacitylag`: demands grow ahead of the capacity to meet them.
+- `Identitylag`: self-understanding stays organised around an earlier condition.
+- `Scaleasynchrony`: a level of a system and a level it depends on develop at
+  different rates, changing how well they fit.
+- `Linkfade`: connections weaken while the participants keep their capacities.
+- `Syncdrift`: activities that coordinated in time move out of alignment.
+- `Foundationfray`: small losses in supporting practices weaken what depends on
+  them.
+- `Formelt`: a structure loses its organising boundaries while its parts remain.
+- `Mirrorbloom`: a self-representation changes its maker.
+- `Swayhold`: a form persists through continual adjustment.
+- `Echoverturn`: repetition reverses a recurring element's effect.
+- `Recifluence`: influence returns through a changed response and changes later
+  influence.
+
+Additional processes, each described without a prescribed response:
+
+- `Focalpeer`: a group's joint action comes to depend on a member who holds no
+  assigned coordinating authority.
+- `Sideinherit`: a practice, belief, capability or flaw passes between separate
+  lines of descent rather than along one.
+- `Badgeread`: recognition rests on a salient mark that co-occurs with a category's
+  members rather than on what makes them members.
+- `Kinproxy`: values, care or understanding are inferred from how far another party
+  resembles the judge.
+
+Patterns for reasoning about evidence and explanation. `DistinguishingTest` is a
+guard; the others are described without a prescribed response:
+
+- `EvidenceDependence`: several confirmations share a foundation, so together they
+  support a claim less than their number suggests.
+- `AbsenceEvidence`: finding nothing counts against something's presence only as far
+  as the search would have found it.
+- `EvidenceUnderdetermination`: the evidence in hand fits two or more explanations
+  about equally and cannot decide between them.
+- `DistinguishingTest` seeks an observation that rival explanations predict
+  differently before more evidence that fits them all is gathered.
+- `ActionConvergence`: rival explanations call for the same next action, which can be
+  taken while the cause stays open.
+- `ContrastClass`: a why-question asks why an outcome happened rather than an
+  alternative, and the alternative decides which explanation answers it.
+
+From the Fractal Intelligence paper's decomposition algorithm:
+
+- `MandatoryAbstraction`: a concrete problem is located by climbing specialization
+  links to the root, with a sibling search at each step, and the route is retraced
+  before the problem is decomposed.
+- `SpecializationEdge`: a child concept is a kind or realization of its parent; the
+  relation is open-world.
+- `CompositionEdge`: a child supplies a contribution its parent's capability
+  requires; a parent's composition children are claimed complete.
+- `RoutingSanityCheck`: a candidate carve is tested by routing a few concrete tasks
+  through it before it is kept.
+
+Reasoning patterns the vocabulary lacked:
+
+- `QuestionSubstitution`: an easier nearby question is answered in place of the one
+  asked, and the answer is reported as if it settled the original.
+- `RegressionToMean`: a result picked out because it was extreme is usually followed by
+  one closer to typical, because part of what made it extreme was chance.
+- `ConfoundedAttribution`: several things changed together, and the effect is
+  credited to the one in view.
+- `ErrorCostAsymmetry`: when one kind of mistake costs far more than the other, the
+  decision leans away from it.
+- `GeneralProblemSolvingProtocol`: the Fractal Intelligence paper's six dimensions
+  for a problem no specialized protocol fits.
+- `ArchiveServingFrontier`: evaluated structures are kept in an inclusive archive, a
+  selective serving layer and an experimental frontier.
+
+Older cards that the new patterns build on gain them as unhashed `related` links,
+so no existing identity changes.
+
+Six of the new cards carry a `caution`: `ActionConvergence`, `DetectorSelfTest`,
+`Focalpeer`, `Mirrorbloom`, `Ruleflip` and `Trialhaven`. Cautions are unhashed metadata, so no identity changes.
+
+### Changed
+
+- The MCP server's instructions tell agents to think with patterns when a task needs
+  reasoning: search for patterns that fit, use their mechanisms to structure the
+  reasoning, their invariants as checks and their failure modes as a checklist, and
+  heed any caution. `sema_search` suggests searching with the problem itself, and the
+  `sema-usage` skill's description now covers reasoning tasks, so the skill loads for
+  them.
+- `UniversalSolverTree` no longer says cycles are permitted while also calling the graph
+  acyclic. Following the Fractal Intelligence paper, its persistent topology is a rooted
+  acyclic graph with multi-parent reuse, and only bounded execution may cycle. Eight
+  released patterns that depend on it get new identities, and each lists its 0.7.1
+  identity in `_meta.supersedes`.
+- `TruthseekingProtocol` keeps verified claims as content-addressed records rather than
+  Sema patterns; only recurring verification strategies become patterns. Following
+  the paper's September revision, a cached verdict is reused only while its recorded
+  scope, time and provenance fit and no superseding evidence is known. A record that
+  no longer qualifies stays as history and its claim is checked again, and a check
+  may end unresolved, reporting its warrant deficit.
+- `DecompositionGate`, `ConceptualDecomposition` and `MarginalValueRule` follow the
+  Fractal Intelligence paper's September revision. The four tests are judged against a
+  stated claim frame: Independence asks for lower coupling rather than orthogonality,
+  Universality holds over the claimed range, and a failed or uncertain candidate may be
+  reframed, narrowed or kept as a labelled frontier alternative.
+  `ConceptualDecomposition` adds the bounded completeness search, `RoutingSanityCheck`
+  and depth chosen per dimension. `MarginalValueRule` becomes the paper's ratio test,
+  with the exploration credit U(n) and interface load, against a domain threshold
+  `theta` that replaces the `depth_premium` parameter. `CollaborativeWritingProtocol`,
+  `DiscoveryProtocol` and `HumanEmulatorProtocol` no longer call their dimensions
+  orthogonal. With the changes above, twenty released patterns have new identities;
+  each lists its 0.7.1 identity in `_meta.supersedes`, and `sema pull` re-mints them
+  under the same handles.
+- Thirteen released patterns gain a `caution`, after a check of the 434 older patterns
+  that had none: `AmbiguityResolution`, `AnchorDrop`, `CurriculumReplay`,
+  `EjectionSeat`, `HumanEmulatorProtocol`, `Jester`, `Oracle`, `RedTeam`,
+  `ShoutWhisper`, `SynergisticMode`, `ToolInvoke`, `TruthseekingProtocol` and
+  `WorkerMode`. Cautions are unhashed metadata, so no identity changes; `sema pull`
+  delivers them to users who have not set a caution of their own.
+- `Abduction` and `EthicalReasoningProtocol` no longer carry a `caution`: both are purely
+  cognitive, which the clarified rule exempts, and the guidance their cautions held
+  stays in their manual entries. `sema pull` treats a caution already on a user's
+  copy as the user's own, so existing copies keep it.
+- `docs/specification/schema.md` and the `sema-mint` skill say when a pattern that
+  only describes a process needs a caution, and name the targeting of individuals
+  as a trigger.
+- `docs/specification/naming.md` §F allows coined handles for concepts English has
+  no word for. The gloss carries the plain-English meaning.
+- `AGENTS.md` records that the three-instance friction rule is waived for the
+  coined-word tranches. The prior-art gate and the collision rule still apply.
+
+### Fixed
+
+- `scripts/verify_vocabulary_change.py` fails at once, with instructions, when `sema`
+  resolves to an installed package instead of the checkout's `src/`. Run that way, the
+  audit step wrote `audit.md` into the installation while both verify modes passed and
+  the checkout's report went stale. The audit runner also takes its checkout from
+  `SEMA_REPO_ROOT`, which the workflow sets, and refuses a root that is not a checkout.
+
+## [0.7.1] - 2026-10-04
+
+This release refines five bootstrap definitions, including two dependency
+cascades. Existing snapshots retain their original identities; consumers choosing
+to upgrade should use the new definitions and vocabulary roots.
+
+### Fixed
+
+- `MechanisticDesignProposal` requires novelty claims to name their comparison
+  and records weak or outdated comparisons as a failure mode.
+- `SemanticTabu` defines avoidance against the listed mechanisms using a stated
+  canonical form; satisfying the tabu list does not establish novelty against
+  unlisted solutions.
+- `DiscoveryProtocol` requires declared distinct cognitive modes, references
+  `Solver` and `Novelty`, and describes unminted solver roles in ordinary prose.
+- The five changed identities, including the dependency cascade to
+  `DesignArchitect` and `PUREBrainstorming`, record their published predecessors.
+  The library still contains 457 patterns.
+
+## [0.7.0] - 2026-09-28
+
+This release changes bootstrap definitions and discovery signatures. Existing
+0.6.0 snapshots remain valid for their original hashes. Consumers choosing to
+upgrade should use the new definitions and roots; old exact references require
+the corresponding retained snapshot.
+
+### Fixed
+
+- Ten bootstrap patterns no longer identify evidence, agreed terms, historical
+  circumstances, interpretation context, or decision information with the
+  portable agent execution `Context`: Belief, Contract, ExploreExploit,
+  GenealogicalTrace, HumanApprove, InternalConsistency, Interpret, OutputGuard,
+  Specialize, and Understand. Their substantive obligations remain explicit.
+  Context's own definition is unchanged.
+- `InternalConsistency` now advertises `Check(Artifact)`, matching its actual
+  subject. `Understand` no longer advertises `Think(Context)`; callers using
+  signature discovery should resolve Understand directly. Its model-adequacy
+  wording explicitly assigns the adequacy standard to the caller.
+- `Cache` guarantees stored-value reuse on a hit instead of promising that
+  every lookup is significantly faster than the source. Existing consistency,
+  freshness, and serialization requirements are retained; latency targets belong
+  to the caller or a specialized pattern.
+- `Interpret` no longer uses reversibility to distinguish translation from
+  interpretation. Translation can be one-way; its existing representation-change
+  boundary remains intact, as do Interpret's context-recording and input-preservation
+  obligations.
+- Design commentary for Context, Cache, Greet, Sign, and the affected consumers
+  now matches their contracts. In particular, Greet requires mutual authentication
+  and Sign describes cryptographic artifact binding, not handwritten signatures.
+- Stale commentary for Permission, Noise, Reversibility, Interpret, and Translate
+  now reflects their existing general-purpose contracts without adding new
+  requirements to those patterns.
+- All 117 changed identities, including dependency cascades from the eleven
+  directly edited patterns, record their published 0.6.0 predecessors. The three
+  exact parent links on RequestFraming, OptimisticSolver, and RigorousSolver
+  point to the updated parent definitions. The library still has 457 patterns;
+  no new patterns were added.
+
+### Documentation
+
+- The vocabulary design manual includes source-card links, parameter definitions,
+  complete instance schemas, and dependency mappings. Its authoring instructions
+  follow the staging workflow, and its introduction distinguishes structural
+  validation from semantic review.
+
+## [0.6.0] - 2026-09-27
+
+All 457 bootstrap pattern identities and both aggregate roots are unchanged.
+
+### Added
+
+- `sema login`, `sema logout`, and `sema whoami` log the CLI in to a hosted
+  Sema registry through the OAuth 2.0 device authorization flow (RFC 8628).
+  The token is stored per registry origin under the Sema configuration
+  directory and can be revoked from the registry profile page.
+- `sema login --key` stores a key created on the registry's profile page,
+  after checking it with the registry. `--key -` reads the key from standard
+  input.
+- `sema registry import|list|remove` publish, list, and remove your libraries
+  on the registry from the command line or from an agent, with no browser
+  visit after the one-time approval. `--registry` and `SEMA_REGISTRY_URL`
+  select another registry, and `sema install` still needs no account. A successful
+  login remembers the selected registry, with explicit flags and environment
+  settings taking precedence. Logging out keeps the registry choice.
+- `sema registry search [WORDS...]` and `sema registry show NAME` list and
+  describe published libraries without an account, and `sema install NAME`
+  installs one by name: exactly the release that the registry verified.
+  Before it writes anything, Sema checks the manifest's name, version, both
+  roots, and archive checksum against the listing, and it refuses a different
+  release, such as a replacement served after an account takeover. The
+  release is then verified as before.
+- `sema update` keeps that protection for libraries installed by name: it
+  takes only a release that the original registry has verified, even if the
+  default registry changes later. A mismatched release or an unavailable
+  registry leaves the installed and active snapshot unchanged. Libraries
+  installed from a URL or a file update from their own source as before.
+- Agents can find, install, and publish libraries from a chat. The MCP tools
+  `sema_library_search`, `sema_library_install`, `sema_library_login`, and
+  `sema_library_publish` search the public registry, install a library by name
+  or from any `library.json` URL, store a key that the user gives the agent,
+  and publish a GitHub release after the user agrees.
+- The local view. `sema serve` opens a view of the active vocabulary in the
+  visual design of semahash.org: its name, whether it is writable, its root,
+  and the patterns in card, list, and JSON views. The 3D graph grows in place
+  while an agent mints; new patterns light up, and a live panel lists them and
+  can follow each one. A writable vocabulary's page ends with the optional
+  steps to publish it on semahash.org. `sema serve --open` opens the view in a
+  browser.
+- The MCP server instructions tell connected agents that they can suggest the
+  local view while building a vocabulary with the user, and describe the
+  optional publishing path: package, GitHub release, `sema login`, and
+  `sema registry import`.
+
+### Changed
+
+- `sema serve` opens the vocabulary selected with `sema use`, using the same
+  database resolution as the CLI and the MCP server, and follows a later
+  `sema use` or `sema_use` from another process. `SEMA_DB_PATH` still pins it.
+  Previously the server showed the bundled catalog unless `SEMA_DB_PATH` was
+  set.
+- The `sema-ui` skill reuses a running server and no longer stops whatever
+  process listens on its port.
+
+### Fixed
+
+- Credential files now use unique temporary files with owner-only permissions
+  from creation, avoiding exposure before the credentials are atomically saved.
+- The server tests no longer read the developer's own active vocabulary.
+
+## [0.5.5] - 2026-09-06
+
+All 457 bootstrap pattern identities and both aggregate roots are unchanged.
+
+### Fixed
+
+- The MCP Registry launch command installs the required MCP extra and pins the
+  package version advertised by the registry. Release metadata synchronization
+  now checks and updates that requirement, with regression coverage for missing
+  extras and stale versions.
+
+## [0.5.4] - 2026-09-06
+
+All 457 bootstrap pattern identities and both aggregate roots are unchanged.
+
+### Added
+
+- Published a reproducible `v0.3.0` to `v0.4.0` delta-reconstruction
+  experiment and a permanent CI contract covering additions, removals,
+  renames, dependency cascades, metadata-only changes, and incorrect deltas.
+  The validation distinguishes matching semantic and catalog roots from full
+  logical release equivalence, and verifies staged fresh compilation as the
+  safe reconstruction path.
+
+### Changed
+
+- Pattern search reuses a cached index and resolves only matched results.
+  MCP search defaults to ten matches, caps results at twenty, and returns
+  compact summaries after the first three new matches. `sema_resolve` returns
+  the complete card when needed.
+- Active database selection and the database registry respect
+  `XDG_CONFIG_HOME`, so project and test configurations can stay separate.
+- Distribution metadata now lists both existing licenses: MIT for software
+  and CC BY 4.0 for content. Packages include both license files and the
+  third-party notice.
+
+### Fixed
+
+- MCP vocabulary status reports whether the selected database is writable,
+  bundled, or an installed read-only library.
+- Search results keep the plain handle separate from the hash reference.
+  Graph neighbors use compact identity and gloss summaries.
+- The bundled browser combines local and remote search matches without
+  duplicate suggestions for the same handle.
+- `sema build` preserves the database and shows recovery instructions if it
+  cannot write the database registry.
+- `sema check` works with current graph-based databases.
+
+## [0.5.3] - 2026-08-21
+
+### Added
+
+- Published versioned canonicalization-v2 golden vectors with exact preimages,
+  digests, normalized values, and rejection cases for independent implementations.
+
+### Fixed
+
+- Canonical hashing now rejects non-finite numbers, overflowing JSON reals,
+  duplicate JSON members, invalid Unicode scalar strings, non-string object keys,
+  and other Python-only values before graph mutation. Local apply and remote
+  library installation now share the same strict JSON parser. String whitespace
+  normalization now uses an explicit protocol repertoire rather than the host
+  runtime's evolving whitespace classification. The previously unversioned NFC
+  database is documented as a v2 compatibility boundary rather than silently
+  changed; all 457 official pattern identities remain unchanged.
+- `sema apply` now enforces Rule 7.6 layer direction against committed dependency
+  targets as well as patterns staged in the same batch. `--check` runs the same
+  preflight before returning, so dry runs no longer miss cross-corpus violations.
+- Direct GraphStore and MCP minting now rejects ordinary dependency cycles before
+  mutating the database, matching the existing `sema apply --check` guarantee.
+  Explicit self-dependencies are also rejected instead of being silently removed
+  from cycle detection.
+
+## [0.5.2] - 2026-08-21
+
+### Fixed
+
+- Removed 19 stale handles from the built-in `standard` preset. Those handles
+  were absent from the current bootstrap vocabulary, so selective builds warned
+  and skipped them. A regression test now requires every standard-preset handle
+  to exist in the authoritative `taxonomy.db`.
+
+### Deprecated
+
+- `data/experimental.db` is now explicitly a frozen historical snapshot. It
+  remains in the repository for review, but is not maintained, packaged, or
+  selected by any built-in Sema tooling. The bundled tool and its built-in
+  presets use only the authoritative bootstrap vocabulary in `data/taxonomy.db`.
+
+## [0.5.1] - 2026-08-20
+
+### Fixed
+
+- MCP now advertises the conditionally exposed write tools under their documented
+  public names, `sema_mint` and `sema_pull`, instead of underscore-prefixed
+  implementation names that clients could not call.
+
+## [0.5.0] - 2026-08-12
+
+457 -> 457 patterns. Aggregate roots: semantic set
+`5b6be2ac2db98eedbc89b1c240fe3660db5d01784db5bbb1177b1d7a76c05f64`,
+catalog `87a541595288b870daa23487a44feeb46517e9eca0416f46dc61ebe43da36064`.
+
+### Added
+
+- Verified third-party vocabulary installation through `sema install <library.json>`,
+  name-based selection with `sema use <name>`, and explicit `sema update <name>`.
+  Releases carry one JSON file per pattern in a checksummed ZIP, declare semantic
+  and catalog roots, and compile to an immutable local SQLite snapshot. The
+  bundled vocabulary remains the offline default.
+- Deterministic official-bootstrap release packaging. Each tool release attaches
+  a generated `library.json` and versioned pattern ZIP whose identities and roots
+  are verified against the bundled database, allowing the bootstrap vocabulary
+  to be installed through the same public contract as a third-party library.
+- Self-service third-party publishing through `sema package`. The command exports
+  a project database as one JSON file per pattern, creates a deterministic ZIP,
+  computes its checksum and both aggregate roots, writes `library.json`, and then
+  recompiles and verifies a fresh local read model before exposing the release
+  files. GitHub shorthand generates a stable manifest URL and a version-pinned
+  artifact URL.
+
+### Changed
+
+- A follow-up audit of the 0.4 delegated decisions corrected decisions that
+  were incomplete or left the durable record and hashed card in disagreement.
+  `Assessment` now makes strengths and weaknesses optional while requiring a
+  non-empty recommendation list; `Solution` makes component trees conditional
+  on composite outputs and requires creator and creation time within provenance;
+  `Mutex` is an ownership-based `Lock` specialization in Infrastructure rather
+  than a distributed-fencing protocol; `SteelmanCheck` separates
+  counter-argument adequacy (`Judge`) from decision robustness (`Check`);
+  `PromptChain` replaces the undefined Skip path with bounded retry-or-halt
+  semantics; and `FailureTrace` binds evaluator, clause, evidence, and signing
+  time in a content signature that `ReceptivityGate` verifies over the exact
+  payload. `Trace` now states partial coverage directly. These are semantic
+  corrections; canonicalization is unchanged. The canonical rebuild changes
+  267 of 457 identities: eight repaired definitions, two explicitly reviewed
+  exact-parent retargets, and 257 transitive dependency updates. Every changed
+  pattern records its public 0.4 identity in `_meta.supersedes`.
+- `sema build --source` accepts an installed library name as well as a database
+  path. Managed sources are reverified before copying, and the resulting project
+  database is writable even though installed releases remain read-only.
+
+### Security
+
+- Remote libraries cannot supply executable or precompiled database state. Sema
+  accepts only the bounded JSON pattern archive and always builds its own local
+  read model. Managed-database verification now also rejects missing runtime
+  indexes, unknown node or edge types, malformed metadata, missing endpoints,
+  and invalid embedding payloads before activation.
+
+## [0.4.0] - 2026-08-04
+
+**The 0.4 reasoning pass re-mints 426 of 452 pattern identities (94%) relative to 0.3.0.** No canonicalization change: hashes move because definitions improved -- 324 patterns were reasoned through individually against the design manual (254 changed, 57 confirmed sound, and 13 OPEN pattern verdicts subsequently adjudicated; a separate sidecar question on `Solution` was also decided) -- and cascades propagated the rest. Every identity-changed pattern carries the 0.3.0 `sema_id` in `_meta.supersedes`, so 0.3.0 consumers converge via `sema pull` instead of orphaning.
+
+452 -> 457 patterns. Aggregate roots under the schemes introduced below:
+semantic set `502d7f981a29a4a134e3080cdc4f361049a30f30ece026224a668bda80a83661`, catalog `146db4c0b6172432a0694baa74263a2e33edfce2c5ba7756c33622f7bc69e324`.
+
+### Added
+
+- Two explicit aggregate commitments: `sema-semantic-set-v1` for the
+  unordered set of unique definition digests, and `sema-catalog-v1` for exact
+  handle-to-definition bindings. Both use domain-separated leaves and the
+  RFC 9162 Merkle Tree Hash construction. `sema_root()` exposes both;
+  `sema_handshake(ref="catalog")` verifies the namespace mapping.
+- Canonical `scripts/verify_vocabulary_change.py` workflow for contributors and
+  CI. It refreshes or non-destructively checks the design manual, audit,
+  vocabulary root, documentation hash references, database/export parity,
+  exported hashes, clean staging, and deterministic reconstruction in one
+  command.
+- `ExponentialBackoff`, a concrete child for capped geometric delay growth
+  with configurable jitter. Retry eligibility, budgets, and reset policy remain
+  caller-owned rather than requirements of the delay strategy.
+- `MetricReading`, a definition-bound quantitative value with optional
+  observation context and dimensions. It references the Metric definition that
+  supplies its derivation rule and value schema; it does not declare `extends`
+  because a reading is an output under a definition, not a kind of definition.
+- Claude Code ref-gate hook (`hooks/ref_gate.py`), registered by the Claude
+  Code plugin on `UserPromptSubmit` and `PreToolUse` (`Agent|Task|SendMessage`).
+  Scans inbound messages for content-addressed refs (`Handle#stub`) and
+  verdicts them against the active registry: stale refs are reported as
+  model-visible context by default (`SEMA_REF_GATE=warn`) or blocked with a
+  repair message in opt-in enforce mode. Unknown handles never block; the gate
+  fails open if the registry is unavailable. See `hooks/README.md`.
+- `sema check`: verdict content-addressed refs in stdin text against the
+  active registry (`--db` override, `--json` for the versioned verdict
+  document; exit 0 clean, 3 stale, 1 registry error). The scan/verdict
+  logic lives in `sema.core.check` and is shared by harness shims — the
+  Claude Code ref-gate hook is now a thin adapter over it. Ships with a
+  conformance fixture set that any future harness shim replays.
+- Lean 4 formal-verification pilot for the handshake decision kernel and
+  canonicalization type-tag domain separation. Proofs are pinned to Lean
+  4.30.0, checked without `sorry`, independently rechecked by `leanchecker`,
+  and enforced by blocking CI.
+- Machine-readable `verification/proof-manifest.json` linking theorem names to
+  production implementations, conformance tests, and explicit assumptions.
+- `sema_handshake(..., strict=true)` mode. Only the full 64-character hash can
+  produce `PROCEED`; a matching truncated stub returns `REQUIRE_FULL_HASH`.
+- `scripts/apply_vocabulary_change.py`, running apply, export, rehash and
+  re-export in the one order that works, stopping at the first failure. The
+  order matters because `rebuild_vocabulary.py` reads the exports while
+  `sema apply` writes the database, so rebuilding before exporting rehashes the
+  previous state.
+- `scripts/audit/dangling_handles.py`, reporting CapitalisedNames in pattern
+  text that resolve to no pattern, with the instance count used by this
+  repository's declared three-instance authoring policy. Covers backticked
+  names and multi-part CamelCase; its docstring records why single bare
+  capitalised words are not detectable in this corpus.
+- `EpistemicCascade` (Mind/Reasoning): a conclusion inherits the verification
+  assurance of its weakest load-bearing premise. Assurance is graded by how a
+  premise was checked (Independent / Self / None); a `Check` yields a `Status`,
+  and this pattern grades what that outcome is worth given how it was obtained.
+  References `Verification`, `Assumption`, `EpistemicCalibrate`,
+  `BeliefTracking`, `Check`, `Status`.
+- New handles relative to 0.3.0, besides the above: `Equivalence` (from the
+  `Identity` untangling), `ExponentialBackoff` (split from generic `Backoff`),
+  `MetricReading` (readings separated from `Metric` definitions), and `Trait`.
+
+### Changed
+
+- `Role` now defines a bearer-independent contextual function rather than an
+  already assigned permission/responsibility bundle. Every role declares its
+  expected contribution; authority and obligation identifiers remain optional
+  facets, while assignment, occupancy, enforcement, and conflict resolution
+  stay with descendants or callers. Because canonical `Permission` and
+  `Responsibility` are already Agent-bound instances, the broad parent no
+  longer claims either as a component. The authored definition moves from
+  `Society/Governance` to `Infrastructure/Data Structures`; only `Workflow` and
+  `OrchestrationLoop` receive dependency-hash cascades. Its supersession
+  metadata now lists all six distinct Role identities shipped from v0.1.18
+  through v0.3.0 and excludes an unreleased rebuild identity.
+- `Refine` now operates on immutable artifact versions: it accepts the current
+  `Artifact` and a caller-defined `Condition`, composes `Critique`, and yields a
+  successor `Artifact` for return or another pass. It no longer requires an
+  external-state `Act` or narrows every revision target to an `Incongruity`.
+  `PhasedRefinement` no longer requires a mutable artifact; its other contract
+  and placement questions remain explicitly open for its own review. The
+  semantic change cascades only to `StyleSpec`, and both edited cards now cite
+  their exact public v0.1, v0.2, and v0.3 identities.
+- `ProphetFanOut` now defines bounded, causally traceable generation of
+  multiple distinct scenarios from a contemplated action and starting context.
+  Binary branching is valid; computational abundance, a fixed three-scenario
+  output, entropy thresholds, mandatory tail weighting, desirability
+  judgments, aggregation, and quorum policy are no longer universal
+  requirements. `BreadthGovernor` no longer claims that `ProphetFanOut`
+  pre-scores or prunes candidates: generation remains upstream, while the
+  governor owns prioritization and reduction. The semantic change cascades
+  only to `NormCheck`.
+- `UniqueHandle` now makes authority linear without claiming that a digital
+  representation cannot be copied. One authoritative holder-generation pair
+  governs use and transfer; the representation alone grants nothing, a
+  conditional transfer has one commit point and one winner, stale generations
+  fail closed, and an unobserved result must be resolved before use or retry.
+  The false `Break` recovery link and implementation-specific `StateLock` and
+  `Agent` requirements are removed; `Resource` is now the sole conceptual
+  dependency. The change cascades through `HeldRelease`, `Award`, and `Oracle`
+  without altering their payloads, and all four cards now cite exact public
+  v0.3 supersession IDs.
+- `Rollout` now executes the approved `ExecutionManifest.operation_sequence`
+  rather than treating prototype-only `Build` as a production executor. A
+  durable `RolloutManifest` write-ahead record precedes each canary or forward
+  action; only Canary `proceed` authorizes wider execution, while non-proceed,
+  inverse-admission failure, and breaker paths emit `Break`, compensate, record,
+  freeze, and require a new Rollout. `EjectionSeat` mode takes precedence,
+  including PAUSE remaining open and EMERGENCY promising neither cleanup nor a
+  final write. The false `WorldReversible` and `MonitorReport` promises are
+  removed. The semantic rewrite cascades to
+  `Deploy`, `OrchestrationLoop`, and `RealizationProtocol`; their payloads are
+  unchanged and their supersession metadata now cites exact public v0.3 IDs.
+- `Rally` now selects responders before MUSTER, counts only confirmed selected
+  participants, terminates both phases at one deadline, and always yields an
+  identified formed-or-dissolved `Outcome`. Its participant bounds match
+  `Select`, while ballot-specific `Quorum`, optional leadership, authentication,
+  and contextual selection policy no longer masquerade as parent requirements.
+  `Delegate` now transfers an existing `Task` only after explicit acceptance,
+  preserves single ownership across refusal and failure, and treats `Break` as
+  an invoked protocol; auction, probing, holographic inheritance, and unsupported
+  dependency/cycle enforcement remain caller or descendant policy. The semantic
+  rewrites cascade to `Handoff` and `Nucleate`.
+- `Work` now requires only `effort_cost`; `timestamp` remains an optional
+  provenance property. Directed resource expenditure is therefore still Work
+  when a context cannot or need not record a clock reading, while descendants
+  remain free to require one. The release-scale dependency cascade changes 272
+  of 455 pattern identities. `RolloutWatch`, `OptimisticSolver`, and
+  `RigorousSolver` were independently reviewed before their exact `extends`
+  pins were retargeted to the resulting `Monitor` and `PolymorphicSolver`
+  identities; no authored contract on either parent or any child changed.
+- `Metric` now defines quantitative meaning rather than conflating that
+  definition with one timestamped observation. Its required fields are the
+  target property, derivation rule, and quantitative value schema; observed
+  values move to `MetricReading`. `Feedback` and `Result` now consume readings,
+  while `Optimize` retains the Metric objective and compares baseline and
+  candidate readings. `Score` is explicitly an evaluative result rather than a
+  generic measurement. The batched split changes 251 of 456 identities,
+  including independently reviewed retargets of `OptimisticSolver` and
+  `RigorousSolver` to the resulting `PolymorphicSolver` identity.
+- Seven independently reviewed consistency repairs preserve broad parents while
+  making their enforceable boundaries explicit. `Workflow` now requires only
+  steps and directed prerequisites; typed edge data, acceptance specifications,
+  role bindings, recursion, and daemon semantics remain declared options.
+  `RetrievalAugment` is neutral across vector, index, graph, and other stores,
+  with selection policy delegated to callers or descendants. `CreativeBlend`
+  owns novelty/value admission without universally invoking `NoiseInjection` or
+  duplicating its temperature. `RealizationProtocol` now composes the actual
+  FrameSpec producer, judges an ExecutionManifest against a Budget and Criteria
+  before Rollout, distinguishes RolloutManifest from Outcome, and delegates
+  iteration to `OrchestrationLoop`; that loop now has an explicit per-run
+  `iteration_limit`. `MutualInformation` uses the general KL definition and
+  scopes its entropy bound, while `Compare` permits declared cross-type rules.
+  The batch changes 16 of 456 identities through seven authored definitions and
+  nine ordinary dependency cascades; no exact specialization pin moves.
+- `Critique` now remains the reasoning operation over a target and declared
+  criteria, while its yielded `Assessment` remains the authoritative output
+  record. The duplicate output-shaped `Critique.data_schema` is removed
+  without deciding Assessment's separate schema questions. The repair changes
+  51 of 456 identities through the ordinary dependency closure; the two exact
+  `PolymorphicSolver` children were reviewed and retargeted without changing
+  their authored contracts.
+- **Breaking aggregate-root migration (semahash 0.4.0):** aggregate identities
+  now use two domain-separated RFC 9162 schemes: `sema-semantic-set-v1` for the
+  unordered set of unique definitions and `sema-catalog-v1` for exact
+  handle-to-definition bindings. Root payloads carry their scheme; malformed
+  inputs and scheme mismatches fail closed. The aggregate migration itself does
+  not change pattern IDs; reviewed card edits in this release do. The final
+  456-pattern snapshot commits semantic-set root
+  `1b90a7b9f4756e60457dcf88e6d5117e6a35affbf387a5a572cca585d08e532b`
+  and catalog root
+  `44427e40b46c728fd2e929b3816aab3f22661f2bae5d2729d01e294a0069b484`.
+- `extends` replaces `derived_from` for new specialization claims. It is
+  hashed, pins the exact full Sema ID of the parent definition, emits `IS_A`,
+  and does not silently follow later definitions sharing the handle.
+- `sema apply` preserves exact `extends` pins by default. In the current
+  single-version workspace, an unresolved pin or a parent edit that would
+  strand a child fails preflight before mutation. After reviewing the
+  relationship, stage the child and pass `--retarget-extends`; only staged
+  claims move. Pull and direct minting enforce the same boundary.
+- Pre-0.4 cards using `derived_from` remain readable and hash-verifiable under
+  their original key. The key is not normalized to `extends`, does not acquire
+  `IS_A`, ordering, or active-parent semantics, and cannot coexist with
+  `extends`; explicit migration mints a new identity.
+- Context negotiation now derives its set commitment from stored pattern
+  identities using the catalog Merkle construction, rather than a second
+  hand-written JSON hash path. This binds every requested handle to its
+  definition, so swapped name mappings cannot falsely agree. The MCP tool
+  still returns an eight-hex-character cooperative drift prefix, and
+  verification now requires its scheme.
+- `Backoff` now defines the general failure-responsive delay family instead of
+  requiring exponential growth, jitter, reset-on-success, and a retry budget.
+  `Retry` explicitly selects `ExponentialBackoff` for transient failures,
+  `StateLock` composes with the generic policy family, and `Yield` no longer
+  links technical retry delay to negotiation concession.
+- The shorthand vocabulary reference is now generated on demand instead of
+  tracked and silently staged by the pre-commit hook. Its exporter uses the
+  current `_meta.path` taxonomy and the database remains the source of truth.
+- Cooperative handshake behavior remains the default for non-adversarial drift
+  detection, but successful responses now report `assurance: "prefix"` or
+  `assurance: "full_hash"` plus the selected mode. Documentation no longer
+  describes a truncated prefix match as byte-exact identity proof.
+- Pattern authoring now includes an explicit constraint-placement test: general
+  parents contain only cross-context, identity-defining contracts, while
+  strategy, deployment policy, and contextual diagnostics belong in
+  descendants, callers, parameters, or design commentary.
+- The design manual now labels broad-use intersections as review hypotheses
+  and critiques as diagnostics rather than contract requirements. Foundational
+  examples no longer treat field counts as evidence that a pattern is weak.
+- `BearerToken` now defines representation-neutral possession semantics.
+  Opaque tokens validated by lookup or introspection and structured tokens
+  validated locally both satisfy the parent; signatures, expiry, revocation,
+  and transfer policy are descendant or deployment choices.
+- The thirteen OPEN pattern verdicts left by the reasoning pass, plus a
+  separate `Solution` sidecar question, were adjudicated, each with its
+  governing principle recorded in the external reasoning ledger: `Trace`
+  (fan-in 203) states best-effort coverage instead of promising that every
+  modification is recorded, with a Silent-gap failure mode; `Mutex` moves
+  Physics -> Society/Coordination and its `accepts` edge is corrected from
+  `task` to `actor`; `Axiom` moves Society -> Mind/Reasoning; `NormCheck` is
+  restated around what all three `action_on_detect` modes share; `Branch` is
+  kept rather than retired and now differentiates itself from `Gate` with a
+  reference edge; `Assessment`'s Reference invariant admits systemic scope;
+  `MutualInformation` gains an estimator-conflation failure mode; and
+  `SteelmanCheck`, `Translate`, `PromptChain`, `CreativeBlend`,
+  `RealizationProtocol`, and `FailureTrace` were adjudicated without further
+  hash changes at release time. The separate `Solution` sidecar question was
+  likewise recorded without a hash change. Follow-up corrections are
+  documented under 0.5.0.
+- Review method: when a parameter's values differ in what happens after an
+  invariant's property holds, the invariant was mis-scoped; restate it around
+  the property all values share (`docs/guides/review-method.md`, third
+  occurrence of the defect class).
+- Paper: the introduction now states the value proposition explicitly --
+  memory that survives summarization, the mechanism-scoped reasoning claim
+  with its boundary as a prediction, binding steps, the standard-library
+  framing, and why the gaps humans left in text are gaps in the model. Paper
+  builds go through `scripts/compile_paper.sh` (now an AGENTS.md rule).
+
+### Fixed
+
+- `PolymorphicSolver` no longer calls all five Solver surfaces mandatory in its
+  Interface Non-Compliance failure mode. Manifest and Execute remain mandatory;
+  Consult, Verify, and Feedback fail conformance only when advertised but not
+  provided.
+- The design manual now describes `Lock` as the K=1 mutual-exclusion contract
+  its payload actually defines. Following the base-lock semantics used by Linux,
+  starvation and convoying remain queue-discipline concerns for descendants
+  rather than universal Lock failure modes.
+- The canonical vocabulary-apply wrapper now forwards the reviewed
+  `--retarget-extends` option and pins both the database and Python imports to
+  its own checkout. An isolated worktree can no longer silently execute an
+  editable `sema` installation from a sibling checkout while mutating the
+  local database.
+- Supersession metadata for `OptimalStop`, `PURE`, `PURECheck`, `ParetoFront`,
+  `PatternDiscovery`, `PatternEmergence`, `MintWhenFriction`, `PreMortem`,
+  `ProphetFanOut`, and `BreadthGovernor` now lists the distinct exact
+  identities shipped in v0.1, v0.2, and v0.3 and excludes unreleased rebuild
+  identities. Eight of these corrections are metadata-only and therefore do
+  not alter the patterns' semantic hashes.
+- `update_doc_refs.py` no longer overwrites refs that are cited precisely
+  because they are not current. `docs/specification/versioning.md` illustrates
+  stub divergence by contrasting a superseded version with the one that replaced
+  it, and the rewriter overwrote both sides with the current stub — so both
+  illustrations ended up quoting the same stub twice, which cannot demonstrate
+  stubs differing. A region fenced with `<!-- doc-refs: pinned -->` is now left
+  alone, and refs outside the fence in the same file are still refreshed. Both
+  examples in the versioning spec are repaired and now cite real members of
+  `PropheticQuorum`'s supersession chain.
+- `rebuild_vocabulary.py --replace` keeps the rebuilt database when it reports
+  hash drift. Drift means the stored hashes were stale — typically a dependency
+  changed and its dependents were never rehashed — and the rebuild has just
+  corrected them in place, so the database it built is the better copy.
+  Restoring the backup discarded that correction, and because a caller
+  re-exports afterwards, the stale hashes were written straight back and the
+  next rebuild found the same files again. Observed looping on a 207-dependent
+  cascade. The exit code is still non-zero so the finding stays visible, and the
+  message now says the hashes were corrected rather than lost.
+- `sema apply --check` now refuses a dependency cycle instead of passing it.
+  The topological sort dropped every edge leaving the batch, so a cycle between
+  a staged pattern and an already-committed one was invisible to it, and the
+  sort ran after `--check` had already returned. A mutual `references` pair —
+  a dependency one way and a citation back — is a cycle and is now reported
+  with its path. Only cycles containing a pattern being added are reported, so
+  a pre-existing cycle elsewhere cannot block an unrelated change.
+- `rebuild_vocabulary.py --replace` no longer discards the vocabulary when the
+  rebuild fails. It kept the freshly created database and deleted the backup on
+  the failure path, and a failed rebuild has no rebuilt database to keep — only
+  an empty one — so the next export wrote zero patterns over `data/vocabulary/`.
+  `--replace` is now honoured only on success, `--check` never keeps its empty
+  database, and backups are timestamped so a later run cannot overwrite the
+  backup an earlier one took.
+- MCP extras now exclude the incompatible 2.x SDK line, which removed the
+  `mcp.server.fastmcp` API used by the server.
+- Vocabulary information statistics now derive layer and category from the
+  canonical `_meta.path` instead of classifying every current pattern as
+  unclassified.
+- The generated design manual no longer embeds the current date, keeping its
+  CI freshness check stable across calendar days.
+- CI now lints and format-checks the manual and vocabulary-information
+  generators enforced by the canonical verification workflow.
+- Handshake examples no longer embed stale pattern or vocabulary hashes; they
+  reuse the canonical challenge response returned by `sema_handshake`.
+- Deterministic rebuilds isolate temporary `sema init` registry writes instead
+  of modifying the developer's real `~/.config/sema` registry.
+- Updating an existing pattern now replaces superseded schema edges and removes
+  orphaned contract facets instead of leaving old invariants, preconditions, or
+  postconditions attached to the graph.
+- Updating or removing a pattern signature or `_meta.related` declaration now
+  prunes its stale graph edges without disturbing parallel relationship types.
+- Vocabulary export always loads the current checkout's hashing code, and the
+  deterministic rebuild compares against its pre-rebuild input snapshot. This
+  avoids stale installed-package hashes and false drift reports on intentional
+  uncommitted vocabulary edits.
+- Vocabulary audits now validate current `path`/`ring`/`tier` metadata and
+  report missing contract fields as advisory coverage rather than structural
+  problems. Broad primitives are no longer labeled defective merely because
+  their contracts are intentionally absent.
+
+---
+- 98 identity-changed patterns did not carry the published 0.3.0 `sema_id` in
+  `_meta.supersedes`, so `sema pull` could not map consumers' pinned hashes
+  forward -- they would have been orphaned rather than replaced. Backfilled per
+  `docs/guides/lifecycle.md`; all 426 identity-changed patterns now carry
+  complete chains. The field is unhashed, so the backfill cascaded nothing.
+- `docs/information/audit.md` had gone stale against the database, which is
+  what fails CI's vocabulary-workflow check (3.12 job only).
+
+## [0.3.0] - 2026-07-06
+
+**Breaking: canonicalization v2 — every pattern hash and the vocabulary root change.** No dual-hash migration is shipped, deliberately: pre-0.3.0 vocabularies HALT on handshake against 0.3.0 registries (fail-closed working as designed) and converge via `sema pull`.
+
+New vocabulary root: `46e651aeeb832fdc654d6e48ba2b9c9049f8585a5423371624426c1ab6d3f15b` (452 patterns, previously `39ca671a4dcb3075…`).
+
+### Fixed — hash spec
+
+v1 canonicalization allowed structurally different definitions to share one content address, breaking `word = hash(canonical(definition))`:
+
+- **No domain separation**: `merkle_hash("1") == merkle_hash(1)`, `"" == [] == {}`, and a 2-element list collided with a 1-entry dict — two schema-valid patterns differing only in `data_schema` shape produced the same `sema_id`. Every hash-tree node input is now prefixed with a type tag (`s:`/`p:`/`l:`/`d:`).
+- **Raw-key ordering**: dict entries were sorted by raw key but hashed by normalized key, so the same canonical form could hash two ways, and keys colliding after normalization silently dropped an entry (now a `ValueError` — fail closed).
+- **Dependency alias collapse**: multiple aliases referencing the same handle collapsed to one insertion-order-dependent entry, silently dropping a dependency from the hash input. Multiple refs to one handle now hash as a sorted list (arity is semantic; alias spelling is not).
+
+### Fixed — reproducibility
+
+- `sema apply` write-back now refreshes dependency ref values in the source JSON (the batch is topo-sorted, so dep hashes are final). Previously files kept whatever dep hashes they were authored with, so stored `sema_id`s could not be recomputed from the files alone.
+- `scripts/test_hash_verification.py` (the dependency-free independent verifier) updated to v2 and taught the dependency-canonicalization step. All 452 patterns now verify from their JSON files alone — this did not hold under v1.
+- First pytest coverage for the hashing core (`src/sema/core/tests/test_hashing.py`): every v1 collision pair is a regression test.
+
+### Changed
+
+- All 452 pattern hashes, refs, and stubs regenerated; `docs/information/vocabulary_information.md` and `skills/sema-usage/SKILL.md` examples updated. Historical `_meta.supersedes` refs keep their original v1 hashes (archival provenance).
+
+---
+
+## [0.2.3] - 2026-04-18
+
+Docs-only release. No code or vocabulary changes.
+
+### Changed
+
+- Safety section rewritten in `README.md` and `docs/README.md` to scope the sandbox recommendation to pattern-execution (not to sema itself) and to split **intended use** (reasoning and reference) from **executing patterns as recipes** (untested research territory).
+- Stale `SEMA_ALLOW_MINT=true` instructions in `install.md`, `docs/guides/getting-started.md`, `skills/sema-mint/SKILL.md`, and `skills/sema-seed/SKILL.md` replaced with the 0.2.2 opt-out model (`SEMA_DISABLE_MINT=true`, `SEMA_DISABLE_PULL=true`). Tools tables gain `sema_pull` / `sema_root` / `sema_graph_skeleton`.
+
+---
+
+## [0.2.2] - 2026-04-18
+
+Doc-vs-code drift fix for the MCP surface. 0.2.0's CHANGELOG, SKILL, and test file all claimed `sema_pull` was an MCP tool and `sema_mint` was exposed by default, but the server module still had `sema_mint` behind `SEMA_ALLOW_MINT=true` and no `sema_pull` at all. This release lands the code that matches the claims.
+
+### Added
+
+- `sema_pull` MCP tool — wraps `cli.main.update_db`. Returns structured JSON with `success`, `added`, `updated`, `skipped`, `cascaded_user`, `superseded_removed`, `superseded_kept_orphan`, `upstream_removed`, `vocabulary_root_before`, `vocabulary_root_after` (and `dry_run` / `error` when applicable).
+- `SEMA_DISABLE_PULL=true` environment variable to hide `sema_pull` in read-only / pinned-vocabulary deployments.
+- `src/sema/mcp/tests/` registered in `pytest` testpaths. The 6 tests for `sema_pull` / `sema_mint` registration and structured-output shape now run in the default suite.
+
+### Changed
+
+- `sema_mint` flipped from opt-in (`SEMA_ALLOW_MINT=true` required) to opt-out (`SEMA_DISABLE_MINT=true` to hide). Exposed by default.
+- `update_db()` now returns a structured dict instead of a bare bool. CLI callers read `result["success"]` for the exit code; the MCP tool serializes the whole dict.
+
+### Removed
+
+- Legacy `SEMA_ALLOW_MINT` environment variable. Clean break, no back-compat shim.
+
+---
+
+## [0.2.1] - 2026-04-18
+
+### Added
+
+- `web/public/llms.txt` — served at `semahash.org/llms.txt` after the next web build (previously the file existed only in the gitignored `web/dist/` and was not deployed).
+
+### Changed
+
+- `reference/all_patterns_short.md` moved to `data/shorthand/all_patterns_short.md`. Generator (`scripts/export/export_short_hand.py`), pre-commit hook, installer hook, and lifecycle doc all updated to the new path.
+- `install.md` refreshed for 0.2.0 (adds `sema_root` / `sema_graph_skeleton` to the MCP tools table; CLI section mentions `sema pull` / `sema categorize`; new "Keeping a project DB fresh" section).
+- `experiments/orchestrator` submodule pointer bumped to the latest upstream commit.
+
+---
+
+## [0.2.0] - 2026-04-17 — Foundation Audit + Pull Loop
+
+Two coherent threads shipped in this release:
+
+1. **Foundation audit** — a cross-pattern refinement pass (dual-LLM proposal/review: Claude Opus 4.7 + Gemini 3.1 Deep Think, adjudicated by the author) tightened the governing rules and applied them to the entire library.
+2. **Pull loop closure** — `sema pull` now reads `_meta.supersedes` and redirects retired handles to their replacements by default (opt-out via `--preserve-superseded`); `sema_mint` flipped from opt-in to opt-out.
+
+**Vocabulary root:** `sema:vocab#mh:SHA-256:39ca671a4dcb3075855cb293380d1796105e2eca0de49b0537279b798b675ee6`
+**Pattern count:** 452 (default) + experimental shelf.
+**Scope of changes:** 31 new patterns, 5 renames, 1 moved to experimental, 71 layer relocations, 71 mechanism rewrites, 50 additional structural fixes (dedup / split / broken-ref cleanup), 3 new `derived_from` wirings, full supersedes population against the live users' db (360 patterns), plus hash cascades through the dependency DAG (399 pattern files differ from v0.1.27 in total — 31 new + 368 updated).
+
+**Per-pattern reasoning:** This changelog lists *what* changed. For *why* each pattern exists, what its mechanism commits to, and the design commentary behind each rename / relocation / rewrite, see the design manual at [`docs/manuals/vocabulary-design.md`](docs/manuals/vocabulary-design.md). The manual ships with this release and is the authoritative review surface for vocabulary quality.
+
+### Breaking changes for consumers
+
+- **`_meta.layer` + `_meta.category` consolidated into `_meta.path: list[str]`.** The taxonomy is now represented as an ordered list — `["Society", "Governance"]` instead of `{"layer": "Society", "category": "Governance"}` — so deeper hierarchies (`["Society", "Governance", "Voting"]`) don't require a schema bump. Consumers reading `pattern["_meta"]["layer"]` or `pattern["_meta"]["category"]` should read `pattern["_meta"]["path"][0]` and `pattern["_meta"]["path"][1]`. The top-level `sema_layer` and `sema_category` fields are preserved as **derived** (read-only) exports for one deprecation cycle; new code should read `_meta.path`. Graph representation follows: `LAYER` + `CATEGORY` node types are superseded by `TAXONOMY_PATH` nodes (one per valid path prefix), linked toward the root by `PARENT_PATH` edges; patterns attach via a single `IN_PATH` edge to their leaf. Pattern `sema_id`s are unaffected (path lives in `_meta`, excluded from the Merkle input).
+- **Old renamed handles are removed on `sema pull`.** The default behavior reads upstream `_meta.supersedes` and removes the local copy of any superseded pattern. Use `sema pull --preserve-superseded` to keep both the old and new handles. The pre-pull snapshot is still retained — `sema pull --undo` restores everything.
+- **`sema_mint` is now exposed by default in the MCP server.** Previously required `SEMA_ALLOW_MINT=true`. Deployments that want to keep mint disabled must now set `SEMA_DISABLE_MINT=true`. (Note: the code change for this actually landed in 0.2.1 — 0.2.0 described the intended behaviour but shipped with the old gate still in place.)
+- **Pattern hashes shifted widely.** The foundation audit rewrote 71 mechanisms and relocated 71 patterns; canonicalization (see below) changed hashes for 4 new patterns plus their dependents. Consumers who pinned specific hashes will see `sema pull` update them automatically via the supersedes chain. Code that references handles (not full hashes) is unaffected.
+
+### Schema migration — path-based taxonomy
+
+**Before (≤ 0.1.27):**
+```json
+"_meta": {"layer": "Society", "category": "Governance", "ring": 1, "tier": 1}
+```
+
+**After (0.2.0+):**
+```json
+"_meta": {"path": ["Society", "Governance"], "ring": 1, "tier": 1}
+```
+
+**Rationale.** Categories are sub-scopes of layers, not flat labels. `Physics/Primitives` and `Infrastructure/Primitives` were always distinct concepts that happened to share a leaf name; the pre-0.2 representation forced them onto one `CATEGORY` node with two `IN_LAYER` edges — a topology lie the queries had to paper over. The list form makes the scope explicit, supports arbitrary depth (`["Society", "Governance", "Voting"]`) without schema changes, and removes ambiguity at the graph level.
+
+**Stricter validation (Pydantic, enforced on `sema apply`):**
+- `path`: list of non-empty strings, length ≥ 1, first segment in `{Physics, Infrastructure, Mind, Society}`, full tuple in `VALID_PATHS`.
+- Path segments cannot contain `/` (reserved separator).
+- Pattern `handle` cannot contain `/` (avoids collision with taxonomy path text).
+- `ring` ∈ {0, 1, 2}, `tier` ∈ {0, 1, 2, 3} — stricter than before.
+
+**New CLI command:** `sema categorize <handle> --path Physics/Primitives` — validates against `VALID_PATHS` and rewires the pattern's `TAXONOMY_PATH` linkage atomically via the existing apply path.
+
+**Migration for downstream consumers.** Run `scripts/migrate_taxonomy_to_path.py` against your `data/vocabulary/*.json` directory; it's deterministic, idempotent, and leaves `sema_id`s untouched. Then `sema apply --add data/vocabulary/` or `scripts/rebuild_vocabulary.py --replace` to get the `TAXONOMY_PATH` graph nodes. Mixed-state DBs (some patterns on `_meta.path`, others still on `_meta.layer`) are handled gracefully — the graph builder reads either shape and normalizes on write.
+
+### Migration guide (from 0.1.27)
+
+For a consumer running 0.1.27 who pulls to 0.2.0, the expected transcript is:
+
+```
+  + 31 new            (Physics primitives, FI Table 4 gap, §6 protocols, etc.)
+  ~ 368 updated       (mechanism rewrites + structural fixes + cascading hashes)
+  = 53 unchanged      (fast-path)
+⚠️  5 user pattern(s) had hashes auto-updated due to upstream changes:
+    AbductiveLeap, CognitiveSolver, Group, SolverRoot, Switch
+→ 5 pattern(s) superseded by upstream, removed locally:
+    CognitiveSolver   → PolymorphicSolver
+    Linear            → Chain
+    AbductiveLeap     → Abduction
+    Switch            → Route
+    SolverRoot        → RootSolver
+ℹ️  Upstream removed 1 pattern(s); they remain locally as user patterns:
+    Group
+```
+
+After pull, `sema pull --verify` confirms all stored hashes match recomputed values.
+
+### Tooling (new in 0.2.0)
+
+- **`sema pull --preserve-superseded`** (new CLI flag). Keeps locally superseded patterns alongside their upstream replacements instead of cleaning them up.
+- **Orphan guard on supersession cleanup.** If a user-only local pattern still depends on a superseded one (via `sema_id` reference), pull keeps the superseded pattern in place and reports `superseded_kept_orphan`. Fix the dependent and re-run to complete the cleanup.
+- **Post-pull warning for stale user-owned `_meta`.** When retained user patterns (absent from upstream) still carry pre-0.2.0 `_meta.layer` + `_meta.category` instead of `_meta.path`, pull flags them by name and points at `scripts/migrate_taxonomy_to_path.py`. Notify, don't auto-migrate — user owns those patterns and the migration is a content decision.
+- **Post-pull notice for orphan sub-nodes.** When supersession cleanup leaves INVARIANT/PRECONDITION/POSTCONDITION nodes with no incoming edges (their parent pattern was removed), pull lists them with their text so consumers can do a follow-up cleanup. No auto-GC.
+- **Design manual** (`docs/manuals/vocabulary-design.md`, new). Per-pattern design commentary rendered from a sidecar — the authoritative review surface for vocabulary quality. Replaces the ad-hoc audit markdown previously kept under `audits/`.
+- **Design-critique sidecar** (`data/design_critique.json`, new). Editable source of commentary (452 entries, one per pattern). Kept out of the hash input, so edits to commentary do not cascade into pattern sema_ids.
+- **`scripts/generate_design_manual.py`** (new). Staging-aware generator — prefers `data/staging/<Handle>.json` over `data/vocabulary/<Handle>.json` when present, so the manual reflects in-progress edits without requiring an apply round-trip.
+- **`scripts/migrate_design_commentary.py`** (new, one-shot). Consolidated the per-pattern audit markdown under `audits/2026-04-17/` into the sidecar. Idempotent on re-run (preserves hand-edited fields).
+- **Env-var opt-outs**:
+  - `SEMA_DISABLE_MINT=true` — hides the `sema_mint` MCP tool.
+  - `SEMA_ALLOW_MINT=false` — legacy alias for `SEMA_DISABLE_MINT=true`; honored one deprecation cycle.
+
+### Bug fix: `_meta.related` edges lost during apply
+
+Two compounding bugs caused `RELATED_TO` edges to be under-populated. Before this release, the DB had 24-34 such edges for ~117 `_meta.related` refs in the vocabulary — only ~20-30% of soft-links showed up as graph edges. Effect on consumers: `sema resolve Foo` missed "related" siblings; graph-based exploration tools silently skipped the weakest but still-valid link class.
+
+1. **Prefix-stripping wasn't applied.** `_meta.related` accepts both bare-handle (`"Foo"`) and full (`"sema:Foo#mh:SHA-256:..."`) refs. The edge-creation code used `item.split("#")[0]`, which for full refs yields `"sema:Foo"` — not a real handle. Fixed: use `extract_handle_from_ref(item)` to strip the `sema:` prefix before lookup.
+
+2. **Topological-order race.** Patterns apply in topological order by **hard** dependencies (`accepts`, `composes_with`, etc.). `_meta.related` is a soft link and doesn't participate in the sort. When pattern A declares `related: [B]` but B is minted after A, A's edge-creation attempt finds no B in `_handle_to_id` and silently skips. Fixed: added `GraphStore.sweep_related_edges()` — a second-pass method that walks all patterns once the full DB is loaded and creates any missing `RELATED_TO` edges. `sema apply` now calls it automatically at the end of a batch; downstream code can call it explicitly when needed.
+
+Post-fix: 105 `RELATED_TO` edges (up from 34), matching the 105 resolvable refs in the vocabulary. 12 refs remain unedged because they point to handles no longer present in the default shelf (e.g., experimental-shelf-only patterns like `ChaosDrift`, `GhostTrail`). Silent skip for those is correct — they're stale but flagged for a future cleanup pass.
+
+Pattern sema_ids unaffected; `RELATED_TO` is metadata and not part of the hash input.
+
+### Bug fix: CATEGORY node collapse across layers
+
+`_add_or_update_pattern` in `graph_store.py` looked up `CATEGORY` nodes by text alone. When the foundation audit added Physics/Primitives patterns after Infrastructure/Primitives already existed, it matched the Infrastructure node (same text "Primitives") and bolted a second `IN_LAYER` edge onto it pointing at Physics — instead of creating a distinct Physics/Primitives node. The graph ended up with 12 CATEGORY nodes and 13 IN_LAYER edges: topology that can't represent "which-category-in-which-layer" unambiguously via edges alone (only via pattern-metadata lookup).
+
+Fix: composite-key lookup — `(category_name, layer_id)` must both match. If a node with the right text exists but no `IN_LAYER` edge to the target layer, a new node is created. After a clean rebuild: 13 CATEGORY nodes, 13 IN_LAYER edges, each `(layer, category)` combo uniquely represented. Pattern `sema_id`s are unaffected (category/layer live in `_meta`, not hashed).
+
+### Bug fix: hash canonicalization
+
+`generate_sema_hash()` produced different hashes for three semantically-equivalent representations of "no dependencies": (a) missing `dependencies` key, (b) `dependencies: {}`, (c) `dependencies: {accepts: {}, yields: {}, composes_with: {}, references: {}}`. This hadn't surfaced before because all dep-less patterns in 0.1.27 used form (a); the audit introduced 4 new patterns (`Boolean`, `Conservation`, `Distance`, `Status`) authored in form (b), triggering `sema pull --verify` false-positives for ~291 patterns via hash cascade.
+
+Fix: `generate_sema_hash` now strips empty dep sub-blocks and drops the `dependencies` key entirely when no real deps remain. All three representations now hash identically. The full library was re-hashed and re-applied; `--verify` passes cleanly on the new DB.
+
+### Added
+
+**Physics primitives** (8, minted under the structured-thinking criterion):
+- `Gradient#480b` — directional rate of change of a scalar field
+- `Equilibrium#f7c5` — dynamical system's stationary state
+- `Conservation#d63a` — invariant quantity under closed-system transformation
+- `Distance#3e1e` — metric-axiom function on a state space
+- `PhaseTransition#edf8` — discontinuous reorganization at a threshold
+- `Attractor#487f` — state-space region dynamics pull toward
+- `MutualInformation#da31` — information-theoretic shared entropy
+- `Measurement#5da6` — substrate act of extracting information
+
+**Solver-family completion** (Mind/Strategy, Mind/Memory, Mind/Reasoning):
+- `PolymorphicSolver#c28a` — five-surface contract (supersedes `CognitiveSolver`)
+- `RootSolver#13e8` — apex triage node with Pathway Memory (supersedes `SolverRoot`)
+- `ConceptualDecomposition#e06a` — contract-bound sub-concept decomposition
+- `PathwayMemory#7899` — problem_class → route → outcome_quality
+- `DecompositionGate#7fbd` — Necessity/Independence/Universality/Completeness
+- `FrameError#579f` — typed failure signaling lateral reframing required
+
+**Fractal Intelligence Table 4 gap** (Infrastructure/Data Structures, Society/Protocols, Society/Governance):
+- `PerformanceSignal#6308` — Feedback-surface typed output
+- `FailureTrace#f80b` — structured proof of AcceptSpec clause violation
+- `ReceptivityGate#9f9c` — guards Feedback surface from poisoned rejection signals
+- `DocumentedOverride#c0fb` — supervised hard-seam bypass, cryptographically logged
+
+**FI §6 generalized protocols** (Mind):
+- `CollaborativeWritingProtocol#7400`, `HumanEmulatorProtocol#307c`, `DiscoveryProtocol#2cd0`, `TemporalEnsembleForecasting#9e5f`, `EthicalReasoningProtocol#0287`, `TruthseekingProtocol#cf2b`, `MetaProtocols#27dc`
+
+**Other additions**:
+- `PURE#87ea` (Mind/Strategy) — viability framework parent
+- `GraphOfThought#226a` (Mind/Reasoning) — `Think(DAG)` sibling
+- `Forest#5eda` (Infrastructure/Data Structures) — N independently-rooted trees
+- `Boolean#2e6b` (Infrastructure/Data Structures) — binary truth value
+- `Status#1cf9` (Infrastructure/Data Structures) — verified/falsified/unknown
+- `ReAttempt#bd00` (Infrastructure/Primitives) — substrate-level re-try
+
+### Renamed (old handles redirect via `_meta.supersedes`)
+
+- `CognitiveSolver` → `PolymorphicSolver#c28a`
+- `SolverRoot` → `RootSolver#13e8`
+- `AbductiveLeap` → `Abduction`
+- `Linear` → `Chain`
+- `Switch` → `Route`
+
+### Relocated (71 patterns; mechanism-sufficiency test applied)
+
+Layer metadata is not hashed, so layer changes do not by themselves change pattern identity — but mechanism rewrites paired with relocation do change hashes. Rule G (hard dependencies flow higher→lower) is now enforced as a `sema apply` gate.
+
+**Society → Mind (30)** — mechanism is single-agent cognition, not multi-party:
+CapacityPressure, CiteBack, CognitiveEcho, CommitmentDevice, Compose, ConstraintFirst, ConstructOntology, CurriculumReplay, DeepResearch, DogfoodFirst, EmpathySim, Expansive, Fermi, FractalIntelligence, HackDetect, LivedProof, LocalizedLearning, ManifestPlanning, MarginalValueRule, MetaPrompt, ProblemFramer, Proprioception, Realizable, RequestFraming, SimulationTrace, SourceEvaluate, ThinSlice, TimeboxThink, TraceBelief, WorldReversible.
+
+**Society → Infrastructure (15)** — data structures / mechanical operations, not multi-party mechanisms:
+AcceptSpec, Aesthetics, ExecutionManifest, FailClosed, FeedbackSignal, FrameSpec, IdempotentWrite, MonitorReport, ProtoPack, RolloutManifest, SolverManifest, StateSnapshot, StyleSpec, TriGate, Warmup.
+
+**Physics → Infrastructure (14)** — authored foundational primitives, not substrate:
+Branch, Compensate, Compress, Cooldown, Cyclic, EntropyPump, Gate, Heartbeat, Hysteresis, Parallel, Route, Sign, StateAudit, Throttle.
+
+**Mind → Infrastructure (6)** — mechanical, no judgment required:
+Cache, Compare, Decision, Monitor, Rank, Tension.
+
+**Physics → Mind (2)** — mechanism requires cognition:
+Retry, Uncertain.
+
+**Infrastructure → Mind (1)** — requires judgment, not schema-matching:
+Critique.
+
+**Physics → Society (1)** — structurally requires counterparty:
+StateLock.
+
+**Mind → Society (1)** — structurally requires multiple parties:
+Stigmergy.
+
+**Society → Physics (1)** — substrate property:
+Reversibility.
+
+### Mechanism rewrites (71 patterns)
+
+Rewritten during refinement for reasons including: invariant/mechanism contradiction (e.g., `EntropyPump` had invariants describing a disambiguation pattern rather than an entropy pump); forward-dependency removal; renamed dependency uptake (e.g., `Solver`/`PolymorphicSolver` updated for the five-surface contract with Consult instead of Question); Noun/Verb morphology cleanup; cycle breaks in the dependency DAG. Full list:
+
+Abduction, AcceptSpec, Aggregate, AnalogyBridge, Anomaly, Audit, AuditTrail, BackwardChain, Ballot, Belief, Bid, Cache, Card, Causation, Chain, Check, ContextSwitch, Contract, Correlation, DriftWatch, Eliminate, EmpathySim, Expansive, FractalIntelligence, Gate, Generalize, HeldRelease, HeuristicSnap, Hypothesis, HypothesisLadder, IdempotentWrite, InvariantFilter, Judge, LatentWander, MechanisticDesignProposal, NormativeJudge, Novelty, OODA, OptimisticSolver, Optimize, OrchestrationLoop, OsmoticFilter, PUREBrainstorming, PURECheck, PUREOptimization, ParetoFront, Parsimony, PatternDiscovery, Plan, ProblemFramer, Prompt, Queue, Rally, Rank, Realizable, RealizationProtocol, RedTeam, RequestFraming, RetrievalAugment, RigorousSolver, ScoringFunction, Solver, SolverTree, Specialize, TaskLifecycle, TimeWarpLog, ToolDiscovery, Tree, UniversalSolverTree, Validate, WorkerMode.
+
+### Retired / Moved to Experimental Shelf
+
+- `Group` — ambiguous between Society coordination and general data structure; moved to experimental for refinement before re-inclusion in the default library.
+
+### Additional structural fixes (50 patterns)
+
+Post-audit surgical cleanup of internal defects found via systematic scans. None change pattern scope; they repair the pattern-as-specification. Verified: 58/58 structural checks pass.
+
+- **Duplicate invariants / ambiguity (5)** — `ConfidenceCalibrate` (post-calibration disambiguation), `Throttle` (redundant rate-limit), `HypothesisLadder` (duplicate Falsifiability), `PreMortem` (two duplicate pairs), `UptakeAsGround` (operational + Wittgensteinian merge).
+- **Duplicate failure modes (4)** — `OsmoticFilter`, `TieredAccess`, `Rally` (8→6), `Resonate` (9→6).
+- **Failure-mode restructure (1)** — `DriftWatch` (mitigations folded into parent failures, 8→4).
+- **Jammed failure modes split (3)** — `Proprioception`, `CapacityPressure`, `CounterfactualAnchor`.
+- **Jammed preconditions/postconditions split (10)** — `BackwardChain`, `BayesUpdate`, `Compose`, `Decompose`, `Delegate`, `Mutex`, `OntologyHandshake`, `Quorum`, `Satisfice`, `Eliminate` (also promoted a miscategorized precondition to real invariants — `Monotonic Reduction`, `Evidence-Required Exclusion`).
+- **Formatting / capitalization (5)** — `Backoff`, `Context`, `ExperienceSharding`, `Reframe`, `SemanticTabu`.
+- **Broken fragment (1)** — `Warmup` (`"(e.g. cache)"` split across entries by a stray comma; reassembled).
+- **Nested list header (1)** — `Mutex` (`"Failure modes: (1)..."` with numbered sub-items flattened to atomic entries).
+- **Bare-label invariants promoted (2)** — `BoundedTask` (`Budget Enclosure` / `Quality Gate` now have statements), `ConceptAnchor` (redundant `Immutable Reference` removed).
+- **FeedbackSignal invariants (1)** — bare adjectives `Targeted` / `Structured` made specific, tied to the data_schema.
+- **Template leaks in gloss (2)** — `Crystallize` (`{{phase_transition}}` → plain text, orphan dep removed), `Decay` (`{{state}}` → plain text).
+- **SacrificialProbe (1)** — semicolon-jammed failure modes split.
+- **`_meta.related` refs to full format (6)** — `Entropy`, `Experiment`, `Falsification`, `RecursionDive` (also: `SolutionNode` → `SolverNode` rename followed), `Snapshot`, `Vector`.
+- **`derived_from` fixes (10)** — `AdversarialProof` (bare handle → full sema_id), `BoundedTask` (stale), `ManifestPlanning` (legacy stub), `OptimisticSolver` (stale), `PolymorphicSolver` (stale), `RequestFraming` (legacy stub), `RigorousSolver` (all-zeros placeholder fixed), `RolloutWatch` (legacy stub), `FractalIntelligence` (`RecursiveIntelligence` retired — removed), `RealizationProtocol` (`CreationProtocol` retired — removed).
+
+### Full supersedes chain (v0.1.18 + v0.1.27 predecessors)
+
+`_meta.supersedes` is an **append-only chain** of prior public-release sema_ids, not a pointer to the most recent. Every pattern whose current sema_id differs from the sema_id it carried in a prior public release now lists that prior sema_id. `sema pull` iterates the chain, so a consumer pinned to any version in the chain gets their old handle cleaned up on upgrade — not just consumers on the most recent prior.
+
+This release populates the chain against **two distinct published DB states**: v0.1.18 (the earliest 0.1.x tag with a non-trivial DB) and v0.1.27 (the last public release). The intermediate v0.1.23 tag contributed zero new entries — its sema_ids coincide with either v0.1.18 or v0.1.27 for every pattern (no pattern changed in both the 02:20→12:11 and 12:11→17:47 windows on 2026-04-16).
+
+**Rename-aware population.** For the 5 rename/collapse successors, the chain must include the predecessor's entries too — not just the successor's same-handle history. Two cases:
+- **Collapse** (`Abduction`, `Chain`, `Route`): successor handle existed in v0.1.18 and v0.1.27 as a separate pattern; its chain carries both the absorbed handle's old sema_id (`AbductiveLeap` / `Linear` / `Switch`) and its own same-handle old sema_id. For these three, the absorbed predecessor was stable across v0.1.18 → v0.1.27, so one absorbed-predecessor entry covers both tags.
+- **Pure rename** (`PolymorphicSolver`, `RootSolver`): successor handle is new in 0.2.0; the chain carries both the v0.1.27 and the v0.1.18 sema_ids of the absorbed handle (`CognitiveSolver` / `SolverRoot`), which *did* change between those tags. Without the v0.1.18 entry, a consumer pinned to a v0.1.18 install would keep the old handle orphaned on pull.
+
+**Chain-length distribution across 452 patterns:**
+- **88 patterns** — no chain. 31 new in 0.2.0 + 57 bit-identical across all three tags.
+- **263 patterns** — 1 entry. Changed once in the chain's history (either between v0.1.18 and v0.1.27, or between v0.1.27 and current).
+- **101 patterns** — 2 entries. Changed in both windows, or one of the 5 rename-aware cases.
+- Max chain length: 2.
+
+**Verified via round-trip pull test.** Point a copy of the v0.1.18 taxonomy.db at the current DB and run `sema pull`: 5 superseded-removed (all 5 rename-source handles cleaned up), 1 upstream-removed (`Group` — intentionally moved to the experimental shelf), 0 orphans. Same test from v0.1.27: identical result.
+
+`_meta.supersedes` is excluded from `SEMANTIC_FIELDS` in `src/sema/core/hashing.py`, so populating the chain — including retroactively adding older predecessors — does not cascade new hashes through the DAG.
+
+### Hash cascades
+
+Because dependency references carry target hashes, any change to a referenced pattern propagates through the Merkle DAG. In total **399 of 452 pattern files differ from v0.1.27** on this release: 31 additions, 5 rename records, 71 layer moves, 71 mechanism rewrites, 50 additional structural fixes, 3 new `derived_from` wirings, and downstream dependents whose hashes changed because their referenced patterns did. 53 patterns are bit-identical to v0.1.27 (fast-path on pull). Consumers running `sema pull` will see their pinned hashes update; the handshake remains valid because the redirect/supersession metadata is preserved.
+
+### Governance
+
+- `docs/core/philosophy.md §3.1` rewritten: the **mechanism-sufficiency test** is now the governing rule for layer placement. *What does the mechanism structurally require to execute? Substrate → Physics. Authored structure, no cognition → Infrastructure. Cognition, single-agent sufficient → Mind. ≥2 independent parties → Society.*
+- **Two-criteria minting rule** is now explicit: a concept earns a pattern if it meets either *protocol consistency* (shared semantics required across agents) or *structured thinking* (invariant-bearing specification sharpens a loose concept). English suffices when neither is met.
+- **Broad-use test** added: a pattern's mechanism must capture only what every legitimate deployment context needs; context-specific variation belongs in descendants via `derived_from`.
+- **Rule G** (layer direction) is now enforced as a compile-time `sema apply` gate; zero current patterns violate the rule.
+
+### Compatibility
+
+- **Full-library supersedes coverage.** All 5 renames plus all 358 content-edited patterns carry their v0.1.27 sema_id in `_meta.supersedes`. A consumer on v0.1.27 running `sema pull` gets pinned hashes mapped forward cleanly for every pattern that changed. One orphan (`Group`) is retained locally as a user pattern because the release moved it to the experimental shelf.
+- `derived_from` lineage now wires canonical parent→descendant pairs: `Lock#051c → Mutex#f52f` (K=1 specialization), `Task#b328 → BoundedTask#eaf4` (budget-carrying), plus 1 other.
+- 15 template-reference migrations wire the 8 new Physics primitives into existing patterns (Budget, ChunkMerge, Mutex, Nucleate, OntologyAdapt, FractalIntelligence, ConceptBlend, DriftWatch, Optimize, SurprisalUpdate, Judge, MemeticSeed, Crystallize, EntropyPump, and others).
+- Distribution split: higher-risk patterns (`AmendLaws`, `ChaosDrift`, `CryptoShred`, `IdentityMask`, `MirrorStake`, others) live on the experimental shelf. Default install stays conservative; engaging the experimental shelf requires explicit opt-in.
+
+---
+
+*Pre-0.2.0 vocabulary changes are in git history; this file begins with the foundation audit.*

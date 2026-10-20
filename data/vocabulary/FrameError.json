@@ -1,0 +1,39 @@
+{
+  "handle": "FrameError",
+  "mechanism": "A typed failure signaling that an acceptance gate rejection requires lateral reframing of the problem rather than retry. Produced by an {{accept_spec}} when a non-compensatory gate fails, the FrameError carries the specific gate that rejected and a reframing hint pointing the upstream planner toward a different frame. Distinct from transient failures (which warrant {{retry}}) and from compensable failures (which warrant {{compensate}}): a FrameError asserts that the current frame is wrong, not that execution went wrong.",
+  "gloss": "Typed failure signaling that lateral reframing, not retry, is required",
+  "invariants": [
+    "A FrameError from a child forces the parent to restructure its approach, not re-execute.",
+    "Must carry identification of the rejecting gate and a reframing hint \u2014 a bare FrameError without context is actionable only as 'halt'."
+  ],
+  "failure_modes": [
+    "Receiving Solver treats FrameError as a generic failure and retries, wasting budget on the wrong frame.",
+    "Missing reframing hint leaves the parent Solver unable to select a new approach \u2014 degenerates to halt.",
+    "Cascaded FrameErrors without dampening cause thrash between frames."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "path": [
+      "Mind",
+      "Reasoning"
+    ],
+    "supersedes": [
+      "sema:FrameError#mh:SHA-256:f67433d411f7ce3c8582a6685e6fc43285c2e96680b404acb8f399a74198fe4b",
+      "sema:FrameError#mh:SHA-256:22e143610af8d9d6296b9497ad462eb71a3933aa6d77488f6a1e2226f81c45fc",
+      "sema:FrameError#mh:SHA-256:53e33befdcaffe1885b8604f77b4a1b508db41bd80cbd440c5d1fe6452336e40"
+    ]
+  },
+  "sema_id": "sema:FrameError#mh:SHA-256:1d0ac501f011a053fde50bef6bc2a781c2f916014f4b2b74de955f6d84db9c5d",
+  "sema_ref": "FrameError#1d0a",
+  "sema_stub": "1d0a",
+  "dependencies": {
+    "references": {
+      "accept_spec": "sema:AcceptSpec#mh:SHA-256:37fa28b93d390f8c8eb171eaab54ff4f9e57a95ef67af024422f823545a291cc",
+      "compensate": "sema:Compensate#mh:SHA-256:4b87623f38564fcc95b87d2cbf5df2f5ff41ef27e617ccafd76c7b7896b144e7",
+      "retry": "sema:Retry#mh:SHA-256:4f9fdfc5b1dafd31221e9426d62c02af80c6356ef5b446eddd3f50da961d1aa2"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

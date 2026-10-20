@@ -1,0 +1,52 @@
+{
+  "handle": "ProblemFramer",
+  "mechanism": "A specialized solver role that {{interpret}}s an initial request via {{request_framing}}, constructs the formal {{accept_spec}} (Definition of Done), and anchors the resulting {{root_solver}} to the {{universal_solver_tree}}. Unlike a general Solver (which executes), the Framer's sole output is a well-formed Problem Node ready for decomposition, or a {{reframe}} request if invalid.",
+  "gloss": "The active strategist that frames the problem",
+  "failure_modes": [
+    "Bad Frame: The problem is framed incorrectly, making it unsolvable.",
+    "Reframe Failure: Fails to find a valid alternative frame after failure."
+  ],
+  "invariants": [
+    "Genesis: Must create exactly one active Root per problem instance.",
+    "Ownership: Owns the high-level success/failure of the task."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:ProblemFramer#mh:SHA-256:8b24c9d8bfa06e9baeef615ed22ab7c74163a021b365f0f010581bdf7e78a9f7",
+      "sema:ProblemFramer#mh:SHA-256:ecc198beafea4353d2393ec31121ed9db92fa79996ffa6b9d45a5b353e4627c7",
+      "sema:ProblemFramer#mh:SHA-256:ea80628660b357af41d6877843b44f7898d1677171c0a13c5e258d59639469f1",
+      "sema:ProblemFramer#mh:SHA-256:271894d4cdcba54a6c1f4c85f1983d05f86c18c7b12948ef19619addebc4a70f",
+      "sema:ProblemFramer#mh:SHA-256:aa76586cc357d7348cc5f550c45a03f41a3ba8dc002f4c8de984cbb9714634c7",
+      "sema:ProblemFramer#mh:SHA-256:27c36c446e3590bab1651a989dbcb9013966eceaf554ced75bfd9cf1642a8996",
+      "sema:ProblemFramer#mh:SHA-256:0428e3addaa259d6827d1b6aa73a2a7fa4b93bad473ddb035bf3d4673408d05a"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ],
+    "related": [
+      "Framecapture#d762"
+    ]
+  },
+  "sema_id": "sema:ProblemFramer#mh:SHA-256:ad6b7fc1f14f2e26dd0d230f81382a2c602c365ebe4b9ad5fd390fb0c2d4c4fc",
+  "sema_ref": "ProblemFramer#ad6b",
+  "sema_stub": "ad6b",
+  "dependencies": {
+    "composes_with": {
+      "interpret": "sema:Interpret#mh:SHA-256:98b9bc57a5eeb7dc01599404ed2aabc5254d959a0a57b0377fb47c0a2aa26d29",
+      "reframe": "sema:Reframe#mh:SHA-256:cbfd4fadde729367ef8f32a68951e5852535b7f7c3edc68a502d9187b8c1d54a",
+      "request_framing": "sema:RequestFraming#mh:SHA-256:2280a35647a93cf3f8b03ee5fb63f8c2ec6faf19ec9627e1d9144ffa231f551e"
+    },
+    "references": {
+      "root_solver": "sema:RootSolver#mh:SHA-256:f7f5a39c4d93545b506ddc3eeb03660295425657486a5ab1f71811cb8e5816ca",
+      "universal_solver_tree": "sema:UniversalSolverTree#mh:SHA-256:f9fba480ef013c98691c0ccb6cbbd58dab5183e60798c550ff0de093dbd30727"
+    },
+    "yields": {
+      "accept_spec": "sema:AcceptSpec#mh:SHA-256:37fa28b93d390f8c8eb171eaab54ff4f9e57a95ef67af024422f823545a291cc"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

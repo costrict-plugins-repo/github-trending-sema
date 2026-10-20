@@ -1,0 +1,68 @@
+{
+  "handle": "Retry",
+  "mechanism": "Intelligent re-attempt of failed coordination with failure-informed strategy. After BREAK + COMPENSATE, agent evaluates: (1) CLASSIFY failure\u2014transient (timeout, rate-limit, network blip) vs persistent (capability gap, protocol mismatch, explicit rejection). (2) CHECK retry_hint from BREAK (partner may say 'don't retry' or 'wait 30s'). (3) CONSULT failure_history\u2014same error repeating? {{circuit_breaker}} threshold reached? (4) COMPUTE {{backoff}}\u2014adaptive based on failure type: transient uses {{exponential_backoff}}, persistent uses longer fixed delay or triggers abort. (5) VERIFY changed_conditions\u2014has something changed that makes retry worthwhile? (6) EXECUTE retry if within budget and conditions favor success, else ABORT with retry_exhausted status. Retry CARRIES FORWARD: failure context, partner state observations, environmental data. Retry RESETS: coordination state (fresh start, don't resume mid-stream). It handles transient failures by re-queuing the task, distinguishing them from terminal failures that trigger {{break}} and {{compensate}}.",
+  "gloss": "Classified re-attempt with backoff conditioned on failure type",
+  "failure_modes": [
+    "Misclassifying persistent failure as transient (wastes retry budget).",
+    "Misclassifying transient as persistent (gives up too soon).",
+    "{{backoff}} too aggressive (slow recovery from transient issues).",
+    "{{backoff}} too timid (hammers already-failing system).",
+    "{{circuit_breaker}} too sensitive (abandons recoverable situations).",
+    "Retry succeeds but same failure recurs (didn't address root cause).",
+    "Changed_conditions check misses relevant changes."
+  ],
+  "invariants": [
+    "Classifies the failure before deciding, and records the classification.",
+    "{{backoff}} applied between attempts.",
+    "Attempts do not exceed `max_attempts`."
+  ],
+  "preconditions": [
+    "A failure has occurred and its details are available to classify"
+  ],
+  "postconditions": [
+    "Success or definitive failure"
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "sema:Backoff#mh:SHA-256:9e59718422f5408d7892feccb6d538a21103f9573b122b891ee3c8cf66303e72",
+      "Plateauturn#240d"
+    ],
+    "ring": 1,
+    "supersedes": [
+      "sema:Retry#mh:SHA-256:d53d7b3af592e07dfb4d8f4cb3d74472da4514f0954d2138f2148e81bd55882a",
+      "sema:Retry#mh:SHA-256:07b7eedd84065dbf822183e0ae1512edb92caa0867bf7c9225b85371721d0091",
+      "sema:Retry#mh:SHA-256:79b69773b2fdd6fc81b1205d1088e9df841db683a982e079fc2dca97f4818804",
+      "sema:Retry#mh:SHA-256:9e178c29dd1aa774432d8eb6e87fb2e93ab5b1a6db9582f737ad60e9ddf56053",
+      "sema:Retry#mh:SHA-256:5e7921bf0dc8d896f922c3e163156be786471af8cfdfbfc8ec22dd5e0e68ab2a"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "parameters": [
+    {
+      "name": "max_attempts",
+      "type": "Integer",
+      "range": "[1, 10]",
+      "description": "Attempts before giving up. Referenced by the third invariant, which previously named a Max_Retries nothing defined."
+    }
+  ],
+  "sema_id": "sema:Retry#mh:SHA-256:4f9fdfc5b1dafd31221e9426d62c02af80c6356ef5b446eddd3f50da961d1aa2",
+  "sema_ref": "Retry#4f9f",
+  "sema_stub": "4f9f",
+  "dependencies": {
+    "composes_with": {
+      "exponential_backoff": "sema:ExponentialBackoff#mh:SHA-256:f5e5ff69408a272184da86cf5698f6675e9dfe2aa47917616a695e117602b828"
+    },
+    "references": {
+      "backoff": "sema:Backoff#mh:SHA-256:9e59718422f5408d7892feccb6d538a21103f9573b122b891ee3c8cf66303e72",
+      "break": "sema:Break#mh:SHA-256:5003e128ac02e7835d2094d72dc929ce4c96819b56ef167c2ca8da9f16aa402a",
+      "circuit_breaker": "sema:CircuitBreaker#mh:SHA-256:3caa9c387c04bb2ac66ec35a6cfe2665e11339f0d47576b96d68229226580c76",
+      "compensate": "sema:Compensate#mh:SHA-256:4b87623f38564fcc95b87d2cbf5df2f5ff41ef27e617ccafd76c7b7896b144e7"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}
