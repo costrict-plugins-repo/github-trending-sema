@@ -1,0 +1,47 @@
+{
+  "handle": "ModestClaim",
+  "mechanism": "Epistemic {{reframe}}. Transforms assertions of '{{equivalence}}' (A == B means same meaning) into assertions of 'Divergence' (Hash(A) != Hash(B) means different meaning). This shifts the burden of proof from verifying universal truth to detecting local mismatch. It applies {{epistemic_calibrate}} to reduce the scope of assertions from 'Universal Truth' to 'Local Observation'.",
+  "gloss": "Defensible over ambitious",
+  "failure_modes": [
+    "Ontological Trap: Claiming the hash solves the Symbol Grounding {{problem}} (it doesn't).",
+    "Brittle Authority: Making absolute claims that invite refutation by a single edge case."
+  ],
+  "invariants": [
+    "Epistemic Priority: Claims must describe 'Evidence of Divergence', not 'Proof of Meaning'.",
+    "Pragmatic Grounding: The measure of success is Coordination Utility, not Semantic Truth."
+  ],
+  "preconditions": [
+    "{{system}} or {{agent}} formulating a capability claim"
+  ],
+  "postconditions": [
+    "Claim scope reduced to defensible limits (Epistemic/Utility)"
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:ModestClaim#mh:SHA-256:f6e6d7b2e1f7025ac355d62791d22e9fa71af38e2d4e17e15994da6e4134f6bb",
+      "sema:ModestClaim#mh:SHA-256:c00b37f51471b8820b17447d652af2a338ceebb1ca140fcdd216b52cd204cdc6",
+      "sema:ModestClaim#mh:SHA-256:83170b25cf7d22ac3c44226af9fe056368fdafd337735a34132b4c33ef28f100"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:ModestClaim#mh:SHA-256:05f3ff05ede05012b3552a1aef48a9102e1abc4b4170c72ce885944cd7f92e8c",
+  "sema_ref": "ModestClaim#05f3",
+  "sema_stub": "05f3",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "epistemic_calibrate": "sema:EpistemicCalibrate#mh:SHA-256:4d4c4a79c03f1ed0c946e0e21fd76efccf7a5d9fb688f2bb59ab6065e8b1573a",
+      "equivalence": "sema:Equivalence#mh:SHA-256:23f09a1881f50a07a5c565897f0837b3cfe4955a3b83250045f94abebf5b058c",
+      "problem": "sema:Problem#mh:SHA-256:2580c43677ec78ee7ee428d200662c6096e4eab38c2c5a868154979074cc0f08",
+      "reframe": "sema:Reframe#mh:SHA-256:cbfd4fadde729367ef8f32a68951e5852535b7f7c3edc68a502d9187b8c1d54a",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

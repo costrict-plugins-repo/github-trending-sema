@@ -1,0 +1,40 @@
+{
+  "handle": "Mosaicmap",
+  "gloss": "Map an understanding a group holds together but no member holds whole",
+  "mechanism": "A group's shared understanding is mapped by recording which member holds which part, how the parts connect, and which questions need several members to answer. Unlike a {{holographic_shard}}, where each part carries the whole goal, here no member holds the whole, so the map is the only account of it and is kept current.",
+  "invariants": [
+    "Each part is attributed to the members who hold it.",
+    "Questions that need several members are listed with the members they need.",
+    "The map is updated when a member who holds a part leaves."
+  ],
+  "failure_modes": [
+    "Single point of knowing: a part held by one member is lost when that member leaves.",
+    "False sum: parts that do not connect are assumed to form a whole."
+  ],
+  "_meta": {
+    "path": [
+      "Society",
+      "Protocols"
+    ],
+    "ring": 2,
+    "tier": 2,
+    "related": [
+      "Reasoncommons",
+      "Doubtshelter"
+    ],
+    "minted": "2026-10-05T21:48:40+02:00",
+    "supersedes": [
+      "sema:Mosaicmap#mh:SHA-256:c51dc7e9da06f179541c49bfc2c8726922a6a72b871ad123ba832af7704d3a9d"
+    ]
+  },
+  "sema_id": "sema:Mosaicmap#mh:SHA-256:4cffed015df58ad88627242ff08b236ad4674616b58fec502f865221a9704104",
+  "sema_ref": "Mosaicmap#4cff",
+  "sema_stub": "4cff",
+  "dependencies": {
+    "references": {
+      "holographic_shard": "sema:HolographicShard#mh:SHA-256:7ac933aea2cb1885dd4cb1e92765c4bb5a1c97f44c3706abe106e6c2e6d0e4c2"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

@@ -1,0 +1,1202 @@
+import base64
+import binascii
+import hashlib
+import hmac
+import json
+import os
+import re
+import secrets
+import sqlite3
+import threading
+import time
+from contextlib import closing
+from pathlib import Path
+from typing import Any
+from urllib.parse import urlencode
+
+import httpx
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+from ..core.registry import get_default_db_path
+from ..core.utils import compact_dict
+from ..core.workspace import (
+    GraphWorkspace,
+    WorkspaceCatalog,
+    WorkspaceNotFoundError,
+    WorkspaceSource,
+)
+
+app = FastAPI(
+    title="Sema API",
+    description="API for Sema Knowledge Graph",
+    docs_url="/api/swagger",
+    redoc_url="/api/redoc",
+)
+
+# CORS: default to the known-safe set (semahash.org + local dev). Operators
+# can widen via SEMA_CORS_ORIGINS=comma,separated,list or SEMA_CORS_ORIGINS=*
+# when they've deliberately chosen to host a public API.
+_DEFAULT_CORS_ORIGINS = [
+    "https://semahash.org",
+    "https://www.semahash.org",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+]
+_cors_env = os.environ.get("SEMA_CORS_ORIGINS", "").strip()
+if _cors_env == "*":
+    # Wildcard + credentials is invalid per the CORS spec (browsers ignore it).
+    # Drop credentials so the wildcard actually works for the operator who
+    # asked for it.
+    _cors_origins: list[str] = ["*"]
+    _cors_credentials = False
+elif _cors_env:
+    _cors_origins = [o.strip() for o in _cors_env.split(",") if o.strip()]
+    _cors_credentials = True
+else:
+    _cors_origins = _DEFAULT_CORS_ORIGINS
+    _cors_credentials = True
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_cors_origins,
+    allow_credentials=_cors_credentials,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# www → apex 301 redirect.
+# Only matches hosts that literally start with "www.", so Railway's
+# internal health check (Host: healthcheck.railway.app) and apex
+# requests pass through untouched. Hardcoding https:// is safe here:
+# Railway terminates TLS at the edge and only public traffic reaches
+# this process, so any www.* request originated as HTTPS.
+@app.middleware("http")
+async def www_to_apex_redirect(request: Request, call_next):
+    host = request.headers.get("host", "")
+    # Strip optional :port suffix before the prefix check
+    host_no_port = host.split(":", 1)[0]
+    if host_no_port.startswith("www."):
+        apex = host_no_port[4:]
+        path = request.url.path
+        query = f"?{request.url.query}" if request.url.query else ""
+        return RedirectResponse(url=f"https://{apex}{path}{query}", status_code=301)
+    return await call_next(request)
+
+
+# Configuration — the same DB resolution as the MCP server and the CLI, so that
+# `sema serve` shows the vocabulary an agent is writing to:
+#   1. SEMA_DB_PATH env var (explicit override)
+#   2. Active DB from the per-user Sema configuration (set with `sema use`)
+#   3. Repository `data/taxonomy.db` (editable install or source checkout)
+#   4. Bundled DB inside the installed package (read-only)
+#   5. User DB via platformdirs client (may try to download)
+DB_PATH = get_default_db_path()
+if DB_PATH is None:
+    print("Warning: no Sema vocabulary database was found")
+    DB_PATH = "taxonomy.db"
+
+print(f"Loading Registry with DB: {DB_PATH}")
+
+
+def _make_workspace(db_path: str) -> GraphWorkspace:
+    return GraphWorkspace(
+        WorkspaceSource(
+            workspace_id=os.environ.get("SEMA_WORKSPACE_ID", "local"),
+            label=os.environ.get("SEMA_WORKSPACE_LABEL", "Local vocabulary"),
+            db_path=db_path,
+            read_only=os.environ.get("SEMA_WORKSPACE_READ_ONLY", "true").lower() != "false",
+        )
+    )
+
+
+# Registry loads from database only
+workspace = _make_workspace(DB_PATH)
+registry = workspace.registry_manager
+workspace_catalog = WorkspaceCatalog()
+workspace_catalog.register_workspace(workspace)
+
+_follow_lock = threading.Lock()
+
+
+def _follow_active_db() -> None:
+    """Switch to the vocabulary that `sema use` or an agent's `sema_use` selected.
+
+    The local view polls, so an agent that switches vocabulary in its own MCP
+    process shows up here without a restart. An explicit SEMA_DB_PATH pins the
+    server instead, and a deployment without a user configuration never switches.
+    """
+    global DB_PATH, registry, workspace
+
+    if os.environ.get("SEMA_DB_PATH"):
+        return
+    target = get_default_db_path()
+    if not target or target == DB_PATH or not Path(target).exists():
+        return
+    with _follow_lock:
+        if target == DB_PATH:
+            return
+        DB_PATH = target
+        workspace = _make_workspace(target)
+        registry = workspace.registry_manager
+        workspace_catalog.register_workspace(workspace)
+
+
+# ── GitHub Auth ───────────────────────────────────────────────────────────────
+
+_GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+_GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+_GITHUB_USER_URL = "https://api.github.com/user"
+_GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
+_SESSION_COOKIE = "sema_session"
+_OAUTH_STATE_COOKIE = "sema_oauth_state"
+_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 14
+
+
+def _github_client_id() -> str | None:
+    return os.environ.get("GITHUB_CLIENT_ID")
+
+
+def _github_client_secret() -> str | None:
+    return os.environ.get("GITHUB_CLIENT_SECRET")
+
+
+def _session_secret() -> str | None:
+    return os.environ.get("SEMA_SESSION_SECRET") or os.environ.get("SESSION_SECRET")
+
+
+def _request_is_secure(request: Request) -> bool:
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    if forwarded_proto:
+        return forwarded_proto.split(",", 1)[0].strip() == "https"
+    return request.url.scheme == "https"
+
+
+def _external_base_url(request: Request) -> str:
+    proto = request.headers.get("x-forwarded-proto", request.url.scheme).split(",", 1)[0].strip()
+    host = (
+        request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    )
+    return f"{proto}://{host}"
+
+
+def _github_redirect_uri(request: Request) -> str:
+    return os.environ.get("GITHUB_OAUTH_REDIRECT_URI") or (
+        f"{_external_base_url(request)}/auth/github/callback"
+    )
+
+
+def _github_oauth_configured() -> bool:
+    return bool(_github_client_id() and _github_client_secret())
+
+
+def _auth_ready() -> bool:
+    return bool(_github_oauth_configured() and _session_secret())
+
+
+def _workspace_auth_redirect(status: str) -> RedirectResponse:
+    return RedirectResponse(url=f"/workspace?auth={status}", status_code=303)
+
+
+def _b64encode(raw: bytes) -> str:
+    return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+
+def _b64decode(value: str) -> bytes:
+    padding = "=" * (-len(value) % 4)
+    return base64.urlsafe_b64decode(f"{value}{padding}".encode("ascii"))
+
+
+def _sign_session_payload(payload: str, secret: str) -> str:
+    digest = hmac.new(secret.encode("utf-8"), payload.encode("ascii"), hashlib.sha256).digest()
+    return _b64encode(digest)
+
+
+def _encode_session(user: dict[str, Any]) -> str:
+    secret = _session_secret()
+    if not secret:
+        raise RuntimeError("SEMA_SESSION_SECRET is not configured")
+
+    payload = _b64encode(
+        json.dumps(
+            {"iat": int(time.time()), "user": user},
+            separators=(",", ":"),
+            sort_keys=True,
+        ).encode("utf-8")
+    )
+    return f"{payload}.{_sign_session_payload(payload, secret)}"
+
+
+def _decode_session(value: str | None) -> dict[str, Any] | None:
+    secret = _session_secret()
+    if not value or not secret or "." not in value:
+        return None
+
+    payload, signature = value.rsplit(".", 1)
+    try:
+        expected = _sign_session_payload(payload, secret)
+    except UnicodeEncodeError:
+        # Cookie bytes outside ASCII can't have been produced by
+        # _encode_session — treat as logged out instead of erroring.
+        return None
+    if not hmac.compare_digest(signature, expected):
+        return None
+
+    try:
+        data = json.loads(_b64decode(payload))
+    except (binascii.Error, ValueError, json.JSONDecodeError):
+        return None
+
+    issued_at = data.get("iat")
+    if not isinstance(issued_at, int) or issued_at < int(time.time()) - _SESSION_MAX_AGE_SECONDS:
+        return None
+
+    user = data.get("user")
+    return user if isinstance(user, dict) else None
+
+
+async def _fetch_github_identity(access_token: str) -> dict[str, Any]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {access_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        user_response = await client.get(_GITHUB_USER_URL, headers=headers)
+        user_response.raise_for_status()
+        user_data = user_response.json()
+
+        email = user_data.get("email")
+        if not email:
+            emails_response = await client.get(_GITHUB_EMAILS_URL, headers=headers)
+            if emails_response.status_code == 200:
+                for candidate in emails_response.json():
+                    if candidate.get("primary") and candidate.get("verified"):
+                        email = candidate.get("email")
+                        break
+
+    return {
+        "id": user_data.get("id"),
+        "login": user_data.get("login"),
+        "name": user_data.get("name"),
+        "avatar_url": user_data.get("avatar_url"),
+        "html_url": user_data.get("html_url"),
+        "email": email,
+    }
+
+
+@app.get("/api/me")
+def get_current_user(request: Request):
+    user = _decode_session(request.cookies.get(_SESSION_COOKIE))
+    return {
+        "authenticated": user is not None,
+        "user": user,
+        "github_oauth_configured": _github_oauth_configured(),
+        "session_configured": bool(_session_secret()),
+        "github_callback_url": _github_redirect_uri(request),
+    }
+
+
+@app.get("/auth/github/start")
+def start_github_auth(request: Request):
+    client_id = _github_client_id()
+    if not _auth_ready() or not client_id:
+        return _workspace_auth_redirect("missing")
+
+    state = secrets.token_urlsafe(32)
+    query = urlencode(
+        {
+            "client_id": client_id,
+            "redirect_uri": _github_redirect_uri(request),
+            "scope": "read:user user:email",
+            "state": state,
+            "allow_signup": "true",
+        }
+    )
+    response = RedirectResponse(url=f"{_GITHUB_AUTHORIZE_URL}?{query}", status_code=303)
+    response.set_cookie(
+        _OAUTH_STATE_COOKIE,
+        state,
+        max_age=600,
+        httponly=True,
+        secure=_request_is_secure(request),
+        samesite="lax",
+        path="/",
+    )
+    return response
+
+
+@app.get("/auth/github/callback")
+async def github_auth_callback(request: Request, code: str | None = None, state: str | None = None):
+    client_id = _github_client_id()
+    client_secret = _github_client_secret()
+    if not _auth_ready() or not client_id or not client_secret:
+        return _workspace_auth_redirect("missing")
+
+    expected_state = request.cookies.get(_OAUTH_STATE_COOKIE)
+    if (
+        not code
+        or not state
+        or not expected_state
+        or not hmac.compare_digest(state, expected_state)
+    ):
+        raise HTTPException(status_code=400, detail="Invalid GitHub OAuth callback")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            token_response = await client.post(
+                _GITHUB_TOKEN_URL,
+                headers={"Accept": "application/json"},
+                data={
+                    "client_id": client_id,
+                    "client_secret": client_secret,
+                    "code": code,
+                    "redirect_uri": _github_redirect_uri(request),
+                },
+            )
+            token_response.raise_for_status()
+            token_data = token_response.json()
+        if token_data.get("error"):
+            detail = token_data.get("error_description") or token_data["error"]
+            raise HTTPException(status_code=400, detail=detail)
+        access_token = token_data.get("access_token")
+        if not access_token:
+            raise HTTPException(status_code=400, detail="GitHub did not return an access token")
+        user = await _fetch_github_identity(access_token)
+    except httpx.HTTPError as exc:
+        raise HTTPException(status_code=502, detail="GitHub OAuth request failed") from exc
+
+    response = _workspace_auth_redirect("github")
+    response.set_cookie(
+        _SESSION_COOKIE,
+        _encode_session(user),
+        max_age=_SESSION_MAX_AGE_SECONDS,
+        httponly=True,
+        secure=_request_is_secure(request),
+        samesite="lax",
+        path="/",
+    )
+    response.delete_cookie(_OAUTH_STATE_COOKIE, path="/")
+    return response
+
+
+@app.get("/auth/logout")
+def logout():
+    response = _workspace_auth_redirect("logout")
+    response.delete_cookie(_SESSION_COOKIE, path="/")
+    response.delete_cookie(_OAUTH_STATE_COOKIE, path="/")
+    return response
+
+
+# Models
+class PatternNode(BaseModel):
+    id: str
+    text: str
+    type: str
+    layer: str | None = None
+    category: str | None = None
+    handle: str | None = None
+    gloss: str | None = None
+    metadata: dict[str, Any]
+
+
+class GraphEdge(BaseModel):
+    id: str
+    source: str
+    target: str
+    type: str
+
+
+class GraphData(BaseModel):
+    nodes: list[PatternNode]
+    edges: list[GraphEdge]
+
+
+@app.get("/api/workspace")
+def get_workspace():
+    """Describe the active graph workspace and published vocabulary root."""
+    _follow_active_db()
+    return workspace.describe()
+
+
+def _resolve_hosted_workspace(workspace_id: str) -> GraphWorkspace:
+    try:
+        return workspace_catalog.resolve(workspace_id)
+    except WorkspaceNotFoundError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@app.get("/api/workspaces/{workspace_id}")
+def get_hosted_workspace(workspace_id: str):
+    """Describe one registered workspace without exposing server paths."""
+
+    description = _resolve_hosted_workspace(workspace_id).describe()
+    public_fields = (
+        "workspace_id",
+        "label",
+        "owner",
+        "repo",
+        "ref",
+        "read_only",
+        "pattern_count",
+        "definition_count",
+        "vocabulary_root",
+        "vocabulary_root_stub",
+        "vocabulary_root_scheme",
+        "catalog_root",
+        "catalog_root_stub",
+        "catalog_root_scheme",
+    )
+    return {field: description[field] for field in public_fields}
+
+
+@app.get("/api/workspaces/{workspace_id}/search")
+def search_hosted_workspace(workspace_id: str, q: str, semantic: bool = True):
+    """Search patterns inside one registered workspace."""
+
+    return _resolve_hosted_workspace(workspace_id).search(q, use_semantic=semantic)
+
+
+@app.get("/api/workspaces/{workspace_id}/patterns/{handle}")
+def get_hosted_pattern(workspace_id: str, handle: str):
+    """Look up a pattern inside one registered workspace."""
+
+    result = _resolve_hosted_workspace(workspace_id).lookup(handle)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@app.get("/api/workspaces/{workspace_id}/resolve/{handle}")
+def resolve_hosted_pattern(workspace_id: str, handle: str, depth: int = 1):
+    """Resolve a pattern subgraph inside one registered workspace."""
+
+    result = _resolve_hosted_workspace(workspace_id).resolve(handle, depth=depth)
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+    return result
+
+
+@app.get("/api/workspaces/{workspace_id}/root")
+def get_hosted_workspace_root(workspace_id: str):
+    """Return the published vocabulary identity for one workspace."""
+
+    payload = _resolve_hosted_workspace(workspace_id).root_payload()
+    payload.pop("db_path", None)
+    return payload
+
+
+@app.get("/api/graph")
+def get_graph():
+    """Get the full graph structure for visualization."""
+    _follow_active_db()
+    nodes = []
+    edges = []
+
+    if not os.path.exists(DB_PATH):
+        return {"nodes": [], "edges": []}
+
+    try:
+        with closing(sqlite3.connect(DB_PATH)) as conn:
+            conn.row_factory = sqlite3.Row
+
+            # Get Nodes and build UUID->handle mapping
+            cursor = conn.cursor()
+            cursor.execute("SELECT id, node_type, text, metadata FROM nodes")
+            uuid_to_id = {}  # Map UUID to our node ID
+
+            for row in cursor.fetchall():
+                meta = json.loads(row["metadata"] or "{}")
+                pattern_meta = meta.get("pattern", {})
+
+                # Apply Overlay Logic
+                raw_handle = pattern_meta.get("handle") or row["text"]
+                overlaid_handle = pattern_meta.get("sema_ref") or raw_handle
+
+                # For PATTERN nodes, use the raw handle as ID (for API lookups)
+                # For other nodes, use the UUID
+                node_id = raw_handle if row["node_type"] == "PATTERN" and raw_handle else row["id"]
+                uuid_to_id[row["id"]] = node_id
+
+                nodes.append(
+                    {
+                        "id": node_id,
+                        "text": overlaid_handle,  # Use overlaid handle as primary text
+                        "type": row["node_type"],
+                        "layer": pattern_meta.get("sema_layer") or meta.get("sema_layer"),
+                        "category": pattern_meta.get("sema_category") or meta.get("sema_category"),
+                        "handle": overlaid_handle,
+                        "gloss": pattern_meta.get("gloss"),
+                        "stub": pattern_meta.get("sema_stub"),
+                        "metadata": meta,
+                    }
+                )
+
+            # Get Edges - translate UUIDs to our node IDs
+            cursor.execute("SELECT id, source_id, target_id, edge_type FROM edges")
+            for row in cursor.fetchall():
+                source_id = uuid_to_id.get(row["source_id"], row["source_id"])
+                target_id = uuid_to_id.get(row["target_id"], row["target_id"])
+                edges.append(
+                    {
+                        "id": row["id"],
+                        "source": source_id,
+                        "target": target_id,
+                        "type": row["edge_type"],
+                    }
+                )
+    except Exception as e:
+        print(f"Error reading DB: {e}")
+        raise HTTPException(status_code=500, detail=str(e)) from e
+
+    return {"nodes": nodes, "edges": edges}
+
+
+@app.get("/api/patterns")
+def list_patterns(category: str | None = None, layer: str | None = None, q: str | None = None):
+    """List all patterns, optionally filtered or searched."""
+    _follow_active_db()
+    registry.refresh()
+
+    # If search query provided, use search
+    if q:
+        return registry.search(q)
+
+    results = []
+    for handle, raw_data in registry.registry.items():
+        if category and raw_data.get("sema_category") != category:
+            continue
+        if layer and raw_data.get("sema_layer") != layer:
+            continue
+
+        # Get resolved pattern data (templates converted to overlay format)
+        data = registry.get_pattern(handle) or raw_data
+
+        # Use Overlay Handle
+        overlaid_handle = data.get("sema_ref", handle)
+
+        results.append(
+            {
+                "id": handle,
+                "handle": overlaid_handle,
+                "gloss": data.get("gloss", ""),
+                "mechanism": data.get("mechanism", ""),
+                "invariants": data.get("invariants", []),
+                "parameters": data.get("parameters", {}),
+                "hash": data.get("sema_id", ""),
+                "stub": data.get("sema_stub", ""),
+                "category": data.get("sema_category", ""),
+                "layer": data.get("sema_layer", ""),
+                "signature": data.get("signature", []),
+                "preconditions": data.get("preconditions", []),
+                "postconditions": data.get("postconditions", []),
+                "failureModes": data.get("failureModes", []),
+                "dependencies": data.get("dependencies", {}),
+            }
+        )
+    return results
+
+
+@app.get("/api/patterns/{handle}")
+def get_pattern_details(handle: str):
+    """Get full details for a pattern (with templates resolved)."""
+    # handle might be "Vote" or "Vote#1234" or a UUID
+    # Registry keys are "Vote". Strip hash if present for lookup.
+    lookup_key = handle.split("#")[0]
+
+    # First try direct lookup
+    data = registry.get_pattern(lookup_key)
+
+    # If not found, it might be a UUID - search for it
+    if not data:
+        # Check if handle looks like a UUID
+        registry.refresh()
+        for h, d in registry.registry.items():
+            if d.get("id") == handle or h == handle:
+                data = d
+                lookup_key = h
+                break
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+
+    # Transform to frontend expected format
+    overlaid_handle = data.get("sema_ref", lookup_key)
+    meta = data.get("_meta", {})
+
+    # Get related patterns from dependencies and _meta.related
+    related_patterns = []
+    seen_handles = set()
+
+    # From dependencies (references, composes_with, etc.)
+    # Dependencies are already in overlay format: {'chain': 'Chain#3abd', ...}
+    dependencies = data.get("dependencies", {})
+    for rel_type, targets in dependencies.items():
+        if isinstance(targets, dict):
+            for _name, overlay_ref in targets.items():
+                # Extract handle from overlay format: "Chain#3abd" -> "Chain"
+                target_handle = overlay_ref.split("#")[0] if isinstance(overlay_ref, str) else None
+                if target_handle and target_handle not in seen_handles:
+                    seen_handles.add(target_handle)
+                    target_data = registry.get_pattern(target_handle)
+                    if target_data:
+                        related_patterns.append(
+                            {
+                                "id": target_handle,
+                                "handle": target_data.get("sema_ref", target_handle),
+                                "gloss": target_data.get("gloss", ""),
+                                "stub": target_data.get("sema_stub", ""),
+                                "layer": target_data.get("sema_layer", ""),
+                                "category": target_data.get("sema_category", ""),
+                                "relation": rel_type,
+                            }
+                        )
+
+    # From _meta.related list (also in overlay format: ["ProgramOfThought#6af2", ...])
+    meta_related = meta.get("related", [])
+    for overlay_ref in meta_related:
+        target_handle = overlay_ref.split("#")[0] if isinstance(overlay_ref, str) else None
+        if target_handle and target_handle not in seen_handles:
+            seen_handles.add(target_handle)
+            target_data = registry.get_pattern(target_handle)
+            if target_data:
+                related_patterns.append(
+                    {
+                        "id": target_handle,
+                        "handle": target_data.get("sema_ref", target_handle),
+                        "gloss": target_data.get("gloss", ""),
+                        "stub": target_data.get("sema_stub", ""),
+                        "layer": target_data.get("sema_layer", ""),
+                        "category": target_data.get("sema_category", ""),
+                        "relation": "related",
+                    }
+                )
+
+    result = {
+        "id": lookup_key,
+        "handle": overlaid_handle,
+        "gloss": data.get("gloss", ""),
+        "mechanism": data.get("mechanism", ""),
+        "invariants": data.get("invariants", []),
+        "parameters": data.get("parameters", {}),
+        "hash": data.get("sema_id", ""),
+        "stub": data.get("sema_stub", ""),
+        "layer": data.get("sema_layer", ""),
+        "category": data.get("sema_category", ""),
+        "signature": data.get("signature", []),
+        "preconditions": data.get("preconditions", []),
+        "postconditions": data.get("postconditions", []),
+        "failureModes": data.get("failureModes", []),
+        "dataSchema": data.get("data_schema"),
+        "meta": {
+            "tier": meta.get("tier"),
+            "ring": meta.get("ring"),
+            "layer": data.get("sema_layer"),
+            "category": data.get("sema_category"),
+            "caution": meta.get("caution"),
+        },
+        "relatedPatterns": related_patterns,
+        "dependencies": data.get("dependencies", {}),
+    }
+
+    return compact_dict(result)
+
+
+@app.get("/api/search")
+def search_patterns(
+    q: str,
+    semantic: bool = True,
+    limit: int | None = None,
+    layer: str | None = None,
+    category: str | None = None,
+):
+    """Search patterns (Hybrid: Keyword + Semantic if available)."""
+    scope = {key: value for key, value in (("layer", layer), ("category", category)) if value}
+    try:
+        keyword_results = registry.search(q, use_semantic=semantic, **scope)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    def limit_results(results: list[dict]) -> list[dict]:
+        if limit is None:
+            return results
+        safe_limit = max(1, min(limit, 100))
+        return results[:safe_limit]
+
+    if not semantic:
+        return limit_results(keyword_results)
+
+    # Boost results whose name the query is looking for, on top of the
+    # registry's own keyword or semantic score, which is kept so a weak match
+    # still reads as weak.
+    query_compact = _compact(q)
+    query_terms = _significant_terms(q)
+    merged = {}
+    for r in keyword_results:
+        r["score"] = float(r.get("score", 0.0)) + _name_boost(
+            r["handle"], query_compact, query_terms
+        )
+        merged[r["handle"]] = r
+
+    results = sorted(merged.values(), key=lambda x: x.get("score", 0), reverse=True)
+    return limit_results(results)
+
+
+_STOPWORDS = frozenset(
+    "a an and are as at be been but by can could did do does for from had has have how "
+    "i if in into is it its itself may might my no not of on or our should so still than "
+    "that the their them then there these they this those to was we were what when where "
+    "which who why will with would you your".split()
+)
+
+
+def _compact(text: str) -> str:
+    """Lower-case text and drop spaces and punctuation, to compare with a handle."""
+    return re.sub(r"[^a-z0-9]", "", text.lower())
+
+
+def _significant_terms(text: str) -> list[str]:
+    """Query words of three or more letters that are not stop words."""
+    words = re.findall(r"[a-z0-9]+", text.lower())
+    return [w for w in words if len(w) >= 3 and w not in _STOPWORDS]
+
+
+def _name_boost(handle: str, query_compact: str, query_terms: list[str]) -> float:
+    """How strongly a pattern's name answers the query.
+
+    An exact name, a name prefix or part of three or more letters, or a name
+    containing every meaningful query word. A shared short word such as "a",
+    or one word of several, does not lift a name above the semantic matches.
+    """
+    bare = handle.split("#")[0]
+    name = bare.lower()
+    if name == query_compact:
+        return 3.0
+    if len(query_compact) >= 3 and name.startswith(query_compact):
+        return 2.5
+    if len(query_compact) >= 3 and query_compact in name:
+        return 2.0
+    name_words = [w.lower() for w in re.findall(r"[A-Z][a-z0-9]*", bare)]
+    if query_terms and all(any(nw.startswith(t) for nw in name_words) for t in query_terms):
+        return 1.5
+    return 0.0
+
+
+@app.get("/api/patterns/by-category/{category}")
+def get_patterns_by_category(category: str):
+    """Get all patterns in a category."""
+    registry.refresh()
+    results = []
+    for handle, data in registry.registry.items():
+        if data.get("sema_category") == category:
+            overlaid_handle = data.get("sema_ref", handle)
+            results.append(
+                {
+                    "id": handle,
+                    "handle": overlaid_handle,
+                    "gloss": data.get("gloss", ""),
+                    "stub": data.get("sema_stub", ""),
+                    "category": data.get("sema_category", ""),
+                    "layer": data.get("sema_layer", ""),
+                }
+            )
+    return results
+
+
+@app.get("/api/patterns/by-layer/{layer}")
+def get_patterns_by_layer(layer: str):
+    """Get all patterns in a layer."""
+    registry.refresh()
+    results = []
+    for handle, data in registry.registry.items():
+        if data.get("sema_layer") == layer:
+            overlaid_handle = data.get("sema_ref", handle)
+            results.append(
+                {
+                    "id": handle,
+                    "handle": overlaid_handle,
+                    "gloss": data.get("gloss", ""),
+                    "stub": data.get("sema_stub", ""),
+                    "category": data.get("sema_category", ""),
+                    "layer": data.get("sema_layer", ""),
+                }
+            )
+    return results
+
+
+@app.get("/api/patterns/{handle}/source")
+def get_pattern_source(handle: str):
+    """Get the canonical source for a pattern from the database."""
+    lookup_key = handle.split("#")[0]
+    data = registry.get_pattern(lookup_key)
+
+    if not data:
+        raise HTTPException(status_code=404, detail="Pattern not found")
+
+    return data
+
+
+# --- Documentation API ---
+DOCS_ORDER = [
+    # --- ORIENTATION ---
+    ("guides/getting-started", "Getting Started"),
+    ("README", "Overview"),
+    ("core/philosophy", "Core Philosophy"),
+    # --- THE PATTERN CARD ---
+    ("specification/schema", "The Pattern Card"),
+    ("specification/naming", "Naming Taxonomy"),
+    # --- GUIDES ---
+    ("guides/authoring", "Pattern Authoring Guide"),
+    ("tools/cli", "CLI Reference"),
+    # --- INTEGRATIONS ---
+    ("guides/understanding-graph", "Using with Understanding Graph"),
+    # Full specification (validation rules, versioning, etc.) at
+    # https://github.com/emergent-wisdom/sema/tree/main/docs/specification
+]
+
+
+def _get_repo_root() -> Path | None:
+    """Find the repo root (parent of docs/ and integrations/)."""
+    # Try relative to __file__ (editable install / running from src)
+    d = Path(__file__).resolve().parent.parent.parent.parent
+    if (d / "docs").exists():
+        return d
+    # Fallback: CWD (installed package, uvicorn from repo root)
+    d = Path.cwd()
+    if (d / "docs").exists():
+        return d
+    return None
+
+
+def _get_docs_dir() -> Path | None:
+    root = _get_repo_root()
+    return root / "docs" if root else None
+
+
+def _get_doc_path(slug: str) -> Path | None:
+    root = _get_repo_root()
+    if not root:
+        return None
+
+    # Try docs/ first, then repo root (for integrations/ etc.)
+    # Resolve both sides and confirm containment so an attacker-controlled
+    # slug ("../../etc/hosts" etc.) can't escape the allowed base directory.
+    for base in [root / "docs", root]:
+        try:
+            base_resolved = base.resolve()
+        except OSError:
+            continue
+        path = (base / f"{slug}.md").resolve()
+        if not path.is_relative_to(base_resolved):
+            continue
+        if path.is_file():
+            return path
+
+    return None
+
+
+@app.get("/api/docs")
+def list_docs():
+    docs_dir = _get_docs_dir()
+    if not docs_dir:
+        return []
+
+    docs = []
+    for slug, default_title in DOCS_ORDER:
+        doc_path = _get_doc_path(slug)
+        if doc_path and doc_path.exists():
+            with open(doc_path, encoding="utf-8") as file:
+                first_line = file.readline().strip()
+                title = (
+                    first_line.lstrip("#").strip() if first_line.startswith("#") else default_title
+                )
+
+            docs.append(
+                {
+                    "slug": slug.replace("/", "__"),
+                    "title": title,
+                    "filename": doc_path.name,
+                    "path": slug,
+                }
+            )
+    return docs
+
+
+@app.get("/api/docs/{slug:path}")
+def get_doc(slug: str):
+    path_slug = slug.replace("__", "/")
+    doc_path = _get_doc_path(path_slug)
+
+    if not doc_path:
+        raise HTTPException(status_code=404, detail="Document not found")
+
+    with open(doc_path, encoding="utf-8") as f:
+        content = f.read()
+
+    lines = content.split("\n")
+    title = lines[0].lstrip("#").strip() if lines and lines[0].startswith("#") else slug
+
+    return {
+        "slug": slug,
+        "title": title,
+        "content": content,
+    }
+
+
+# ── Paper ──────────────────────────────────────────────────────────────────────
+
+
+@app.get("/api/paper")
+def get_paper():
+    from fastapi.responses import FileResponse
+
+    # Look for paper PDF relative to repo root
+    paper_path = Path(__file__).resolve().parent.parent.parent.parent / "paper" / "sema.pdf"
+    if not paper_path.exists():
+        paper_path = Path.cwd() / "paper" / "sema.pdf"
+    if paper_path.exists():
+        return FileResponse(paper_path, media_type="application/pdf", filename="sema.pdf")
+    return JSONResponse({"error": "Paper not found"}, status_code=404)
+
+
+# ── Install Guide ──────────────────────────────────────────────────────────────
+
+
+@app.get("/install.md")
+def get_install_md():
+    from fastapi.responses import PlainTextResponse
+
+    root = _get_repo_root()
+    if root and (root / "install.md").exists():
+        return PlainTextResponse(
+            (root / "install.md").read_text(encoding="utf-8"), media_type="text/markdown"
+        )
+    cwd = Path.cwd() / "install.md"
+    if cwd.exists():
+        return PlainTextResponse(cwd.read_text(encoding="utf-8"), media_type="text/markdown")
+    raise HTTPException(status_code=404, detail="install.md not found")
+
+
+# ── DB Management ──────────────────────────────────────────────────────────────
+
+
+def _is_local_request(request: Request) -> bool:
+    """True when running locally (not deployed) AND the caller is loopback.
+
+    The env check catches known deploy targets (Railway sets
+    RAILWAY_ENVIRONMENT); the loopback check protects self-hosters who
+    expose the server without setting PRODUCTION — DB switching can point
+    the process at any readable file, so it must never be reachable
+    remotely.
+    """
+    if os.environ.get("RAILWAY_ENVIRONMENT") or os.environ.get("PRODUCTION"):
+        return False
+    client = request.client
+    if client is None:
+        # ASGI test harnesses (TestClient) have no real transport.
+        return True
+    return client.host in ("127.0.0.1", "::1", "testclient")
+
+
+@app.get("/api/dbs")
+def get_dbs(request: Request):
+    """List all known vocabulary databases. Local-only."""
+    if not _is_local_request(request):
+        raise HTTPException(status_code=404, detail="DB management is local-only")
+
+    from ..core.registry import list_dbs
+
+    _follow_active_db()
+
+    dbs = list_dbs()
+    for db in dbs:
+        db["active"] = db["path"] == DB_PATH
+        # Installed libraries record their count; count the other vocabularies.
+        if "pattern_count" not in db and db.get("exists"):
+            db["pattern_count"] = _count_patterns(db["path"])
+    return {"current": DB_PATH, "databases": dbs, "local": True}
+
+
+def _count_patterns(db_path: str) -> int | None:
+    """Count the patterns in a vocabulary database without loading it."""
+    try:
+        uri = f"{Path(db_path).resolve().as_uri()}?mode=ro"
+        with closing(sqlite3.connect(uri, uri=True)) as conn:
+            row = conn.execute("SELECT COUNT(*) FROM nodes WHERE node_type = 'PATTERN'").fetchone()
+        return int(row[0])
+    except (sqlite3.Error, ValueError, OSError):
+        return None
+
+
+@app.post("/api/use")
+def use_db_endpoint(payload: dict, request: Request):
+    """Switch the active database for this server process. Local-only."""
+    if not _is_local_request(request):
+        raise HTTPException(status_code=404, detail="DB management is local-only")
+
+    from ..core.registry import (
+        get_registered_db,
+        get_registered_db_by_path,
+        is_bundled_db,
+        register_db,
+        set_active_db,
+        validate_registry_db,
+    )
+
+    global DB_PATH, registry, workspace
+
+    target = payload.get("path")
+    use_default = payload.get("default", False)
+
+    if use_default:
+        from ..core.registry import get_bundled_db_path
+
+        bundled = get_bundled_db_path()
+        if not bundled:
+            raise HTTPException(status_code=500, detail="Bundled DB not found")
+        DB_PATH = bundled
+        workspace = _make_workspace(bundled)
+        registry = workspace.registry_manager
+        workspace_catalog.register_workspace(workspace)
+        set_active_db(None)
+        count = len(registry.registry)
+        return {"success": True, "db_path": bundled, "total_patterns": count}
+
+    if not target:
+        raise HTTPException(status_code=400, detail="Missing 'path' or 'default' field")
+
+    selected_record = get_registered_db(target)
+    candidate = Path(target).expanduser()
+    if selected_record is not None:
+        resolved = Path(selected_record["path"]).expanduser().resolve()
+    elif candidate.exists():
+        resolved = candidate.resolve()
+        selected_record = get_registered_db_by_path(resolved)
+    else:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Database path or installed library not found: {target}",
+        )
+    if not resolved.exists():
+        raise HTTPException(status_code=404, detail=f"Database not found: {resolved}")
+    try:
+        validate_registry_db(resolved)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid Sema database: {exc}") from exc
+    if is_bundled_db(str(resolved)):
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot use the bundled DB as active — it gets overwritten on upgrade.",
+        )
+
+    if selected_record and selected_record.get("kind") == "installed-library":
+        from ..core.libraries import LibraryError, verify_installed_library
+
+        try:
+            verify_installed_library(selected_record)
+        except (LibraryError, OSError, ValueError) as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Installed library verification failed: {exc}",
+            ) from exc
+
+    DB_PATH = str(resolved)
+    workspace = _make_workspace(str(resolved))
+    registry = workspace.registry_manager
+    workspace_catalog.register_workspace(workspace)
+    set_active_db(str(resolved))
+    if selected_record is None:
+        register_db(str(resolved))
+    count = len(registry.registry)
+    return {"success": True, "db_path": str(resolved), "total_patterns": count}
+
+
+# ── MCP Registry ───────────────────────────────────────────────────────────────
+# Serve server.json at /.well-known/mcp/server.json per the 2026 MCP Registry
+# discovery convention (registry.modelcontextprotocol.io). Also available at
+# /server.json for convenience.
+
+
+def _find_server_json() -> Path | None:
+    """Locate server.json in the repo root (editable install) or CWD (deployed)."""
+    root = _get_repo_root()
+    if root and (root / "server.json").exists():
+        return root / "server.json"
+    cwd_candidate = Path.cwd() / "server.json"
+    if cwd_candidate.exists():
+        return cwd_candidate
+    return None
+
+
+@app.get("/.well-known/mcp/server.json")
+def get_well_known_server_json():
+    from fastapi.responses import FileResponse
+
+    path = _find_server_json()
+    if path is None:
+        raise HTTPException(status_code=404, detail="server.json not found")
+    return FileResponse(path, media_type="application/json")
+
+
+@app.get("/server.json")
+def get_server_json():
+    return get_well_known_server_json()
+
+
+# ── Static Frontend ───────────────────────────────────────────────────────────
+# Serve the built semahash-web frontend if available.
+# This enables `sema serve` to provide both API and UI at localhost:3000.
+
+_SPA_CACHE_HEADERS = {"Cache-Control": "no-cache"}
+
+
+def _spa_file_response(path: Path):
+    """Serve an HTML application shell that browsers must revalidate.
+
+    The shell names the hashed asset files of one build. A cached shell from
+    an older installation would request assets that an upgrade removed.
+    """
+    from fastapi.responses import FileResponse
+
+    return FileResponse(path, headers=_SPA_CACHE_HEADERS)
+
+
+_static_dir = Path(__file__).parent / "static"
+if _static_dir.exists() and (_static_dir / "index.html").exists():
+    from fastapi.responses import FileResponse
+
+    # Mount static assets (js, css, etc.)
+    _assets_dir = _static_dir / "assets"
+    if _assets_dir.exists():
+        app.mount("/assets", StaticFiles(directory=str(_assets_dir)), name="assets")
+
+    # SPA catch-all: any non-API path serves the client shell.
+    # Prerendering materializes only `/` into index.html. Serving that home
+    # page markup for /graph or /docs makes React hydration fail (error
+    # #418), so every other path gets the framework's __spa-fallback.html.
+    # Guard against path traversal — the resolved candidate must live inside
+    # _static_dir before we serve it. Anything suspicious falls back to the
+    # shell (the SPA will handle client-side routing / 404 rendering).
+    _static_root = _static_dir.resolve()
+    _spa_shell = _static_dir / "__spa-fallback.html"
+    if not _spa_shell.is_file():
+        _spa_shell = _static_dir / "index.html"
+
+    @app.get("/{path:path}")
+    def serve_spa(path: str):
+        if path.startswith("api/") or path.startswith("assets/"):
+            raise HTTPException(status_code=404)
+        if path == "":
+            return _spa_file_response(_static_dir / "index.html")
+        candidate = (_static_dir / path).resolve()
+        if candidate.is_relative_to(_static_root) and candidate.is_file():
+            if candidate.suffix.lower() == ".html":
+                return _spa_file_response(candidate)
+            return FileResponse(candidate)
+        return _spa_file_response(_spa_shell)

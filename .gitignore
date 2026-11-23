@@ -1,0 +1,48 @@
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.egg-info/
+dist/
+build/
+.venv
+venv/
+.env
+.mcp.json
+.pytest_cache/
+.lake/
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.lof
+*.log
+*.lot
+*.out
+*.synctex.gz
+*.toc
+texput.log
+*.db.bak
+
+# React Router build output
+web/build/
+web/.react-router/
+my.db
+
+# UG project data (not sema's)
+projects/
+
+# Optional generated vocabulary reference
+data/shorthand/all_patterns_short.md
+
+# Frontend build artifacts (generated)
+src/sema/server/static/__spa-fallback.html
+src/sema/server/static/assets/
+src/sema/server/static/llms.txt
+
+# Experiment traces
+experiments/sema_design_challenge/traces/test_run/
+.claude/

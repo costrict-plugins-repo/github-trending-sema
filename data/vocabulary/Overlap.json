@@ -1,0 +1,69 @@
+{
+  "handle": "Overlap",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "set_a",
+      "set_b"
+    ],
+    "properties": {
+      "set_a": {
+        "type": "array",
+        "description": "First accept-set (outcome IDs)"
+      },
+      "set_b": {
+        "type": "array",
+        "description": "Second accept-set (outcome IDs)"
+      },
+      "intersection": {
+        "type": "array",
+        "description": "Common elements between sets"
+      },
+      "expansion_count": {
+        "type": "integer",
+        "description": "How many times sets were expanded to find overlap"
+      }
+    }
+  },
+  "mechanism": "Before stating positions, each agent declares their ACCEPT-SET: all outcomes they can live with. Sets are hash-committed before reveal (commit-reveal protocol). Compute intersection. If non-empty, select from intersection. If empty, both agents EXPAND accept-sets by one step and recompute. Repeat until overlap found or expansion-limit hit. It employs {{mece}} partitioning to cleanly identify the intersection of distinct accept-sets.",
+  "gloss": "Accept-set intersection protocol with commit-reveal for interest-based negotiation",
+  "failure_modes": [
+    "Strategic minimal accept-sets (mitigated but not eliminated by commit-reveal).",
+    "Expansion limit hit with no overlap.",
+    "Accept-sets too abstract to intersect meaningfully.",
+    "Requires both agents to support commit-reveal protocol."
+  ],
+  "invariants": [
+    "Accept-sets are hash-committed before any is revealed.",
+    "Selection is from the intersection only.",
+    "Expansion is bounded; at the expansion limit the protocol ends without agreement."
+  ],
+  "preconditions": [
+    "Two parties, each able to declare an accept-set"
+  ],
+  "postconditions": [
+    "Intersection identified"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:Overlap#mh:SHA-256:bcfa7595ad18e8227f2019bedc717a67f3ffca1871ab9abfd02ff9cbf18cdfbb",
+      "sema:Overlap#mh:SHA-256:d70c8e5e00064f385853d70213d03d8ba547a1156024f826c4f782c4b677cefd"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Overlap#mh:SHA-256:c7019daf2905344a1f3ca2232d74eea272fd284fbe14523e5aa33caa1b46c18e",
+  "sema_ref": "Overlap#c701",
+  "sema_stub": "c701",
+  "dependencies": {
+    "references": {
+      "mece": "sema:MECE#mh:SHA-256:ae1975b15fa25939a85a231371adec3b2431658837ad7ada72315f64b849cb78"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

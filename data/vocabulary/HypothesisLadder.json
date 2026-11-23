@@ -1,0 +1,49 @@
+{
+  "handle": "HypothesisLadder",
+  "mechanism": "The agent explicitly lists its current hypotheses about the world state and assigns probabilities. As new data arrives, it updates these probabilities using {{bayes_update}}. It acts on the highest-probability {{hypothesis}} but keeps others alive. It structures {{abduction}} into falsifiable rungs, climbing to higher certainty only when an {{experiment}} validates the current level.",
+  "gloss": "Bayesian belief updating via falsification rungs",
+  "failure_modes": [
+    "Clinging to low-probability priors."
+  ],
+  "invariants": [
+    "Ascension Rule: Cannot move to {{hypothesis}}(N+1) until {{hypothesis}}(N) is validated by evidence.",
+    "Exclusivity: Hypotheses at the same rung must be mutually exclusive (required for Bayesian probability assignment).",
+    "Falsifiability: Each rung must have a testable disprove condition."
+  ],
+  "preconditions": [
+    "Data is valid"
+  ],
+  "postconditions": [
+    "{{experiment}} defined"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:HypothesisLadder#mh:SHA-256:e739d24ffb9b7c57bf309404838cdd21a4c39d6aa48b72e6565c98a8767f9fa7",
+      "sema:HypothesisLadder#mh:SHA-256:b8cd4534d34515209818259fc96a079f2813f4673326b4b844d53780a3f5c4e1",
+      "sema:HypothesisLadder#mh:SHA-256:5f0c04b152f81423c0ed9daa5433cd2d0be8413c6d5790c4cee54ea54ab488b5",
+      "sema:HypothesisLadder#mh:SHA-256:fac9530cb1134c155f1ef116fd84ee6d4f8b076222be67f7292384efce8e4381",
+      "sema:HypothesisLadder#mh:SHA-256:cbd75b0550a7903a8d7a8a24d9b06bbb61b52d52035608ba89617b42330ba9fe"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:HypothesisLadder#mh:SHA-256:58b55c2c1b13ca27b222e139e54f0ee01116e8f3706428654aaa551b08cccfc8",
+  "sema_ref": "HypothesisLadder#58b5",
+  "sema_stub": "58b5",
+  "dependencies": {
+    "composes_with": {
+      "experiment": "sema:Experiment#mh:SHA-256:421e41c03e27f10e09c08b1f884bbcb9addf0f232be0a5bf1097950b40f15748"
+    },
+    "references": {
+      "abduction": "sema:Abduction#mh:SHA-256:e738d3035534bba0a6b165325ba64818abb897a0f6b9848bc00c7c17ca146921",
+      "bayes_update": "sema:BayesUpdate#mh:SHA-256:865637baf030de8ee9babd2a2fdddbf68d99353516aa86eef07cf6bc1e8a5d38",
+      "hypothesis": "sema:Hypothesis#mh:SHA-256:09894332330937ab8ffd172087883db3adeddf6b7d4ca2befe31832416dedc14"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

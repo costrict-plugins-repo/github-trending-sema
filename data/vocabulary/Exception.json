@@ -1,0 +1,69 @@
+{
+  "handle": "Exception",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "error_code",
+      "message"
+    ],
+    "properties": {
+      "error_code": {
+        "type": "string",
+        "description": "Standardized failure ID"
+      },
+      "message": {
+        "type": "string",
+        "description": "Human-readable description"
+      },
+      "stack_trace": {
+        "type": "array",
+        "description": "Execution context at failure"
+      },
+      "severity": {
+        "type": "string",
+        "enum": [
+          "Fatal",
+          "Error",
+          "Warning"
+        ]
+      }
+    }
+  },
+  "mechanism": "A signal indicating that the standard execution flow has encountered a critical anomaly or invalid {{state}}. Must be handled explicitly by a {{circuit_breaker}} or {{fail_closed}} policy to prevent system corruption.",
+  "gloss": "Runtime anomaly signal",
+  "_meta": {
+    "ring": 0,
+    "tier": 1,
+    "supersedes": [
+      "sema:Exception#mh:SHA-256:bcdc11a8b6e4c1af2def02029ab03bf24c1480bd827ee3d570e374096cfccdc6",
+      "sema:Exception#mh:SHA-256:39fb7ba646e5c1dc91699ae4b3dc0887f4ec476fe6bf29970b83aaaca025f686",
+      "sema:Exception#mh:SHA-256:054ce28455dfd0a13bce0b5a23e048429a58a1b7e6c9082252bc3f815fe6be21",
+      "sema:Exception#mh:SHA-256:61e41a9f4e26dad1ab09516b35640c6204e99e7d1df29ce0899bcbb24a126e1d",
+      "sema:Exception#mh:SHA-256:7c68ca1c9f4cae08d081d6fd31a667fa16a67d2de79eae1a96b196ad69bb9869"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Exception#mh:SHA-256:ae9485039008abed9587e74c05a8c31c37d9a8f70347a11c0630fe87673fb7bb",
+  "sema_ref": "Exception#ae94",
+  "sema_stub": "ae94",
+  "invariants": [
+    "Classifies the anomaly by `error_code`.",
+    "Must be handled by {{circuit_breaker}} or {{fail_closed}}, never merely observed."
+  ],
+  "failure_modes": [
+    "Swallowed: the signal is caught and discarded, so the invalid {{state}} continues unhandled.",
+    "Over-broad code: one `error_code` covers unrelated anomalies, so no handler can dispatch on it."
+  ],
+  "dependencies": {
+    "references": {
+      "circuit_breaker": "sema:CircuitBreaker#mh:SHA-256:3caa9c387c04bb2ac66ec35a6cfe2665e11339f0d47576b96d68229226580c76",
+      "fail_closed": "sema:FailClosed#mh:SHA-256:dfbcf50c68d036ae4f18719bf59f41eddd83b5510bd60ff1326f8854240d8066",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

@@ -1,0 +1,50 @@
+{
+  "handle": "MintWhenFriction",
+  "mechanism": "A decision procedure that permits minting only in response to recorded friction from actual use or coordination. The caller declares what observations count as friction and the sufficiency rule before evaluation. Invoke {{pattern_discovery}} to gate prior art, evaluate the evidence under that rule, then invoke {{gate}} to return a proceed or halt {{decision}}. Anticipated future usefulness alone does not qualify.",
+  "gloss": "Mint only after use creates recorded friction",
+  "failure_modes": [
+    "Speculative Mint: Approval relies on anticipated usefulness rather than recorded friction.",
+    "Registry Bloat: Flooding the namespace with low-value patterns makes discovery harder.",
+    "Definition Drift: Minting a concept before it has stabilized leads to frequent version churning."
+  ],
+  "invariants": [
+    "Prior Art: {{pattern_discovery}} must yield proceed before this gate yields proceed.",
+    "Grounded Demand: Every approval cites friction observed before the proposal.",
+    "Declared Rule: The evidence type and sufficiency rule are fixed before the minting decision."
+  ],
+  "preconditions": [
+    "Proposed pattern mechanism and boundary, registry scope, and discovery method available.",
+    "Recorded friction evidence, evidence type, and sufficiency rule available."
+  ],
+  "postconditions": [
+    "Minting {{decision}} and evaluated evidence returned."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:MintWhenFriction#mh:SHA-256:d48d58e14fdd17707bd90aaeab196fc13189a2d39b37aaa8b086c4e03356ff57",
+      "sema:MintWhenFriction#mh:SHA-256:b259809f0e4675aa3f38df2353b6fdb18537f6cb66b62b145e7f7dc210849e30",
+      "sema:MintWhenFriction#mh:SHA-256:76ce47097df09b4f89d8cb28d034a234cb659b9f5db6c1708930731586bb9c5e",
+      "sema:MintWhenFriction#mh:SHA-256:8c036e4a8a072c10afb0925b17c73b31cac64b1384145d7e2dfe77b645029b75"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:MintWhenFriction#mh:SHA-256:727e0e935cdf1f807e543d3a0da374c3a496b4b819913347e2623058e51d5371",
+  "sema_ref": "MintWhenFriction#727e",
+  "sema_stub": "727e",
+  "dependencies": {
+    "composes_with": {
+      "gate": "sema:Gate#mh:SHA-256:664dd801873a87e8aa3d67499e27e7c47923d5c0cdd129af6c09a7531ed7de15",
+      "pattern_discovery": "sema:PatternDiscovery#mh:SHA-256:742a4d59a47458bf5ba632097b9cc410228dbedc941a561e7cfa70f2c63cd602"
+    },
+    "yields": {
+      "decision": "sema:Decision#mh:SHA-256:b1407127acd4a39314fc24b418310e4b95e0347e4e22f376151ab765e2dfd2c7"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

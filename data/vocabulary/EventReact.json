@@ -1,0 +1,45 @@
+{
+  "handle": "EventReact",
+  "mechanism": "Event-Driven Response: {{agent}} subscribes to event types. Events queued by priority. Handler invoked per event. Handler execution atomic. Unhandled events logged or escalated. It implements the reactive loop, often triggering a {{re_act}} cycle upon signal reception.",
+  "gloss": "Responding to external triggers rather than polling",
+  "failure_modes": [
+    "Event Storm: Cascade of events overwhelms handler capacity, causing dropped or delayed responses."
+  ],
+  "invariants": [
+    "Handler matches event type",
+    "Response latency < Max_Latency"
+  ],
+  "preconditions": [
+    "Event listener active",
+    "Trigger event occurs"
+  ],
+  "postconditions": [
+    "Handler executed"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:EventReact#mh:SHA-256:7db170eab2eaf5a1764ee61af391ab290db9e83835f6ca3107305d2a709554fe",
+      "sema:EventReact#mh:SHA-256:a0ef747d97aabc453629d237c4d625d02c26d22515a3f958c1ab261c156a3b56",
+      "sema:EventReact#mh:SHA-256:d2e17a1a86ecdfab6743565083d7b92c41df3bc9515560ee73dba34b2a62bedd",
+      "sema:EventReact#mh:SHA-256:6f43ed9daa820d62cf2701cd394d4853d5a9d0e527270d11edd8748d624e27a5",
+      "sema:EventReact#mh:SHA-256:f71a4aacd1cedf16a425dea52ea0e712de4617c7d527798e5cd1d0aabf678d17"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:EventReact#mh:SHA-256:4bad4fe25039564ac25139829244df5133e31cb65e5bd50ddbc953cad0082eb9",
+  "sema_ref": "EventReact#4bad",
+  "sema_stub": "4bad",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "re_act": "sema:ReAct#mh:SHA-256:3361fd75537995da1d70c0f60b9b8bd01c44bad9e2596a81fa059b7c6c3fba83"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

@@ -1,0 +1,36 @@
+{
+  "handle": "Lock",
+  "mechanism": "A synchronization primitive that enforces exclusive access to a resource. At most one holder may access the protected resource at any time. The holder must explicitly release the lock to allow others to acquire it.",
+  "gloss": "Mutual exclusion enforcement",
+  "failure_modes": [
+    "Deadlock: Holder crashes or hangs without releasing, blocking all other contenders indefinitely.",
+    "Priority Inversion: High-priority contender blocked by low-priority holder."
+  ],
+  "invariants": [
+    "Exclusivity: At most one holder at any time.",
+    "Acquire-before-access: Protected resource cannot be touched without holding the lock.",
+    "Release-after-use: Holder must release after completing the critical section."
+  ],
+  "preconditions": [
+    "Shared resource exists",
+    "Contending parties can communicate"
+  ],
+  "postconditions": [
+    "Exactly one party holds exclusive access",
+    "Other contenders are blocked or queued"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "caution": "Exclusive access \u2014 starvation enables denial of service.",
+    "path": [
+      "Physics",
+      "Primitives"
+    ]
+  },
+  "sema_ref": "Lock#95c2",
+  "sema_id": "sema:Lock#mh:SHA-256:95c2ee952a5301d4b346a5e8693350829d88b3c600048eedcf87bb00c23ee5fb",
+  "sema_stub": "95c2",
+  "sema_layer": "Physics",
+  "sema_category": "Primitives"
+}

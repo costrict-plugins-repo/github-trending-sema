@@ -1,0 +1,72 @@
+{
+  "handle": "Snapshot",
+  "mechanism": "A static, immutable record of the {{state}} of a {{system}} or object at a specific point in time.",
+  "gloss": "Immutable state record",
+  "failure_modes": [
+    "Serialization Gap: In-memory state (e.g., open sockets) that cannot be serialized.",
+    "Corruption: Snapshot hash matches but data is unreadable.",
+    "Staleness: Restoring from a snapshot that is logically valid but temporally obsolete."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "related": [
+      "sema:StateSnapshot#mh:SHA-256:c86b7e118ded573ed0dd2c4b2ced4928d1c9d4c7644ebc2d0f99a9281cece4b2"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "snapshot_id",
+      "timestamp",
+      "state_hash",
+      "data"
+    ],
+    "properties": {
+      "snapshot_id": {
+        "type": "string"
+      },
+      "target_system_id": {
+        "type": "string"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "state_hash": {
+        "type": "string",
+        "description": "Merkle root of the state"
+      },
+      "data": {
+        "type": "object",
+        "description": "The actual serialized state payload"
+      },
+      "meta": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          },
+          "creator_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "sema_id": "sema:Snapshot#mh:SHA-256:390d2ec2934136d534f969b4039e6b899d2ed3956ddd8aa0ca4754068ed8d133",
+  "sema_ref": "Snapshot#390d",
+  "sema_stub": "390d",
+  "dependencies": {
+    "references": {
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

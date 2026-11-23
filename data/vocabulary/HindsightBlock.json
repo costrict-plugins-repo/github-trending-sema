@@ -1,0 +1,55 @@
+{
+  "handle": "HindsightBlock",
+  "mechanism": "{{decision}}-Time Evaluation: When evaluating past decision, reconstruct information available AT DECISION TIME. {{judge}} decision quality by expected value given that information, not by outcome. Good decisions can have bad outcomes. Bad decisions can have good outcomes. It mirrors {{pre_mortem}} logic after the fact, reconstructing the ex-ante probability space to judge decision quality independent of outcome.",
+  "gloss": "Preventing results-oriented thinking",
+  "failure_modes": [
+    "{{outcome}} Blindness: Ignoring outcomes entirely prevents learning from black swans or model errors."
+  ],
+  "invariants": [
+    "No Revision: Log is immutable",
+    "Prior Commitment: Prediction(T) must be cryptographically committed before {{outcome}}(T+delta)"
+  ],
+  "preconditions": [
+    "Prediction registry active"
+  ],
+  "parameters": [
+    {
+      "name": "lookback_window",
+      "type": "Duration",
+      "range": "[1min, 24h]",
+      "description": "How far back to evaluate"
+    },
+    {
+      "name": "regret_threshold",
+      "type": "Float",
+      "range": "[0.0, 0.5]",
+      "description": "Max acceptable regret score"
+    }
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:HindsightBlock#mh:SHA-256:bdb602218783e07b6eb5e68e900635bcd80e7b6d2ff32ac26ec03e383837f363",
+      "sema:HindsightBlock#mh:SHA-256:51fc6c6213db5ba4483123deb00c3ebfc2a05310434d308f6850c12e1b6aad46",
+      "sema:HindsightBlock#mh:SHA-256:0ba0f1520d64889425562a8fa226f5da04f0b64fd98e167383538cc0e9e653f2"
+    ],
+    "path": [
+      "Mind",
+      "Inference"
+    ]
+  },
+  "sema_id": "sema:HindsightBlock#mh:SHA-256:5d8d82eb55fe76c2657aa1f5ac21d4bc38edb2a3835c4e1ca1a071bad5f2a8fd",
+  "sema_ref": "HindsightBlock#5d8d",
+  "sema_stub": "5d8d",
+  "dependencies": {
+    "references": {
+      "decision": "sema:Decision#mh:SHA-256:b1407127acd4a39314fc24b418310e4b95e0347e4e22f376151ab765e2dfd2c7",
+      "judge": "sema:Judge#mh:SHA-256:704cbb71588d7a3bafa08b71c863005e31ec4400860b9cb8b094e660da9c7c6c",
+      "outcome": "sema:Outcome#mh:SHA-256:753768dae28040f1291ee2849d2aac2a08bbffd836cfab679bdbea9a6ff7ec03",
+      "pre_mortem": "sema:PreMortem#mh:SHA-256:e4c24813f33aa41fdb183e380d05707fe1fd813c46b4127602449a8988f47964"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Inference"
+}

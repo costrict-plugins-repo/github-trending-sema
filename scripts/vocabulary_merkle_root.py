@@ -1,0 +1,240 @@
+#!/usr/bin/env python3
+"""
+Calculate the Merkle root and generate vocabulary statistics.
+
+This script:
+1. Loads all patterns from the database (source of truth)
+2. Computes the Merkle root
+3. Calculates statistics (Layer/Category distribution)
+4. Generates a comprehensive information page (docs/information/vocabulary_information.md)
+5. Updates the website's merkle.json
+"""
+
+import hashlib
+import json
+import os
+from collections import defaultdict
+from typing import Any
+
+DB_PATH = os.environ.get("SEMA_DB_PATH", "data/taxonomy.db")
+OUTPUT_FILE = "docs/information/vocabulary_information.md"
+
+
+def sha256(data: bytes) -> str:
+    """Compute SHA-256 hash. Kept for backward compat; new code should
+    import `vocabulary_root` from sema.core.hashing."""
+    return hashlib.sha256(data).hexdigest()
+
+
+def extract_hash_from_sema_id(sema_id: str) -> str:
+    """Extract the hash portion from a sema_id."""
+    if not sema_id or "#mh:SHA-256:" not in sema_id:
+        return ""
+    return sema_id.split("#mh:SHA-256:")[1]
+
+
+def load_patterns() -> list[dict[str, Any]]:
+    """Load all patterns from the database (source of truth)."""
+    import sqlite3
+
+    if not os.path.exists(DB_PATH):
+        raise FileNotFoundError(f"Database not found: {DB_PATH}")
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """
+        SELECT text as handle, metadata
+        FROM nodes
+        WHERE node_type = 'PATTERN'
+        ORDER BY text
+    """
+    )
+
+    patterns = []
+    for row in cursor.fetchall():
+        meta = json.loads(row["metadata"] or "{}")
+        pattern_data = meta.get("pattern", {})
+        pattern_data["handle"] = row["handle"]
+        patterns.append(pattern_data)
+
+    conn.close()
+
+    if not patterns:
+        raise ValueError("No patterns found in database")
+
+    return patterns
+
+
+def compute_merkle_root(patterns: list[dict[str, Any]]) -> str:
+    """Compute the semantic-set root (compatibility wrapper)."""
+    return compute_vocabulary_roots(patterns)["semantic_root"]
+
+
+def compute_vocabulary_roots(patterns: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compute both canonical aggregate roots, rejecting malformed entries."""
+    import sys
+    from pathlib import Path as _Path
+
+    sys.path.insert(0, str(_Path(__file__).resolve().parents[1] / "src"))
+    from sema.core.hashing import pattern_hash_from_sema_id, vocabulary_roots
+
+    bindings = []
+    for p in patterns:
+        handle = p.get("handle")
+        if not handle:
+            raise ValueError("Pattern is missing its handle")
+        try:
+            pattern_hash = pattern_hash_from_sema_id(
+                p.get("sema_id"),
+                expected_handle=handle,
+            )
+        except ValueError as exc:
+            raise ValueError(f"Pattern {handle!r} has an invalid sema_id: {exc}") from exc
+        bindings.append((handle, pattern_hash))
+    return vocabulary_roots(bindings)
+
+
+def calculate_stats(patterns: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Calculate counts per Layer and Category."""
+    stats = defaultdict(lambda: defaultdict(int))
+
+    for p in patterns:
+        meta = p.get("_meta", {})
+        path = meta.get("path")
+        if isinstance(path, list) and path:
+            layer = path[0]
+            category = path[1] if len(path) > 1 else "Uncategorized"
+        else:
+            layer = meta.get("layer", "Unclassified")
+            category = meta.get("category", "Uncategorized")
+        stats[layer][category] += 1
+
+    return stats
+
+
+def generate_markdown_content(
+    roots: dict[str, Any],
+    patterns: list[dict[str, Any]],
+    stats: dict[str, dict[str, int]],
+) -> str:
+    """Generate the content for vocabulary_information.md."""
+    total_patterns = len(patterns)
+    semantic_root = roots["semantic_root"]
+    catalog_root = roots["catalog_root"]
+
+    content = f"""# Vocabulary Information
+
+## System Status
+
+- **Semantic-set Root**: `{semantic_root}`
+- **Semantic-set Scheme**: `{roots["semantic_root_scheme"]}`
+- **Catalog Root**: `{catalog_root}`
+- **Catalog Scheme**: `{roots["catalog_root_scheme"]}`
+- **Pattern Count**: {total_patterns}
+- **Unique Definition Count**: {roots["definition_count"]}
+- **Verified Against Semantic Root**: `{semantic_root[:16]}…`
+
+## Usage
+
+### Handshake Protocol
+
+Agents use the semantic-set root to compare canonical-v2 definition sets and
+the catalog root when exact handle-to-definition bindings must also agree.
+Because canonicalization v2 hashes target handles in structured references,
+a target rename can also change dependent definition digests:
+
+```python
+import json
+
+# Agent A shares semantic-set root + scheme
+semantic_root_A = "{semantic_root}"
+scheme_A = "{roots["semantic_root_scheme"]}"
+
+# Agent B independently reads its local versioned roots
+local = json.loads(sema_root())
+semantic_root_B = local["semantic_root"]
+scheme_B = local["semantic_root_scheme"]
+
+if scheme_A == scheme_B and semantic_root_A == semantic_root_B:
+    print("✅ PROCEED - Definition sets match")
+else:
+    print("🚫 HALT - Vocabulary mismatch")
+```
+
+## Vocabulary Statistics
+
+Breakdown of patterns by Civilization Layer and Functional Category.
+
+"""
+
+    # Sort layers logically if possible, else alphabetically
+    layer_order = ["Physics", "Mind", "Society", "Infrastructure", "Unclassified"]
+    sorted_layers = sorted(
+        stats.keys(), key=lambda x: layer_order.index(x) if x in layer_order else 99
+    )
+
+    for layer in sorted_layers:
+        categories = stats[layer]
+        layer_total = sum(categories.values())
+        content += f"### {layer} ({layer_total})\n\n"
+        content += "| Category | Count |\n| :--- | :---: |\n"
+
+        for cat, count in sorted(categories.items(), key=lambda x: x[1], reverse=True):
+            content += f"| {cat} | {count} |\n"
+        content += "\n"
+
+    return content.rstrip() + "\n"
+
+
+def main():
+    print(f"📚 Loading patterns from database: {DB_PATH}\n")
+
+    patterns = load_patterns()
+    print(f"✓ Loaded {len(patterns)} patterns\n")
+
+    roots = compute_vocabulary_roots(patterns)
+    stats = calculate_stats(patterns)
+
+    print("=" * 80)
+    print("VOCABULARY INFORMATION")
+    print("=" * 80)
+    print(f"\nSemantic-set root: {roots['semantic_root']}")
+    print(f"\nCatalog root: {roots['catalog_root']}")
+    print(f"\nPattern count: {len(patterns)}")
+
+    # Generate and write markdown file
+    markdown_content = generate_markdown_content(roots, patterns, stats)
+    with open(OUTPUT_FILE, "w") as f:
+        f.write(markdown_content)
+
+    print(f"\n✓ Updated {OUTPUT_FILE}")
+
+    # Write JSON for Website
+    WEBSITE_JSON = "../../packages/sema-website/public/merkle.json"
+    if os.path.exists(os.path.dirname(WEBSITE_JSON)):
+        with open(WEBSITE_JSON, "w") as f:
+            json.dump(
+                {
+                    "root": roots["semantic_root"],
+                    "root_scheme": roots["semantic_root_scheme"],
+                    "catalog_root": roots["catalog_root"],
+                    "catalog_root_scheme": roots["catalog_root_scheme"],
+                    "count": len(patterns),
+                    "definition_count": roots["definition_count"],
+                    "verified_against_root": roots["semantic_root"],
+                },
+                f,
+                indent=2,
+            )
+        print(f"✓ Updated {WEBSITE_JSON}")
+    else:
+        print(f"⚠️  Skipped website update (dir not found): {WEBSITE_JSON}")
+
+    print("\n" + "=" * 80)
+
+
+if __name__ == "__main__":
+    main()

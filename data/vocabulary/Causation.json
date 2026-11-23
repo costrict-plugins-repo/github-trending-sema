@@ -1,0 +1,35 @@
+{
+  "handle": "Causation",
+  "mechanism": "A relationship where manipulating one event directly forces another to occur \u2014 a directed edge in the causal graph. The definitional property is intervention-responsiveness: an external change to the cause alters the effect, which distinguishes causation from mere co-movement.",
+  "gloss": "Direct force relationship",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Causation#mh:SHA-256:63e1089ee47f39bb6e2aeb8de41bb1f5a36666053833d0f198be91aea7d58dbc",
+      "sema:Causation#mh:SHA-256:e47b8f36ae5e8b43d3e3f521fc75c2a70f0355cbe062f794ecbe93a4c608921c"
+    ],
+    "path": [
+      "Physics",
+      "Primitives"
+    ],
+    "related": [
+      "EffectDelayCheck#bfff",
+      "Ripplelag#8edf",
+      "ConfoundedAttribution"
+    ]
+  },
+  "invariants": [
+    "Intervention-responsive: an external change to the cause alters the effect.",
+    "Directed: intervening on the effect does not alter the cause along the same edge."
+  ],
+  "failure_modes": [
+    "Asserted without intervention: where no intervention is possible, the definitional property is claimed rather than tested.",
+    "Confounded: a third variable drives both, so intervening on the named cause would not move the effect."
+  ],
+  "sema_id": "sema:Causation#mh:SHA-256:ed6cdeb5f2972a180d13c58e1b51957e7309cd78052a029a56e34dad9a8a6850",
+  "sema_ref": "Causation#ed6c",
+  "sema_stub": "ed6c",
+  "sema_layer": "Physics",
+  "sema_category": "Primitives"
+}

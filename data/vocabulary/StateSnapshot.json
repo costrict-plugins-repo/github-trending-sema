@@ -1,0 +1,48 @@
+{
+  "handle": "StateSnapshot",
+  "mechanism": "Periodic serialization of internal volatile {{state}} to durable storage to enable crash recovery. Unlike distributed checkpoints (which requires consensus), {{snapshot}} is a local or unilateral durability guarantee. It enables 'Resume' functionality. Utilizes {{trace}}, {{idempotent_write}}.",
+  "gloss": "Durable persistence of volatile state",
+  "invariants": [
+    "Atomicity: {{snapshot}} is either fully written or discarded (no partial corruption)",
+    "Roundtrip Integrity: Deserialize(Serialize(S)) must equal S"
+  ],
+  "preconditions": [
+    "Serializable {{state}}",
+    "Write access to durable storage"
+  ],
+  "postconditions": [
+    "Resume point established"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:StateSnapshot#mh:SHA-256:9ffc9d057109f26717249d3a4c46dfaa52a944d10a363034bca187b83305f39f",
+      "sema:StateSnapshot#mh:SHA-256:17a545e1632273e11d37315e7ad7e7e355c38bb6decf379ce9091129f80a06f9",
+      "sema:StateSnapshot#mh:SHA-256:5791e43fad7e1f42cb7451eec53c6bfa9fef567b30a14d05be269116203e5848",
+      "sema:StateSnapshot#mh:SHA-256:53b2f1c57a571f308d8ce1686edf0fbbbc178bf35d96b2a445bcebeda01208aa",
+      "sema:StateSnapshot#mh:SHA-256:56fe3bd8ddf82906d7a28b5e978207b6224227f51a6a2c6dfcdc14fafdd5f05b",
+      "sema:StateSnapshot#mh:SHA-256:0a0fee933e452552f3128e0f5491a74cdb132c8417dfc3cf2e6f1e2141e0b21b"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ]
+  },
+  "signature": [
+    "State(Snapshot)"
+  ],
+  "sema_id": "sema:StateSnapshot#mh:SHA-256:d75752f332fe14ae3abf2253a45ab180034d2becc3a7e19e3e30da3c94b3c636",
+  "sema_ref": "StateSnapshot#d757",
+  "sema_stub": "d757",
+  "dependencies": {
+    "references": {
+      "idempotent_write": "sema:IdempotentWrite#mh:SHA-256:7226e14f5caed42394b33c28989972451a03b43ba531e8cb6a9975a0fee4ab2c",
+      "snapshot": "sema:Snapshot#mh:SHA-256:390d2ec2934136d534f969b4039e6b899d2ed3956ddd8aa0ca4754068ed8d133",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "trace": "sema:Trace#mh:SHA-256:b68d64423aa72b13a06714aa182baab79eb49a5a856dce56dd554fd63b41c2a9"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

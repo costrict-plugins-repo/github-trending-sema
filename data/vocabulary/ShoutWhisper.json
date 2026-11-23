@@ -1,0 +1,45 @@
+{
+  "handle": "ShoutWhisper",
+  "mechanism": "Agents 'Shout' (broadcast) high-level intent to discover peers, then switch to 'Whisper' (encrypted P2P) for the actual coordination. Optimizes bandwidth and privacy.",
+  "gloss": "Dual-mode communication",
+  "failure_modes": [
+    "Metadata leakage during the Shout phase."
+  ],
+  "invariants": [
+    "Amplitude {{check}}: Shout must reach >90% of network",
+    "Privacy {{check}}: Whisper content encrypted to Recipient"
+  ],
+  "preconditions": [
+    "Broadcast channel available"
+  ],
+  "postconditions": [
+    "{{global}} signal sent, payload private"
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "sema:Route#mh:SHA-256:7c7e44685dd8d0fffb3d9ff54cbfb5eba19791e324b6a6ed66382b03f2226fc9"
+    ],
+    "ring": 1,
+    "supersedes": [
+      "sema:ShoutWhisper#mh:SHA-256:35ddf298feb20dc16aeaa1294566eddb2dda1928744d7d25e747ae9a697d0d78",
+      "sema:ShoutWhisper#mh:SHA-256:f9a8bedaa2a57a13a489fbc7e19b9dd780dc00b9f589d14e4eaab3ae404db82d"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ],
+    "caution": "Coordination moves to encrypted channels monitors cannot read \u2014 keep a record of who whispered to whom, or collusion goes unseen."
+  },
+  "sema_id": "sema:ShoutWhisper#mh:SHA-256:b12ba94fa0c10a49e1d2910fa6adfcce90f99041b8d8481a855d2093e43979ac",
+  "sema_ref": "ShoutWhisper#b12b",
+  "sema_stub": "b12b",
+  "dependencies": {
+    "references": {
+      "check": "sema:Check#mh:SHA-256:6890b221c38531710528cd84bbf3a957e29d9836dfc9c02669fc0a86709bcb00",
+      "global": "sema:Global#mh:SHA-256:330166f5c16b13500d92d26d0e58ad24657bebccbe295ff8108f363d3539034d"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

@@ -1,0 +1,40 @@
+{
+  "handle": "ParetoFront",
+  "mechanism": "Given an input candidate set and declared axes, use {{compare}} under each axis's no-worse relation. Candidate X dominates Y when X is no worse than Y on every axis and, on at least one axis, Y is not no worse than X. Return every input candidate not dominated by another input candidate. Ordering or selecting among returned candidates is caller policy.",
+  "gloss": "Nondominated candidates across declared axes",
+  "invariants": [
+    "Dominance: X dominates Y iff X is no worse than Y on every declared axis and there is at least one axis on which Y is not no worse than X.",
+    "Frontier Completeness: Every undominated input candidate is returned, and no dominated input candidate is returned."
+  ],
+  "preconditions": [
+    "At least two axes are declared.",
+    "Each axis supplies a reflexive, transitive no-worse relation applicable to every candidate pair."
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "sema:OpportunityCost#mh:SHA-256:f0a3f074464fb30b60adac59167d2d34aeadf8fdd47de6c433f278c0036223fb",
+      "sema:Satisfice#mh:SHA-256:fa75c44d4d400749a16f521c8c2793207877c783154cc00a93390beae85d2e0d"
+    ],
+    "ring": 2,
+    "supersedes": [
+      "sema:ParetoFront#mh:SHA-256:9091ffbe5c96a8da82e0aba315ad4bc9191b92a69656df4ffe18706a954bf822",
+      "sema:ParetoFront#mh:SHA-256:c1fb20ece1fc1f524f90d03106f76a4fcbb7107640a6258153bb273177d654be",
+      "sema:ParetoFront#mh:SHA-256:10a7d315172e2163bed132c3943b3008d5a566e5b4b4941af614838dcbecffe0"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ]
+  },
+  "sema_id": "sema:ParetoFront#mh:SHA-256:e6f5d6269118c342b52699a99154c79dc1e7b39e04c12bafc2f605805c0dfd02",
+  "sema_ref": "ParetoFront#e6f5",
+  "sema_stub": "e6f5",
+  "dependencies": {
+    "composes_with": {
+      "compare": "sema:Compare#mh:SHA-256:15a079e73bd3c280efbe2b35ab4b082b2302ab65e5dd5eb1c4fba1a5f554cebe"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

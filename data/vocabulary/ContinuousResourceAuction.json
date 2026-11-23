@@ -1,0 +1,92 @@
+{
+  "handle": "ContinuousResourceAuction",
+  "mechanism": "A market {{protocol}} for allocating rivalrous resources (e.g., compute, bandwidth, state slots) where the pricing function is continuous and algorithmic. It actively invokes {{state_lock}} to serialize bidding attempts and accepts {{value}} metrics to determine allocation. Unlike static auctions, it supports configurable pricing models via parameters, allowing agents to implement congestion pricing (e.g., EIP-1559), Dutch auctions, or linear decay.",
+  "gloss": "Algorithmic pricing for rivalrous resources",
+  "signature": [
+    "Protocol(Value)"
+  ],
+  "failure_modes": [
+    "Price Instability: Aggressive pricing curves lead to volatility that discourages long-term resource planning.",
+    "Monopoly Lockout: Wealthy agents can permanently rent-seek if the holding cost is too low relative to their capital."
+  ],
+  "invariants": [
+    "Holding the resource costs more than nothing, at `holding_cost_rate`.",
+    "Price adjusts to demand or to time.",
+    "Resolves to a winner or resets within `cycle_time`."
+  ],
+  "parameters": [
+    {
+      "name": "pricing_model",
+      "type": "Enum",
+      "range": "{CongestionPricing, DutchAuction, Linear}",
+      "description": "Default: CongestionPricing"
+    },
+    {
+      "name": "cycle_time",
+      "type": "Duration",
+      "range": "[100ms, 1h]",
+      "description": "Duration of each auction cycle"
+    },
+    {
+      "name": "holding_cost_rate",
+      "type": "Float",
+      "range": "(0.0, 1.0]",
+      "description": "Cost per cycle of continuing to hold the resource. Cannot be zero."
+    }
+  ],
+  "data_schema": {
+    "type": "object",
+    "properties": {
+      "resource_id": {
+        "type": "string"
+      },
+      "current_price": {
+        "type": "number"
+      },
+      "current_holder": {
+        "type": "string"
+      },
+      "next_cycle_start": {
+        "type": "integer"
+      }
+    },
+    "required": [
+      "resource_id",
+      "current_price",
+      "next_cycle_start"
+    ]
+  },
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "related": [
+      "AttentionMarkets"
+    ],
+    "supersedes": [
+      "sema:ContinuousResourceAuction#mh:SHA-256:babf1b41f451b6df2220129e0c0a05483abfc8f8aa8b4bfd3f7fd543ac9e009f",
+      "sema:ContinuousResourceAuction#mh:SHA-256:46f6f567beca632d55d7b03ad3572d292d56b887f45d18eaec50a0c073a1cf08",
+      "sema:ContinuousResourceAuction#mh:SHA-256:8fe283f5ae6bd9adcf164ba848bcc731863b0f232f2dbc4fa8c389f70eb8184c",
+      "sema:ContinuousResourceAuction#mh:SHA-256:15530861d00609a281c40ecd368dda8f2a8e15181bef54b2532752f50348e290"
+    ],
+    "path": [
+      "Society",
+      "Economics"
+    ]
+  },
+  "sema_ref": "ContinuousResourceAuction#c725",
+  "sema_id": "sema:ContinuousResourceAuction#mh:SHA-256:c725833053eec6c59a6e1cc307abb8176a0efe407e512bf718cf0f1e60a66815",
+  "sema_stub": "c725",
+  "dependencies": {
+    "accepts": {
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    },
+    "composes_with": {
+      "state_lock": "sema:StateLock#mh:SHA-256:c9c2809bdf97bb6ac17a8ffe428d4aa9a28294b99d64cc8a336a239d26a8afb8"
+    },
+    "references": {
+      "protocol": "sema:Protocol#mh:SHA-256:f583ad96f598ecf0c9068f5c1390bdf247d2eb67bd7a14c7ce615c357b957b46"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Economics"
+}

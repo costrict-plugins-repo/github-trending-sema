@@ -1,0 +1,38 @@
+{
+  "handle": "Datum",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "payload",
+      "source_id"
+    ],
+    "properties": {
+      "payload": {
+        "description": "The raw fact or value (any valid JSON)"
+      },
+      "source_id": {
+        "type": "string",
+        "description": "Origin of the datum"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "mechanism": "A single unit of raw, unprocessed fact. Unlike information, it has no attached meaning yet, just existence. Singular of Data.",
+  "gloss": "Raw unit of fact",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Datum#mh:SHA-256:f90456c1067ac5db4e9825a82a22bc58086022f8acd0d0f63fdfeaeb6be2e937",
+  "sema_ref": "Datum#f904",
+  "sema_stub": "f904",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

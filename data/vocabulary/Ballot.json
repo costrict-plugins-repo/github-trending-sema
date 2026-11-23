@@ -1,0 +1,74 @@
+{
+  "handle": "Ballot",
+  "mechanism": "The immutable record of one agent's cast choice in a decision. Carries which proposal, which voter, and which option was chosen. The question, the options and the decision rule belong to the `Vote` that called for it; a Ballot is the response, and `Quorum` counts these. Immutable once cast \u2014 a revision is a new Ballot carrying a fresh {{monotonic_counter}} sequence, so revocation and amendment surface as distinct later decisions rather than retroactive edits.",
+  "gloss": "Immutable record of one agent's cast choice",
+  "failure_modes": [
+    "Spoiled ballot: ambiguous or invalid {{select}} format.",
+    "Double voting: a single agent submits multiple ballots for one proposal (Sybil risk)."
+  ],
+  "invariants": [
+    "Immutable once cast: a revision is a new Ballot, not an edit.",
+    "Names one voter and one choice drawn from the options of the decision it answers.",
+    "Choice is expressed as a {{select}} over those options, not free text."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Ballot#mh:SHA-256:f1d7f5635ea8bc53d0e1718d1ea372bd93b829500ac69602e648e507404f7beb",
+      "sema:Ballot#mh:SHA-256:84c3ea1db9fa8ab818d4fd156a8ef0a43d15b50419ca42236869bd9119f35497",
+      "sema:Ballot#mh:SHA-256:43ebc85e8e87e132698c59536402d1ba715b0dbad9e6c116f97a056c60da4577"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "ballot_id",
+      "proposal_id",
+      "voter_id",
+      "choice"
+    ],
+    "properties": {
+      "ballot_id": {
+        "type": "string"
+      },
+      "proposal_id": {
+        "type": "string"
+      },
+      "voter_id": {
+        "type": "string"
+      },
+      "choice": {
+        "type": "string",
+        "description": "The selected option"
+      },
+      "weight": {
+        "type": "number",
+        "default": 1.0
+      },
+      "signature": {
+        "type": "string",
+        "description": "Cryptographic proof of vote"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "sema_ref": "Ballot#e0e4",
+  "sema_id": "sema:Ballot#mh:SHA-256:e0e4a34b48dba4669e09b04c4b8c3202f95c878fc26c29480a298012753b1f3c",
+  "sema_stub": "e0e4",
+  "dependencies": {
+    "references": {
+      "monotonic_counter": "sema:MonotonicCounter#mh:SHA-256:d0d3ce256be4bc080a29eab7fda36381a4352a280d9a12d59179c60e71cf9bd0",
+      "select": "sema:Select#mh:SHA-256:decf9c05490dc5e6b372c5dbb7d89d2285fdd832714fc992b10fdbd6b7c2c2e3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

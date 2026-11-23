@@ -1,0 +1,40 @@
+{
+  "handle": "SurvivorCorrect",
+  "mechanism": "Failure Inclusion: When learning from examples, ask: \"Am I only seeing successes?\" Estimate base rate of attempts. Seek out failures and near-misses. The pattern that \"all successful X do Y\" means nothing if failed X also did Y. Denominator matters. Utilizes {{base_rate_include}}.",
+  "gloss": "Accounting for silent failures in data",
+  "failure_modes": [
+    "Phantom Hunt: Wasting resources looking for failures in a dataset that is genuinely 100% successful."
+  ],
+  "invariants": [
+    "{{cognitive_bias}} reduced",
+    "Sample re-weighted to account for missing data"
+  ],
+  "preconditions": [
+    "Filtered dataset (survivors only)"
+  ],
+  "postconditions": [
+    "True population estimate"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "path": [
+      "Mind",
+      "Inference"
+    ],
+    "supersedes": [
+      "sema:SurvivorCorrect#mh:SHA-256:6c9093fc93158cdc0e8e81af7cd3dbc29b9998b609d3a490a18142ae96179aea"
+    ]
+  },
+  "sema_id": "sema:SurvivorCorrect#mh:SHA-256:37802a37d7e4bc9080836e17c5fbf7c170bce0942ed40d8a4960c46f6ca2407c",
+  "sema_ref": "SurvivorCorrect#3780",
+  "sema_stub": "3780",
+  "dependencies": {
+    "references": {
+      "base_rate_include": "sema:BaseRateInclude#mh:SHA-256:1e637d4655d2b503d5cc333935aa74aabb13d09f174577f4d6cdf0de77688569",
+      "cognitive_bias": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Inference"
+}

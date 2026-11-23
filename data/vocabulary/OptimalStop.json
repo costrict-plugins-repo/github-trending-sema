@@ -1,0 +1,27 @@
+{
+  "handle": "OptimalStop",
+  "mechanism": "Given a sequential decision process, specify its process and information model, objective, feasible stop and continue actions, horizon or terminal condition, and stopping rule. At each decision point, apply the rule to the information then available and take the selected action.",
+  "gloss": "Choose when to stop a sequential process",
+  "invariants": [
+    "Model-Relative Optimality: Under the declared model and constraints, no feasible stopping rule attains a better value for the declared objective.",
+    "Non-Anticipation: Each stop/continue decision uses only information available when the decision is made."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:OptimalStop#mh:SHA-256:74391a0813dfa1c767a2221d9fd50da3c1bd6714bd77a402f0178c707a8ad95f",
+      "sema:OptimalStop#mh:SHA-256:e7ca1560a9735578b604728b9cad0aa0b894bbdc0ff7aae3859cbc5a8e9955f0",
+      "sema:OptimalStop#mh:SHA-256:78c85dfc9a641c288bf891a44b1023018fce524e1d57742416604f3a1d205df0"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:OptimalStop#mh:SHA-256:975a03119434e7abb3e4fb2e7176865203b46f9a6f282630c454303f8507157a",
+  "sema_ref": "OptimalStop#975a",
+  "sema_stub": "975a",
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

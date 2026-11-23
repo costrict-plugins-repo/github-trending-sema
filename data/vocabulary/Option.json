@@ -1,0 +1,56 @@
+{
+  "handle": "Option",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "option_id",
+      "description"
+    ],
+    "properties": {
+      "option_id": {
+        "type": "string"
+      },
+      "description": {
+        "type": "string"
+      },
+      "cost_estimate": {
+        "type": "number"
+      },
+      "risk_score": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "predicted_outcome": {
+        "type": "string",
+        "description": "Simulation result if this option is chosen"
+      }
+    }
+  },
+  "mechanism": "A discrete, actionable alternative within a decision space. An Option must be fully specified (executable) and mutually exclusive from other options in the same set. It represents a valid path for state transition.",
+  "gloss": "A discrete, executable alternative",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "supersedes": [
+      "sema:Option#mh:SHA-256:b099a885b070faa10168a2edff0671cd773d31c0cc5fb0e775521a12444c1135"
+    ],
+    "related": [
+      "Canonseal#27fc",
+      "Jointscape#8aca"
+    ]
+  },
+  "invariants": [
+    "Fully specified: an Option is executable as written, not a direction requiring further choice.",
+    "Mutually exclusive: selecting one Option in a set excludes the others in that set."
+  ],
+  "sema_id": "sema:Option#mh:SHA-256:134bea703754281f36b52e9e6901090a3db9ce84f0d843a8e1d18151c0c5beb0",
+  "sema_ref": "Option#134b",
+  "sema_stub": "134b",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

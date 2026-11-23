@@ -1,0 +1,38 @@
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.12
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest
+        entry: pytest
+        language: system
+        types: [python]
+        pass_filenames: false
+        always_run: true
+
+      - id: export-patterns
+        name: export-patterns
+        entry: bash -c 'PYTHONPATH=src python scripts/export/export_short_hand.py && git add data/shorthand/all_patterns_short.md'
+        language: system
+        pass_filenames: false
+        files: '(data/taxonomy\.db|data/vocabulary/.*\.json)'
+
+      - id: changelog-gate
+        name: changelog-gate
+        entry: scripts/hooks/changelog_gate.sh
+        language: system
+        pass_filenames: false
+        files: 'pyproject\.toml'
+
+      - id: sync-release-metadata
+        name: sync-release-metadata
+        entry: bash -c 'python3 scripts/sync_release_metadata.py && git add src/sema/__init__.py src/sema/mcp/__init__.py .claude-plugin/plugin.json server.json uv.lock'
+        language: system
+        pass_filenames: false
+        files: '(pyproject\.toml|data/taxonomy\.db|src/sema/(mcp/)?__init__\.py|\.claude-plugin/plugin\.json|server\.json|uv\.lock)'

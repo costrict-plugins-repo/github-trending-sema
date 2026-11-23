@@ -1,0 +1,57 @@
+{
+  "handle": "Generalize",
+  "mechanism": "Pattern Extraction: Given multiple instances, identify shared structure. Replace specific values with variables. {{state}} the invariant that holds across all instances. Test: does pattern predict behavior of new instances? Refine until predictive. The canonical form of {{induction}} in sema's reasoning taxonomy \u2014 probable conclusions from specific observations. It employs {{analogy_bridge}} to map specific instances to abstract schemata, validating the invariant across the set.",
+  "gloss": "Inductive pattern extraction",
+  "failure_modes": [
+    "Overfitting: the extracted pattern includes noise or coincidence from the instances it was drawn from.",
+    "Over-generalisation: the rule covers the instances and also cases it should exclude."
+  ],
+  "invariants": [
+    "The abstract rule covers every instance it was drawn from.",
+    "Drawn from at least `min_instances` instances.",
+    "Tested against instances not used to form it."
+  ],
+  "preconditions": [
+    "Set of specific instances"
+  ],
+  "postconditions": [
+    "General principle extracted"
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "Specialize",
+      "Almostnot#4d07"
+    ],
+    "ring": 2,
+    "supersedes": [
+      "sema:Generalize#mh:SHA-256:17c94171f5f8f82695fc6dfb89eac6aad8adedf46545e3d48e799056ec132941",
+      "sema:Generalize#mh:SHA-256:78cbd8c531e0daa24d78be404ae40023b9ae598b6b0642e925756b1822145ccf",
+      "sema:Generalize#mh:SHA-256:251f07a282bc1b83a737977141d164311e3334d50b555400970928758153289d"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "parameters": [
+    {
+      "name": "min_instances",
+      "type": "PositiveInteger",
+      "range": "[2, 100]",
+      "description": "Instances required before a shared structure counts as a pattern."
+    }
+  ],
+  "sema_id": "sema:Generalize#mh:SHA-256:29f133fe83dfe2cd7d2b432390f59e3a64a84866b964a2ca6199f8134ba64e7e",
+  "sema_ref": "Generalize#29f1",
+  "sema_stub": "29f1",
+  "dependencies": {
+    "references": {
+      "analogy_bridge": "sema:AnalogyBridge#mh:SHA-256:cf62f5ead4f1aaa93a26feb06a9546035a93d1103cca1fccb1d4de5f08babc4a",
+      "induction": "sema:Induction#mh:SHA-256:1b39044c28c83bf79a7bfe108d0edaf616724b3cc0e9fec93086913101fc1530",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

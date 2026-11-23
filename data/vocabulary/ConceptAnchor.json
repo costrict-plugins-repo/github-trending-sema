@@ -1,0 +1,47 @@
+{
+  "handle": "ConceptAnchor",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "definition_hash"
+    ],
+    "properties": {
+      "definition_hash": {
+        "type": "string",
+        "description": "Content-addressed hash of the anchored definition"
+      },
+      "content": {
+        "description": "The actual definition content - any valid JSON (schema, text, or structured data)"
+      },
+      "metadata": {
+        "type": "object",
+        "description": "Optional metadata (creator, timestamp, version)"
+      }
+    }
+  },
+  "mechanism": "Agents do not define terms inline; they reference immutable, content-addressed 'Concept Anchors' stored globally. 'I want [hash:Apple]', not 'I want an apple'. It is established via an external drop event that finalizes the definition hash.",
+  "gloss": "Pinning meaning to immutable references",
+  "failure_modes": [
+    "Link rot (if anchors disappear)."
+  ],
+  "invariants": [
+    "Immutability: The definition pointed to by the Anchor Hash cannot change.",
+    "Resolution: The Anchor must resolve to a valid schema or content."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:ConceptAnchor#mh:SHA-256:91873000b379e08c41bc3fe3fea23f1f0870600871f89cca46ecbc87cc1d69d0"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:ConceptAnchor#mh:SHA-256:95cbc106b1950fc5848516078b0857ce0d98e15ccd3311a6a70ec1411b450f05",
+  "sema_ref": "ConceptAnchor#95cb",
+  "sema_stub": "95cb",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

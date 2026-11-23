@@ -1,0 +1,69 @@
+{
+  "handle": "Context",
+  "mechanism": "The portable execution environment and state container for an agent. It encapsulates: (1) Inherited Constraints (Safety/Budget), (2) Available Tools/Capabilities, (3) Working Memory (History/Variables), and (4) {{identity}} Claims. Context flows through delegation chains, acting as the 'Stack Frame' of the agentic system. It allows agents to be paused, moved, or cloned.",
+  "gloss": "Portable execution environment with inherited constraints",
+  "failure_modes": [
+    "Context Contamination/Leak: Private data from one context leaking into another (e.g., across tenant boundaries).",
+    "Context Poisoning: malicious prompts or data injected into the context to hijack agent behavior.",
+    "Stale Context: Acting on outdated information after a long pause.",
+    "Context Explosion: Size grows beyond the window limit of the model."
+  ],
+  "invariants": [
+    "{{constraint}} Monotonicity: Child contexts can ADD constraints but never REMOVE inherited ones.",
+    "Serializability: The entire context must be serializable to JSON/Storage for persistence.",
+    "Provenance: Every item in the context must be traceable to its source (Observation, User Input, or Inference)."
+  ],
+  "preconditions": [
+    "Parent context exists (or Root is created)",
+    "Schema is defined"
+  ],
+  "postconditions": [
+    "Agent has a valid environment to execute."
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "ContextCompress",
+      "ContextSwitch",
+      "AnchorDrop",
+      "Nestmap#8b8f"
+    ],
+    "ring": 0,
+    "supersedes": [
+      "sema:Context#mh:SHA-256:510af8317d84bfff7dbba4ebbe2ae2a14d0e28ed8ed342a4e8dbc2e3294c1353",
+      "sema:Context#mh:SHA-256:d5f79a21faef9ef640ab687c90a25cdf457a066fb6da23d247115b267c539132"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "constraints": {
+        "type": "array"
+      },
+      "history": {
+        "type": "array"
+      },
+      "variables": {
+        "type": "object"
+      }
+    }
+  },
+  "sema_id": "sema:Context#mh:SHA-256:c1b72256dc4732033ee42cc07ff5d9fb60a7f1a3e5634449c343692a33340756",
+  "sema_ref": "Context#c1b7",
+  "sema_stub": "c1b7",
+  "dependencies": {
+    "references": {
+      "constraint": "sema:Constraint#mh:SHA-256:70136d525260a10eedf156aad1fe6c50510eadb10a89d063c7a85575b15708fc",
+      "identity": "sema:Identity#mh:SHA-256:b24a57fdd59ebf2ef019be30af8fa10fc127f61d346a74ab0b49f729b4e32093"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

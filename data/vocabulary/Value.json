@@ -1,0 +1,44 @@
+{
+  "handle": "Value",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "magnitude",
+      "unit"
+    ],
+    "properties": {
+      "magnitude": {
+        "type": "number",
+        "description": "Scalar utility or worth"
+      },
+      "unit": {
+        "type": "string",
+        "description": "Currency, energy, or utility metric"
+      },
+      "context": {
+        "type": "string",
+        "description": "Scope where this value applies"
+      }
+    }
+  },
+  "mechanism": "A quantitative or qualitative measure of utility, worth, or priority assigned to a {{state}} or resource.",
+  "gloss": "A measure of utility",
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8",
+  "sema_ref": "Value#37fd",
+  "sema_stub": "37fd",
+  "dependencies": {
+    "references": {
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

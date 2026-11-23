@@ -1,0 +1,52 @@
+{
+  "handle": "AttentionMarkets",
+  "mechanism": "Agents bid for priority in message queues. High-stakes messages pay to jump the line; spam is priced out by congestion pricing. Queue manager runs continuous auction: incoming {{signal}}s include a {{value}} bid, manager sorts by bid/urgency ratio, losers wait or increase bid. Price discovery via second-price auction prevents overpayment. Revenue redistributed to queue participants or burned. It instantiates the {{continuous_resource_auction}} mechanism to continuously price bandwidth availability based on network congestion.",
+  "gloss": "Pricing bandwidth to filter spam",
+  "failure_modes": [
+    "Plutocratic Blockage: Wealthy agents monopolize bandwidth, silencing critical low-budget signals (e.g., emergency alerts).",
+    "Starvation: Low-value signals never clear the queue during high congestion."
+  ],
+  "invariants": [
+    "Attention supply is rivalrous (Bandwidth < Demand).",
+    "Price reflects aggregate demand (Congestion Pricing).",
+    "Bid Monotonicity: Higher bid guarantees strictly better or equal placement.",
+    "Clearing: Messages with Bid < CurrentPrice are dropped or buffered."
+  ],
+  "preconditions": [
+    "Limited processing bandwidth",
+    "Multiple information sources",
+    "Liquid currency for bidding"
+  ],
+  "postconditions": [
+    "Resources allocated to highest-bid signals",
+    "Market price established for current tick"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "supersedes": [
+      "sema:AttentionMarkets#mh:SHA-256:923679ce8222a914dc75a55824b91d403220b0b3f8943cf0d0d9fc0512c0d20b",
+      "sema:AttentionMarkets#mh:SHA-256:45c58856dcc5f1dd258552665a7a9a7c16ee4792d43085bb698223de0494daba",
+      "sema:AttentionMarkets#mh:SHA-256:faf81f5f0d5d6d9bf0b6ac33732c08fb90d5574d168377c5c908295f978fcf13",
+      "sema:AttentionMarkets#mh:SHA-256:787e196833bbf6e6f914b37f1097fe555e6d4197a71afe9de60a6772cc41e593"
+    ],
+    "path": [
+      "Society",
+      "Economics"
+    ]
+  },
+  "sema_id": "sema:AttentionMarkets#mh:SHA-256:3b445d35c4faa9f68a66f23068ba3dfa57c12553d72a80d57f1334e350da10fb",
+  "sema_ref": "AttentionMarkets#3b44",
+  "sema_stub": "3b44",
+  "dependencies": {
+    "composes_with": {
+      "continuous_resource_auction": "sema:ContinuousResourceAuction#mh:SHA-256:c725833053eec6c59a6e1cc307abb8176a0efe407e512bf718cf0f1e60a66815"
+    },
+    "references": {
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc",
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Economics"
+}

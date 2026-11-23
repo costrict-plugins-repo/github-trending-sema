@@ -1,0 +1,67 @@
+{
+  "handle": "Work",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "effort_cost"
+    ],
+    "properties": {
+      "previous_hash": {
+        "type": "string",
+        "description": "State before work"
+      },
+      "new_hash": {
+        "type": "string",
+        "description": "State after work"
+      },
+      "effort_cost": {
+        "type": "object",
+        "description": "Resources consumed (tokens, time)"
+      },
+      "timestamp": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "mechanism": "The primitive representation of directed effort. It represents the expenditure of resources (Compute, Time, Energy) to transform a {{task}} from an 'Open' state to a 'Solved' state (reducing local entropy). Work is the bridge between Intent (thinking) and Reality ({{act}}). Work is validated against an acceptance criteria.",
+  "gloss": "The application of effort to reduce entropy",
+  "failure_modes": [
+    "Thrashing: Expending resources without making progress toward the goal.",
+    "Burnout: Exhausting the {{budget}} before the task is complete.",
+    "Busywork: Performing valid actions that do not contribute to the objective function."
+  ],
+  "invariants": [
+    "Cost: Work always consumes resources (Time/Tokens > 0).",
+    "Directionality: Work must be vector-aligned with a Goal (otherwise it is just 'Heat')."
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "EntropyPump"
+    ],
+    "ring": 0,
+    "supersedes": [
+      "sema:Work#mh:SHA-256:aaad0ca428ad22dd8f5941f56b4425ddf62180752cfd6d5d8145419c8a6ac90b",
+      "sema:Work#mh:SHA-256:e574aab6ce5d94ab4e9acb6d92531441f46ff05ed1c2ba0a99e0d08b59f30523"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:Work#mh:SHA-256:f0c3ba2d663c900244d2ed814ed3682c56a867aa32bc3c4dfd1b19fe311aa2c6",
+  "sema_ref": "Work#f0c3",
+  "sema_stub": "f0c3",
+  "dependencies": {
+    "composes_with": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    },
+    "references": {
+      "act": "sema:Act#mh:SHA-256:2dfedd75a396f2639ce949b9f5270766350b9c7404d404c11c57140fcf030455",
+      "budget": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

@@ -1,0 +1,69 @@
+{
+  "handle": "Message",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "header",
+      "body"
+    ],
+    "properties": {
+      "header": {
+        "type": "object",
+        "properties": {
+          "sender": {
+            "type": "string"
+          },
+          "recipient": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string"
+          }
+        },
+        "description": "Sender, recipient and timestamp.",
+        "required": [
+          "sender",
+          "recipient",
+          "timestamp"
+        ]
+      },
+      "body": {
+        "description": "The content payload"
+      },
+      "signature": {
+        "type": "string",
+        "description": "Sender verification"
+      }
+    }
+  },
+  "mechanism": "A structured container for a {{signal}}, adding Metadata (Sender, Recipient, Timestamp) to the raw emission.",
+  "gloss": "Structured signal container",
+  "invariants": [
+    "Immutability: once sent, the message content cannot be changed.",
+    "Addressed: carries sender, recipient and timestamp. Without a recipient it is a {{signal}} with metadata, which is what this pattern exists to be distinct from."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 1,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "supersedes": [
+      "sema:Message#mh:SHA-256:b17515adef760297f0374e7cfcf4a7b3cc4f5f2c21ab0c0295285545c60482ea"
+    ],
+    "related": [
+      "Nuancefilter#d36a"
+    ]
+  },
+  "sema_id": "sema:Message#mh:SHA-256:bf6d3d4643c881a8c245617c3603b13ffef26026304fc7e7c384a80cf25fd237",
+  "sema_ref": "Message#bf6d",
+  "sema_stub": "bf6d",
+  "dependencies": {
+    "references": {
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

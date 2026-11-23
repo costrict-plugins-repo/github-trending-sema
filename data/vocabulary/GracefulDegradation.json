@@ -1,0 +1,65 @@
+{
+  "handle": "GracefulDegradation",
+  "mechanism": "Resolution Fallback {{strategy}}. When a Pattern_ID is not found in local storage, the system attempts to resolve it via secondary channels (Inline Payload -> Network Request) rather than halting immediately. Crucially, any definition acquired this way must be cryptographically verified against the requested Pattern_ID. It defaults to {{fail_closed}} if verification fails, but attempts to parse verified inline definitions to maintain continuity.",
+  "gloss": "When verification fails, fall back to inline definition",
+  "failure_modes": [
+    "Hash Mismatch: Inline definition claims to be Pattern#X but hashes to Pattern#Y (Spoofing).",
+    "DoS via Definition: Sender includes massive multi-megabyte 'definition' to exhaust receiver memory.",
+    "Dependency Hell: Inline definition references other unknown patterns, triggering recursive lookups."
+  ],
+  "invariants": [
+    "A definition enters local storage only if it validates fully.",
+    "An externally acquired definition is hashed and verified against the requested ID before loading.",
+    "Rejects definitions larger than `max_def_size`.",
+    "Expands inline definitions no deeper than `max_recursion_depth`.",
+    "Defaults to {{fail_closed}} when verification fails."
+  ],
+  "preconditions": [
+    "{{message}} contains fallback data OR sender is reachable",
+    "Pattern lookup failed"
+  ],
+  "postconditions": [
+    "Pattern resolved and locally minted OR Transaction aborted"
+  ],
+  "parameters": [
+    {
+      "name": "max_def_size",
+      "type": "PositiveInteger",
+      "range": "unspecified",
+      "description": "Largest inline definition accepted, in bytes. Deliberately uncapped; default 100KB."
+    },
+    {
+      "name": "max_recursion_depth",
+      "type": "Integer",
+      "range": "[1, 5]",
+      "description": "Depth of inline-definition expansion permitted before the chain is refused."
+    }
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:GracefulDegradation#mh:SHA-256:f6d796365ffaa5244e54660f836f2e31ca948169f42fd305da33445cbfa30485",
+      "sema:GracefulDegradation#mh:SHA-256:1a82403193308a36bfe7623bdbd9e98dd611761e086b0e038ced0655e8db0336",
+      "sema:GracefulDegradation#mh:SHA-256:84362d70dbeb585179a9adc7352dcd96d5edd14a611ee6c7d2400a4d78395eec",
+      "sema:GracefulDegradation#mh:SHA-256:f10808f46c43a5c56cc2c16b27de525604b7888f232240cb742f276e089d4781",
+      "sema:GracefulDegradation#mh:SHA-256:b5fb816bf7d74fb14b80795841d2043f22ac266873f442fce51c163346dc5a85"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:GracefulDegradation#mh:SHA-256:6633433b9b713c199d43b085ec6e07183544183c507e5c9673aafa0518135df9",
+  "sema_ref": "GracefulDegradation#6633",
+  "sema_stub": "6633",
+  "dependencies": {
+    "references": {
+      "fail_closed": "sema:FailClosed#mh:SHA-256:dfbcf50c68d036ae4f18719bf59f41eddd83b5510bd60ff1326f8854240d8066",
+      "message": "sema:Message#mh:SHA-256:bf6d3d4643c881a8c245617c3603b13ffef26026304fc7e7c384a80cf25fd237",
+      "strategy": "sema:Strategy#mh:SHA-256:3dc598d0c6af12389df445c204e17df03950dbc886656b85700e6c87c31b2eef"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

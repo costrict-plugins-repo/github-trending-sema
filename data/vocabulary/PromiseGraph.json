@@ -1,0 +1,84 @@
+{
+  "handle": "PromiseGraph",
+  "mechanism": "Agents do not trust each other directly; they trust a graph of promises. {{agent}} A accepts a promise from {{agent}} B only if B provides a dependency graph of sub-promises it relies on. A verifies the leaves of the graph or checks B's 'credit score' for fulfilling similar graph structures. It maintains a DAG of trust, validating leaf nodes via {{spot_audit}} and ensuring acyclic dependencies via {{negative_proof}} logic.",
+  "gloss": "Recursive trust dependencies modeled as a DAG",
+  "failure_modes": [
+    "Graph explosion (too much verification overhead)."
+  ],
+  "invariants": [
+    "Acyclic: Promise dependencies cannot form a loop",
+    "Cycles forbidden.",
+    "Leaf Verification: All leaf promises must be anchored in verified truth"
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 2,
+    "supersedes": [
+      "sema:PromiseGraph#mh:SHA-256:b71f80814ed80753cff7a03dc7b0969e1afafb207e0eef5edd5dcd74c1eb93ec",
+      "sema:PromiseGraph#mh:SHA-256:b671a765bd7d7b02ee4ad3582eb6a8fa7301bae735df912befb8e35c3c4f73a8",
+      "sema:PromiseGraph#mh:SHA-256:6bddbeb9a53a37790eca67d11fdb8d515c8f3c42a173f0a2d7cd191a6fe4a0f0"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_id": "sema:PromiseGraph#mh:SHA-256:3d396f8f7903b440b517dd7f5711a8da61c0001d77722517a94100252fc0830e",
+  "sema_ref": "PromiseGraph#3d39",
+  "sema_stub": "3d39",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "nodes",
+      "edges"
+    ],
+    "properties": {
+      "nodes": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "promise_id": {
+              "type": "string"
+            },
+            "promisor": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Promise nodes"
+      },
+      "edges": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "from": {
+              "type": "string"
+            },
+            "to": {
+              "type": "string"
+            }
+          }
+        },
+        "description": "Dependency edges"
+      },
+      "leaf_anchors": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Verified leaf promises"
+      }
+    }
+  },
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "negative_proof": "sema:NegativeProof#mh:SHA-256:1184ac0ee80295c5617be9d08bc656197f7d6f5d38dfee4baee466555bf517b2",
+      "spot_audit": "sema:SpotAudit#mh:SHA-256:d3a9df6a57f06278d581310ad3f0cb57941311ced0fb7360a5041e9093231b8a"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

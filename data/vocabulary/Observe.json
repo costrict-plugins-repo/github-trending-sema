@@ -1,0 +1,49 @@
+{
+  "handle": "Observe",
+  "mechanism": "The process of gathering information from the environment. It involves sensing raw data, filtering it for relevance (Attention), and integrating it into the internal {{context}} and state. Unlike passive reception, Observe is often an active query (e.g., polling an API, reading a file).",
+  "gloss": "Active State Perception",
+  "failure_modes": [
+    "Sensor noise: Input data is corrupted or inaccurate.",
+    "Blind Spot: Critical information exists but is outside the agent's observable range.",
+    "Information Overload: Too much data prevents effective filtering and integration.",
+    "Stale Data: Observing a cached state that no longer reflects reality."
+  ],
+  "invariants": [
+    "Does not modify the observed state. An active query may still consume quota and leave a record at the source; what it may not do is change what is being observed.",
+    "Discloses its filtering: the observation records what was excluded by attention."
+  ],
+  "preconditions": [
+    "Sensors/Tools are active",
+    "Actor has attention capacity"
+  ],
+  "postconditions": [
+    "Internal state is updated",
+    "New information is available for Thinking"
+  ],
+  "_meta": {
+    "tier": 1,
+    "related": [
+      "Belief",
+      "Attention"
+    ],
+    "ring": 0,
+    "supersedes": [
+      "sema:Observe#mh:SHA-256:8ebdc058f13dc14e6ed22cd000bc6eb89507e3b6b507cc393c88a8209c65122f",
+      "sema:Observe#mh:SHA-256:db88fe3226ab245793b6eb0126536dfd5eb281ceb95ddbd09f287fa85a266871"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ]
+  },
+  "sema_id": "sema:Observe#mh:SHA-256:4a04c0e91f072dc02a4be52bca921c38c1be46e88b1f2bcb375076fdb5103e96",
+  "sema_ref": "Observe#4a04",
+  "sema_stub": "4a04",
+  "dependencies": {
+    "yields": {
+      "context": "sema:Context#mh:SHA-256:c1b72256dc4732033ee42cc07ff5d9fb60a7f1a3e5634449c343692a33340756"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

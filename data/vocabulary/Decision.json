@@ -1,0 +1,62 @@
+{
+  "handle": "Decision",
+  "mechanism": "The cognitive act of committing to a specific {{option}} after weighing alternatives. It transforms a set of possibilities into a single committed trajectory using {{select}}. Unlike a simple filter, a Decision implies the resolution of ambiguity and the assumption of consequences.",
+  "gloss": "Irrevocable selection from a set of options",
+  "invariants": [
+    "Selection: Must choose exactly one option from the available set.",
+    "Irrevocability: Once made, the decision cannot be unmade without a new Decision process."
+  ],
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Decision#mh:SHA-256:acfb3458cde8e55c378b2f51b44afc30687b58093f1777299f49caca475274a1",
+      "sema:Decision#mh:SHA-256:7fdfee9027fde0e699ed12cc286565c16ff262d50d55b0668da94dcdf0712a1f"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ],
+    "related": [
+      "Complexitytax#fb09",
+      "Futureclaim#a57c",
+      "Hearshift#4fcf",
+      "Reasonbridge#f8d2",
+      "Reasoncommons#0f52"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "description": "A committed choice \u2014 artifact recording which option was selected.",
+    "required": [
+      "option",
+      "committed_at"
+    ],
+    "properties": {
+      "option": {
+        "type": "string"
+      },
+      "committed_at": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "rationale": {
+        "type": "string"
+      },
+      "reviewer": {
+        "type": "string"
+      }
+    }
+  },
+  "sema_id": "sema:Decision#mh:SHA-256:b1407127acd4a39314fc24b418310e4b95e0347e4e22f376151ab765e2dfd2c7",
+  "sema_ref": "Decision#b140",
+  "sema_stub": "b140",
+  "dependencies": {
+    "references": {
+      "option": "sema:Option#mh:SHA-256:134bea703754281f36b52e9e6901090a3db9ce84f0d843a8e1d18151c0c5beb0",
+      "select": "sema:Select#mh:SHA-256:decf9c05490dc5e6b372c5dbb7d89d2285fdd832714fc992b10fdbd6b7c2c2e3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

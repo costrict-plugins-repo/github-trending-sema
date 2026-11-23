@@ -1,0 +1,50 @@
+{
+  "handle": "Anomaly",
+  "mechanism": "A {{datum}} whose observed value falls outside the expected baseline by a measurable deviation score. Anomalies carry the (observed, expected, deviation) triple as first-class structure, so they can be routed, ranked, and triaged. Serves as the trigger artifact for investigation, learning, and diagnostic workflows.",
+  "gloss": "Datum whose observed value deviates from the expected baseline, triggering investigation",
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Anomaly#mh:SHA-256:7987f2cd4a353f206fccd038ddac021ef849cfa58e352d2d2d7ba3850b916893"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "observed_value",
+      "expected_baseline",
+      "deviation_score"
+    ],
+    "properties": {
+      "observed_value": {
+        "description": "The data point that triggered detection (any type)"
+      },
+      "expected_baseline": {
+        "description": "The prediction or mean value (any type)"
+      },
+      "deviation_score": {
+        "type": "number",
+        "description": "Standard deviations (sigma) or distance metric"
+      },
+      "detected_at": {
+        "type": "string",
+        "format": "date-time"
+      }
+    }
+  },
+  "sema_id": "sema:Anomaly#mh:SHA-256:459522f7c0225dc99953dbd5cd6c9cbb558d914abbd9d4d979e103984e0739cc",
+  "sema_ref": "Anomaly#4595",
+  "sema_stub": "4595",
+  "dependencies": {
+    "references": {
+      "datum": "sema:Datum#mh:SHA-256:f90456c1067ac5db4e9825a82a22bc58086022f8acd0d0f63fdfeaeb6be2e937"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

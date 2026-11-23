@@ -1,0 +1,55 @@
+{
+  "handle": "ExtendedThinking",
+  "mechanism": "Inference-time compute scaling where the model generates extended reasoning traces (potentially thousands of tokens) before producing a final answer. Unlike standard {{chain}}-of-Thought, this pattern explicitly trades latency and compute cost for accuracy by allowing the model to 'think longer'. The reasoning budget can be user-controlled or adaptive based on {{task}} complexity.",
+  "gloss": "Scale inference compute via extended reasoning",
+  "failure_modes": [
+    "Confabulation Chains: Long reasoning traces that sound plausible but contain errors.",
+    "Overthinking: Spending compute on simple problems that don't benefit.",
+    "Hidden Reasoning: Model reaches conclusions via paths not shown in the trace."
+  ],
+  "invariants": [
+    "The reasoning budget is fixed before the trace begins.",
+    "A trace is produced and logged for every answer.",
+    "Emitted, not certified: the trace is what the model produced, not proof of how it concluded."
+  ],
+  "preconditions": [
+    "Complex prompt",
+    "High token budget"
+  ],
+  "postconditions": [
+    "High-accuracy answer"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:ExtendedThinking#mh:SHA-256:ca3c54e46218935876ca5c993974742069fe61871fae7af38a2fef745753dc98",
+      "sema:ExtendedThinking#mh:SHA-256:da3f0bf23a85cddefae39b7a83e02d95bf321356de714bdf4575b4ff07b8c4df"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "sema_id": "sema:ExtendedThinking#mh:SHA-256:3a9046a74fa5ecf3f06526936caf2038c95be83b02f0fbfe15dc2c448f572a1a",
+  "sema_ref": "ExtendedThinking#3a90",
+  "sema_stub": "3a90",
+  "parameters": [
+    {
+      "name": "budget_mode",
+      "type": "Enum",
+      "range": "{UserControlled, Adaptive}",
+      "description": "Whether the caller sets the reasoning budget or the {{task}}'s complexity does."
+    }
+  ],
+  "dependencies": {
+    "accepts": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    },
+    "references": {
+      "chain": "sema:Chain#mh:SHA-256:3ba084dba5cf36bbdd43d03306c187ca75a2e3f448b555e257c26aab9b71c4fb"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

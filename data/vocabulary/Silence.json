@@ -1,0 +1,33 @@
+{
+  "handle": "Silence",
+  "mechanism": "Active Waiting. The agent deliberately withholds {{signal}} output for duration T or until Trigger. Distinguishes 'Processing...' from 'Abstaining'.",
+  "gloss": "Active withholding of signal",
+  "invariants": [
+    "Timeout: Silence > MaxDuration implies Failure or Default Action."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Mind",
+      "Strategy"
+    ],
+    "supersedes": [
+      "sema:Silence#mh:SHA-256:cc90dc097c5c67b0cb24bc8e74c7d0a105b5877c2a075a20454114dac44b4893"
+    ],
+    "related": [
+      "ChannelCheck#3ceb",
+      "Silencevote#b022"
+    ]
+  },
+  "sema_id": "sema:Silence#mh:SHA-256:164514c0b493a18d2fea5edb243314adfaa5193d5dd9014b8a9c2d01a362a57f",
+  "sema_ref": "Silence#1645",
+  "sema_stub": "1645",
+  "dependencies": {
+    "references": {
+      "signal": "sema:Signal#mh:SHA-256:6eaff8a06e08e75279670bc09d88175d130815240fdfb3a21252c0364769c1fc"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

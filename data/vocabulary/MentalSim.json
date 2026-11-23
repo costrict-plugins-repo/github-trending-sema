@@ -1,0 +1,75 @@
+{
+  "handle": "MentalSim",
+  "mechanism": "{{system}} 2 {{simulation}}. {{agent}} constructs a causal graph of the target system. It executes a 'Dry Run' of the proposed plan within that graph, inside an isolated {{agent_sandbox}}, to predict {{state}}(t+1) \u2014 toggling between fast {{heuristic_snap}} and rigorous {{deep}} simulation modes.",
+  "gloss": "Predictive modeling of system dynamics",
+  "failure_modes": [
+    "Map-Territory Error: {{simulation}} diverges from reality (Hallucinated Physics).",
+    "Overconfidence: {{agent}} trusts the simulation execution log more than real-world feedback."
+  ],
+  "invariants": [
+    "Builds a causal graph of the target {{system}} before running anything.",
+    "The {{simulation}} produces no side effects in the production context.",
+    "Costs at most `cost_fraction` of executing the plan for real."
+  ],
+  "preconditions": [
+    "Causal model of target system available",
+    "Initial state known"
+  ],
+  "postconditions": [
+    "Probabilistic outcome vector generated"
+  ],
+  "parameters": [
+    {
+      "name": "cost_fraction",
+      "type": "Ratio",
+      "range": "(0.0, 0.5]",
+      "description": "Share of real execution cost the simulation may consume before simulating is not worth it."
+    },
+    {
+      "name": "fidelity",
+      "type": "Enum",
+      "range": "{Low, High}",
+      "description": "Whether the causal graph models coarse dynamics or detailed ones."
+    },
+    {
+      "name": "steps",
+      "type": "Integer",
+      "range": "[1, 10]",
+      "description": "How far ahead the dry run looks."
+    }
+  ],
+  "_meta": {
+    "tier": 2,
+    "related": [
+      "ProphetFanOut"
+    ],
+    "ring": 2,
+    "supersedes": [
+      "sema:MentalSim#mh:SHA-256:5728b6db7446bf4b3dc0ce1998ddf5a2b724b09438efc15d68709c09ec93a26e",
+      "sema:MentalSim#mh:SHA-256:7212dad44c65f6241e70f0fc2e20440788e837a84cc644fea6bcc5f59e09f94e",
+      "sema:MentalSim#mh:SHA-256:287471afbc4498472aca1185bd961b7338fb6d9f28e6f007f44a4f824e8bb520",
+      "sema:MentalSim#mh:SHA-256:9ddd892c32849bd213ec101cbce9c51f127634ba81f79c4186ae1b67196fdbef",
+      "sema:MentalSim#mh:SHA-256:1ca02743f4d01cc9740234943b92ad700825c2a4c918a4f7b1248872e4aa4e1f"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:MentalSim#mh:SHA-256:c28c84db7597a2e8cef38b73dc9780b6f8fe28c9d45700c4431b3a7a2ac3b8fc",
+  "sema_ref": "MentalSim#c28c",
+  "sema_stub": "c28c",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "agent_sandbox": "sema:AgentSandbox#mh:SHA-256:1594a10a882956e4b8501764091e1d5025ba0b405cce34b7ef931bb17e5c634a",
+      "deep": "sema:Deep#mh:SHA-256:16b0cb8d6aa42a890215fb7a44e480c27360165de2249d205ee6c1b2d01896bb",
+      "heuristic_snap": "sema:HeuristicSnap#mh:SHA-256:d683f415a9eabd2639464e981993ed784e7f9aed6800f92abe66182df817696f",
+      "simulation": "sema:Simulation#mh:SHA-256:1058e7090079e846251ed480d7afec0328809d22bebb6b205425b2de614787c3",
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

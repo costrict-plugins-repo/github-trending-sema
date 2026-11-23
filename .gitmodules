@@ -1,0 +1,3 @@
+[submodule "experiments/orchestrator"]
+	path = experiments/orchestrator
+	url = https://github.com/emergent-wisdom/orchestrator.git

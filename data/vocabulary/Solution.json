@@ -1,0 +1,104 @@
+{
+  "handle": "Solution",
+  "mechanism": "A recursive {{work}} unit that contains an output {{artifact}}, provenance identifying its creator and creation time, and a reference to its originating {{task}}. Composite solutions also record a component {{tree}} of the sub-solutions used to generate them; omission of that tree denotes a leaf. It is the verifiable output container validated against the task's acceptance criteria.",
+  "gloss": "The fractal unit of completed work",
+  "failure_modes": [
+    "Orphaned {{artifact}}: Solution does not reference a valid {{task}} ID.",
+    "Broken Lineage: a composite Solution references a sub-solution whose verification fails ({{chain}} of custody broken).",
+    "Schema Violation: {{artifact}} data does not match acceptance criteria type."
+  ],
+  "invariants": [
+    "Immutability: Once finalized, {{artifact}} and Provenance cannot be modified.",
+    "Provenance attributes the Solution to its Creator and the time of creation.",
+    "Where the Creator is untrusted, attribution is cryptographically signed."
+  ],
+  "preconditions": [
+    "{{artifact}} generated",
+    "{{task}} ID is valid"
+  ],
+  "postconditions": [
+    "Solution sealed and ready for transport"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Solution#mh:SHA-256:7186aebe86145a01476542042ab77b7eda5c54033e6dccf62a97e8fa6b94e806",
+      "sema:Solution#mh:SHA-256:48442c3e14ce25ef325cbff085d095ecf4c7735b006f162eb76e23d4315f8fa2",
+      "sema:Solution#mh:SHA-256:6bd046a617cb877ba6d0cd898bd1a87287d902621693230a291d80db16314fae"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "artifact",
+      "provenance",
+      "task_ref"
+    ],
+    "properties": {
+      "artifact": {
+        "description": "The output produced by this solution"
+      },
+      "provenance": {
+        "type": "object",
+        "required": [
+          "creator_id",
+          "timestamp"
+        ],
+        "properties": {
+          "creator_id": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "signature": {
+            "type": "string"
+          }
+        }
+      },
+      "task_ref": {
+        "type": "string",
+        "description": "Reference to the originating task"
+      },
+      "component_tree": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        },
+        "description": "Sub-solutions used by a composite solution; omit for a leaf"
+      },
+      "confidence": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "cost_incurred": {
+        "type": "number",
+        "description": "Total compute cost in tokens"
+      }
+    }
+  },
+  "sema_id": "sema:Solution#mh:SHA-256:8d55004ffa8f61d6e7d12d588ae4baa9723296dd7fa501759b5e6b1b97e7c9ab",
+  "sema_ref": "Solution#8d55",
+  "sema_stub": "8d55",
+  "dependencies": {
+    "accepts": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    },
+    "references": {
+      "artifact": "sema:Artifact#mh:SHA-256:b533ad2674ec00c5e9a5f1e3920f1097e2bc1eea7263f89e8f46563fa319a0ee",
+      "chain": "sema:Chain#mh:SHA-256:3ba084dba5cf36bbdd43d03306c187ca75a2e3f448b555e257c26aab9b71c4fb",
+      "tree": "sema:Tree#mh:SHA-256:dd927c24f8165bd3ddc75b29cc96c1e43eb45bdaf084ba1e2bce2b0a71ab05ec",
+      "work": "sema:Work#mh:SHA-256:f0c3ba2d663c900244d2ed814ed3682c56a867aa32bc3c4dfd1b19fe311aa2c6"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

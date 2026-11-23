@@ -1,0 +1,44 @@
+{
+  "handle": "Realizable",
+  "gloss": "Evaluates execution feasibility of a plan",
+  "mechanism": "A {{judge}} of execution feasibility: can the declared artifact actually be built or enacted in the world it targets, given its stated inputs, {{step}}s, and constraints? Applies wherever a {{plan}} or design must be checked against physical, computational, or institutional reality \u2014 engineering feasibility, policy implementation, software design, research program scoping. The essential move is grounding every {{step}} in a primitive or sub-component that is itself realizable, recursively. Specific rating semantics belong on descendants or on the composing protocol. The signature Judge({{value}}) captures that the question yields a {{value}}-rating of feasibility, not a binary verdict \u2014 'mostly realizable with two unverified links' is a legitimate output.",
+  "signature": [
+    "Judge(Value)"
+  ],
+  "invariants": [
+    "Causality: no {{step}} precedes its dependencies. Topological order, not sequence \u2014 independent steps may run concurrently.",
+    "Every leaf terminates in a primitive drawn from a stated set of what is available.",
+    "The verdict is rendered against a stated {{budget}} and names it."
+  ],
+  "failure_modes": [
+    "Hidden Complexity: A step looks simple ('Draw the rest of the owl') but contains unsolved sub-problems.",
+    "Resource Blindness: The steps are logically sound but physically impossible given the budget."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:Realizable#mh:SHA-256:cf006ab5a950cea6c7a9130ea7330c57d0a6b440f37d57f598ed71d84a4f3039",
+      "sema:Realizable#mh:SHA-256:42f8270af6b0361a440bf86d1ece23a0117d34f504d9db576f30f67cf04815b3",
+      "sema:Realizable#mh:SHA-256:e8e3932e8d9cc73bbf9c5aff5ef6bc0014b2c357c6ddb9b0e4e2868ca41dd455"
+    ],
+    "path": [
+      "Mind",
+      "Reasoning"
+    ]
+  },
+  "sema_ref": "Realizable#2ed7",
+  "sema_id": "sema:Realizable#mh:SHA-256:2ed7d7f05fe50ff38d46631e5334f2229c4c1f1118e0576d88388b23a586d622",
+  "sema_stub": "2ed7",
+  "dependencies": {
+    "references": {
+      "budget": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef",
+      "judge": "sema:Judge#mh:SHA-256:704cbb71588d7a3bafa08b71c863005e31ec4400860b9cb8b094e660da9c7c6c",
+      "plan": "sema:Plan#mh:SHA-256:246db278c5db286fcd78d824d85054fafb3348565ef584599b63900000c43b32",
+      "step": "sema:Step#mh:SHA-256:fa207e6f70e14a67e3baa7e4ad4df9ece59ba4d07083fbbcc992332959e1520a",
+      "value": "sema:Value#mh:SHA-256:37fd75758d04cdd7f57a636ccb5394d463713d60c33b694e37ab71f4a5a896f8"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Reasoning"
+}

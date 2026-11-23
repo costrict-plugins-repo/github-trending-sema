@@ -1,0 +1,41 @@
+{
+  "handle": "RetrievalAugment",
+  "mechanism": "Before generating a response, the {{agent}} queries an external knowledge store to retrieve material relevant to the current {{context}}. The retrieval follows {{context_first}}: the lookup completes before generation begins, and the retrieved material is supplied as context for the response. The store, retrieval method, selection policy, and response process remain caller- or descendant-defined.",
+  "gloss": "Ground responses in retrieved external knowledge",
+  "failure_modes": [
+    "Retrieval Poisoning: Malicious or incorrect material returned by the store contaminates responses.",
+    "{{context}} Stuffing: Retrieved material exceeds the available {{context}} capacity, causing critical information to be omitted or truncated."
+  ],
+  "invariants": [
+    "Query Before Generate: Retrieval must precede response generation"
+  ],
+  "_meta": {
+    "tier": 2,
+    "related": [
+      "sema:DeepResearch#mh:SHA-256:cd1dc8b74fb7377b4a9754e9c3b3cadc6f718810472a63ecbae30a09aeeb8797"
+    ],
+    "ring": 2,
+    "supersedes": [
+      "sema:RetrievalAugment#mh:SHA-256:ca586b1cfff0f1d6db36de4ef419b29d21e55e8382db24b435fe9bb00ad32241",
+      "sema:RetrievalAugment#mh:SHA-256:7ca744ce28611156f415add4da95e3dc93006d92061a05139e17b70d3882e848",
+      "sema:RetrievalAugment#mh:SHA-256:95fc6c4071bdede8f9e366e3d268cba27459256c62d4510359c916c80018d85e",
+      "sema:RetrievalAugment#mh:SHA-256:9c601193335e19b27f2b94ee1fe6c324e6db3278af4d408d6f594f6ff3ef7d15"
+    ],
+    "path": [
+      "Mind",
+      "Memory"
+    ]
+  },
+  "sema_id": "sema:RetrievalAugment#mh:SHA-256:6f840cc4134b302b712d8f59dcca0c1b446c255369a8cea11031e884c16f3052",
+  "sema_ref": "RetrievalAugment#6f84",
+  "sema_stub": "6f84",
+  "dependencies": {
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "context": "sema:Context#mh:SHA-256:c1b72256dc4732033ee42cc07ff5d9fb60a7f1a3e5634449c343692a33340756",
+      "context_first": "sema:ContextFirst#mh:SHA-256:f157ec66ccb7e55eabe7179aeefb0dc4b36bc45e3bbea3073e50d97dab86138b"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Memory"
+}

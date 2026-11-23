@@ -1,0 +1,40 @@
+cff-version: 1.2.0
+message: >-
+  If you use Sema in your research or build on the pattern vocabulary,
+  please cite the preprint below. The software metadata at the top of
+  this file is also valid as a standalone software citation.
+title: "Sema: When the Hash Is the Word"
+abstract: >-
+  Sema is a content-addressed reference system for reasoning and
+  communication. Participants encode and hash information under an
+  agreed representation, then reuse the content address as a verifiable
+  reference, optionally paired with a human-readable handle. Matching
+  full references establishes identity of the resolved hashed content;
+  semantic equivalence, correctness, and enforcement remain separate
+  questions.
+authors:
+  - family-names: Westerberg
+    given-names: Henrik
+type: software
+url: "https://semahash.org"
+repository-code: "https://github.com/emergent-wisdom/sema"
+license: MIT
+keywords:
+  - multi-agent-systems
+  - alignment
+  - content-addressing
+  - semantic-coordination
+  - knowledge-graph
+  - mcp
+preferred-citation:
+  type: article
+  title: "Sema: When the Hash Is the Word"
+  authors:
+    - family-names: Westerberg
+      given-names: Henrik
+  year: 2026
+  month: 4
+  publisher:
+    name: Zenodo
+  doi: 10.5281/zenodo.19462702
+  url: "https://doi.org/10.5281/zenodo.19462702"

@@ -1,0 +1,79 @@
+{
+  "handle": "Resource",
+  "mechanism": "A finite, identifiable entity that can be allocated, consumed, or locked. Resources are individuated, may be renewable or exhaustible, and are subject to contention when demand exceeds supply. Forms the basis for {{budget}} allocation and mutex coordination.",
+  "gloss": "Finite allocatable entity",
+  "invariants": [
+    "Conservation: Resources cannot be created from nothing within a closed system",
+    "Identity: Each resource instance has a unique handle"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Resource#mh:SHA-256:9bb2dd733e5900d441d35d2c6e74f69dc4e4afe536c12adbcfc5863f3ada2922",
+      "sema:Resource#mh:SHA-256:f18a2d66448ccb0cc712adcc06c5344a6f3c38ba927fd5d642d5e50dbfdca898"
+    ],
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "resource_id",
+      "type",
+      "owner_id"
+    ],
+    "properties": {
+      "resource_id": {
+        "type": "string",
+        "description": "Unique asset ID"
+      },
+      "type": {
+        "type": "string",
+        "enum": [
+          "Compute",
+          "Storage",
+          "Bandwidth",
+          "Token"
+        ]
+      },
+      "quantity": {
+        "type": "number"
+      },
+      "unit": {
+        "type": "string"
+      },
+      "owner_id": {
+        "type": "string",
+        "description": "Current holder/owner"
+      },
+      "lock_state": {
+        "type": "object",
+        "properties": {
+          "locked": {
+            "type": "boolean"
+          },
+          "locked_until": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "holder_id": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "sema_ref": "Resource#0e5e",
+  "sema_id": "sema:Resource#mh:SHA-256:0e5e5e6735fa9ee49f7e623029d977e435625b8ad05b28f83f962683a0ebb19b",
+  "sema_stub": "0e5e",
+  "dependencies": {
+    "references": {
+      "budget": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

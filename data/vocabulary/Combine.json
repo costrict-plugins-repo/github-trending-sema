@@ -1,0 +1,25 @@
+{
+  "handle": "Combine",
+  "mechanism": "Merge two same-typed values into one. Associative, with an identity element (Empty) \u2014 together with Closure this makes the operation a monoid.",
+  "gloss": "Binary merge operation",
+  "invariants": [
+    "Associativity: (A + B) + C = A + (B + C)",
+    "Closure: Result type must match Input type"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ],
+    "supersedes": [
+      "sema:Combine#mh:SHA-256:c465eb2ec32d4de2329827dbd943672f5f0b675716af0aca501ce9d157e309b9"
+    ]
+  },
+  "sema_id": "sema:Combine#mh:SHA-256:5f8bc7d0ef143d4edeeea1ed81c4864a9cde7ded3b3eec2be25db3e9c3f51dc6",
+  "sema_ref": "Combine#5f8b",
+  "sema_stub": "5f8b",
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

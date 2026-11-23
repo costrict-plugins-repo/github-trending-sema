@@ -1,0 +1,59 @@
+{
+  "handle": "HumanApprove",
+  "mechanism": "A checkpoint gate where execution pauses and awaits explicit human approval before proceeding. The agent presents its proposed {{task}}, rationale, and risk assessment to a human operator. Only upon receiving affirmative consent does execution continue. Critical for high-stakes actions (financial transactions, deployments, irreversible changes).",
+  "gloss": "Pause for human approval before critical actions",
+  "parameters": [
+    {
+      "name": "challenge_required",
+      "type": "Boolean",
+      "range": "{true, false}",
+      "description": "Whether the approver must match a challenge code, not merely click through."
+    },
+    {
+      "name": "timeout",
+      "type": "Duration",
+      "range": "unspecified",
+      "description": "Longest the gate waits for a human before escalating. Deliberately uncapped."
+    }
+  ],
+  "failure_modes": [
+    "Approval Fatigue: Humans rubber-stamp requests without review due to high volume.",
+    "Blocking: {{system}} halts indefinitely if human is unavailable.",
+    "Missing decision information: Human lacks sufficient information about the proposal, rationale, or risk to make an informed decision."
+  ],
+  "invariants": [
+    "Presents the proposed {{task}}, its rationale and its risk assessment before asking.",
+    "Halts execution until a human answers, or until `timeout`.",
+    "Requires a context-specific challenge code when `challenge_required`.",
+    "Logs every approval and rejection with a timestamp and a rationale, in the {{audit}} trail.",
+    "On timeout the action does not proceed: silence is not consent."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "caution": "Bypassing removes the human-in-the-loop safety boundary.",
+    "supersedes": [
+      "sema:HumanApprove#mh:SHA-256:e64a6a1fc261b726fbfdcae8b5d3a3da39e3ea2e8f2d168e1a4135985e36d7ea",
+      "sema:HumanApprove#mh:SHA-256:a00d536aac2d6660891039ecad29602e85778477b6848395424a5ccaf96afad5",
+      "sema:HumanApprove#mh:SHA-256:5d0d6a006d1f45cbb1708798d609a4d08bca0a9086218c434e83877f2c2993f6"
+    ],
+    "path": [
+      "Infrastructure",
+      "Verification"
+    ]
+  },
+  "sema_id": "sema:HumanApprove#mh:SHA-256:cf561deb1a5e93a9f221abe2621c8a2bcfebf6863bd1128fa2230ef90237e67d",
+  "sema_ref": "HumanApprove#cf56",
+  "sema_stub": "cf56",
+  "dependencies": {
+    "accepts": {
+      "task": "sema:Task#mh:SHA-256:a85010f508f85055170c396c8fa390125c1206888c565ac10651f3969a339f8d"
+    },
+    "references": {
+      "audit": "sema:Audit#mh:SHA-256:be970add829f4f162533569b04c9ffd12ea4d070d53405a4993f0785d4074f77",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Verification"
+}

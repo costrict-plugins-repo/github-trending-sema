@@ -1,0 +1,41 @@
+{
+  "handle": "CognitiveBias",
+  "mechanism": "A structural error definition describing a specific distortion in information processing. The 'lens' is curved, distorting the interpretation of {{datum}}.",
+  "gloss": "Structural processing error definition",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "name",
+      "distortion_type"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "distortion_type": {
+        "type": "string"
+      },
+      "correction_strategy": {
+        "type": "string"
+      }
+    }
+  },
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "path": [
+      "Infrastructure",
+      "Data Structures"
+    ]
+  },
+  "sema_id": "sema:CognitiveBias#mh:SHA-256:c8a4abe2e0ce048be16d25f890a50f8c7095e099b5ab2de23aa059942328f387",
+  "sema_ref": "CognitiveBias#c8a4",
+  "sema_stub": "c8a4",
+  "dependencies": {
+    "references": {
+      "datum": "sema:Datum#mh:SHA-256:f90456c1067ac5db4e9825a82a22bc58086022f8acd0d0f63fdfeaeb6be2e937"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Data Structures"
+}

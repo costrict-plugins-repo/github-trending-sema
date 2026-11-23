@@ -1,0 +1,66 @@
+{
+  "handle": "Budget",
+  "mechanism": "A quantified allocation of resources (compute, time, energy) that bounds execution against a finite pool. Whether the bound is enforced strictly or admits overdraft is a descendant concern; what Budget fixes is that consumption is accounted for rather than merely permitted.",
+  "gloss": "Resource allocation limit",
+  "data_schema": {
+    "type": "object",
+    "required": [
+      "total",
+      "remaining",
+      "unit"
+    ],
+    "properties": {
+      "total": {
+        "type": "number",
+        "description": "The initial allocated amount"
+      },
+      "remaining": {
+        "type": "number",
+        "description": "The current available amount"
+      },
+      "unit": {
+        "type": "string",
+        "enum": [
+          "Tokens",
+          "USD",
+          "Ms"
+        ],
+        "description": "The unit of measurement"
+      }
+    }
+  },
+  "invariants": [
+    "{{conservation}} of account: every change to Remaining corresponds to a recorded consumption or refund."
+  ],
+  "preconditions": [
+    "Total budget defined"
+  ],
+  "postconditions": [
+    "Budget decremented by cost"
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "supersedes": [
+      "sema:Budget#mh:SHA-256:a7637c4387d834ae190f6c42a2a96914c65294a9f618c4c96adf4ee1d26450e0",
+      "sema:Budget#mh:SHA-256:f2f58874eaeb0600039600ba5b26064164c225fd44482b269ae94e37a9df15b4"
+    ],
+    "path": [
+      "Infrastructure",
+      "Primitives"
+    ],
+    "related": [
+      "Limitlisten#bb16"
+    ]
+  },
+  "sema_id": "sema:Budget#mh:SHA-256:4e3e536c9ecec8c1b0af017cfd0a26ba00e9f96047de4a690bf9d3db7f3720ef",
+  "sema_ref": "Budget#4e3e",
+  "sema_stub": "4e3e",
+  "dependencies": {
+    "references": {
+      "conservation": "sema:Conservation#mh:SHA-256:0b32d007b27a9b5201c46931bdbabd09d08ff9d7b01cf49469f61709989507c2"
+    }
+  },
+  "sema_layer": "Infrastructure",
+  "sema_category": "Primitives"
+}

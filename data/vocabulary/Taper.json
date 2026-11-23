@@ -1,0 +1,65 @@
+{
+  "handle": "Taper",
+  "gloss": "Multi-stage filter of increasing strictness: wide high-entropy input to narrow certain output",
+  "mechanism": "A multi-stage {{sequence}} process that accepts wide-aperture, high-entropy inputs and progressively filters them through {{gate}}s or {{tri_gate}}s of increasing strictness. Each stage: (1) Applies a stage-specific acceptance threshold, acting as a functional {{depth_governor}}; (2) Reduces the candidate set to {{compress}} the search space; (3) Increases certainty. Final stage outputs zero-entropy signal (deterministic, unambiguous). Failure modes are stage-appropriate: Early stages optimize for recall (don't lose valid signals), Late stages optimize for precision (don't pass garbage).",
+  "signature": [
+    "Sequence(Gate)"
+  ],
+  "invariants": [
+    "Monotonic Narrowing: |candidates[n+1]| <= |candidates[n]|",
+    "Strictness Increase: threshold[n+1] > threshold[n]",
+    "Terminal Certainty: final stage tolerance = 0"
+  ],
+  "parameters": [
+    {
+      "name": "stages",
+      "type": "Integer",
+      "range": "[2, N]",
+      "description": "Number of progressive refinement stages from broad to precise"
+    },
+    {
+      "name": "early_bias",
+      "type": "Enum",
+      "range": "{Recall, Balanced}",
+      "description": "Search strategy in early stages (Recall = cast wide net)"
+    },
+    {
+      "name": "late_bias",
+      "type": "Enum",
+      "range": "{Precision, Balanced}",
+      "description": "Search strategy in late stages (Precision = narrow to exact match)"
+    }
+  ],
+  "_meta": {
+    "ring": 1,
+    "tier": 1,
+    "supersedes": [
+      "sema:Taper#mh:SHA-256:9687795b14b6e66574aebb5255ef84529bf7095b350513470085285e3d90a260",
+      "sema:Taper#mh:SHA-256:2044ab29206db4b7235103a9f4a1fc6a0ba647fd31e1d6f420a1581e52845e4f",
+      "sema:Taper#mh:SHA-256:8dc5f590659da3360002d22320c458eeaa775788b16700359f704838c9d16c2e",
+      "sema:Taper#mh:SHA-256:83db268464c312c097ff6e9f579a6ae4c484097c3f4e601a4d88c8151fd9ccb0",
+      "sema:Taper#mh:SHA-256:bde1970317c7758a43f0ba62f15f06f13004a83a6fd40e1a46eb7b439591307c",
+      "sema:Taper#mh:SHA-256:bebf17edba19afa6c38821869c95b162aebd4ba474e73665fcc198a569911703"
+    ],
+    "path": [
+      "Society",
+      "Protocols"
+    ]
+  },
+  "sema_ref": "Taper#5a75",
+  "sema_id": "sema:Taper#mh:SHA-256:5a7557a60ba8e0a07cd7d75f43ceb3b125c411e6eddf5bee63039775eab9ba7a",
+  "sema_stub": "5a75",
+  "dependencies": {
+    "composes_with": {
+      "gate": "sema:Gate#mh:SHA-256:664dd801873a87e8aa3d67499e27e7c47923d5c0cdd129af6c09a7531ed7de15",
+      "sequence": "sema:Sequence#mh:SHA-256:0cae6b0951c4e93742259ff81ded009a85283d250c948f97cce3b9b3b8e58e1a",
+      "tri_gate": "sema:TriGate#mh:SHA-256:04a9a7cc17d29dab76ee781b7d7a3f557f68d528788da12620a320ce53d6b44c"
+    },
+    "references": {
+      "compress": "sema:Compress#mh:SHA-256:b585b8c462691d24d55deee575c5ade6d6510d9f99f9c59c38d2ff025ad3721c",
+      "depth_governor": "sema:DepthGovernor#mh:SHA-256:5b24d810ede53e7e6716e3e20e7c28cf578f171845af2358344c25f0c56b7b75"
+    }
+  },
+  "sema_layer": "Society",
+  "sema_category": "Protocols"
+}

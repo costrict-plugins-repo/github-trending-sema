@@ -1,0 +1,28 @@
+{
+  "handle": "PhaseTransition",
+  "mechanism": "A sudden, qualitative reorganization of a system's {{state}} when a control parameter crosses a threshold. Below the threshold the system occupies one regime (behaviors, structures, or equilibria); above it, a structurally distinct regime. The transition is non-continuous: small changes in the control parameter near the threshold produce disproportionately large changes in system behavior. Substrate phenomenon: appears in thermodynamics (ice-water-vapor), percolation networks (connectivity thresholds), opinion dynamics (cascade onset), coordination systems (consensus formation), neural dynamics (critical states). Not to be confused with authored state transitions in a finite-state machine \u2014 PhaseTransition names the substrate pattern of threshold-triggered structural change in dynamical systems.",
+  "gloss": "Sudden, qualitative reorganization of a system when a control parameter crosses a threshold",
+  "invariants": [
+    "Threshold: the transition is associated with a critical value of a control parameter.",
+    "Qualitative change: the regimes above and below the threshold are structurally distinct, not merely quantitatively different.",
+    "Non-continuity: the system's macroscopic behavior is not a smooth function of the control parameter at the threshold."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 0,
+    "path": [
+      "Physics",
+      "Primitives"
+    ]
+  },
+  "sema_id": "sema:PhaseTransition#mh:SHA-256:b7752342dcc7b20033400fc4ec1befd4bc3a31532493d6acdce763293e81c1d7",
+  "sema_ref": "PhaseTransition#b775",
+  "sema_stub": "b775",
+  "dependencies": {
+    "references": {
+      "state": "sema:State#mh:SHA-256:4f25e6a16ccd37dc0bc154cccc7055cb504d49daa8b712f372a425eb6c7b8cb2"
+    }
+  },
+  "sema_layer": "Physics",
+  "sema_category": "Primitives"
+}

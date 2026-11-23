@@ -1,0 +1,46 @@
+{
+  "handle": "AdversarialSteel",
+  "mechanism": "The {{meta}}-process for adversarial verification. Instead of a single judgment, the {{system}} spawns a 'green advocate' (who constructs the strongest case FOR the idea) and a 'red advocate' (who constructs the strongest case AGAINST). A third {{judge}} {{agent}} renders the verdict only after reviewing both steelmanned arguments. It orchestrates {{steelman_check}} to generate the opposing arguments and employs {{compatibility_check}} to ensure the pro, con, and {{judge}} {{agent}}s share a precise definition of the {{criteria}} before debate begins.",
+  "gloss": "Dual-advocate verdict generation",
+  "failure_modes": [
+    "{{judge}} {{agent}} defaults to 'Both sides' compromise (Median Trap).",
+    "Shared blind spot: the {{system}} spawns both advocates, so a gap common to their origin appears in neither argument and reaches the {{judge}} as apparent consensus."
+  ],
+  "invariants": [
+    "Dual Representation: Verdict cannot be rendered without Pro + Con arguments",
+    "Targeted opposition: the red argument must identify the specific claim of the proposal it contradicts. An objection that cites no claim is a strawman and does not satisfy the con requirement."
+  ],
+  "_meta": {
+    "tier": 2,
+    "ring": 1,
+    "caution": "Spawned advocates share the same model \u2014 collusion risk.",
+    "supersedes": [
+      "sema:AdversarialSteel#mh:SHA-256:35f025a1bfbbcbcf86d8d60889b3e1c08fa43a2d439b358c4021c83de2291234",
+      "sema:AdversarialSteel#mh:SHA-256:5e05f6b505964cc5058f75a14b715fb3b78ad0aa96babd91dd9e5b488e471db4",
+      "sema:AdversarialSteel#mh:SHA-256:aaf9288a5aa63817fd3cfd1143068dcf639e41fb3de1ac9d28a7e4959c1b90c5",
+      "sema:AdversarialSteel#mh:SHA-256:ed5ea5a0048acf8703754159e2fc2fb516a23033316f2dcb58a7d77e7df71603"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:AdversarialSteel#mh:SHA-256:90b1f6225005275367227017d930134959decfd97f52d7550de19cd8784c8702",
+  "sema_ref": "AdversarialSteel#90b1",
+  "sema_stub": "90b1",
+  "dependencies": {
+    "composes_with": {
+      "steelman_check": "sema:SteelmanCheck#mh:SHA-256:b004eb6d85a184da7f9bb7fc06d011bc869f6eb6ad1061f30cbbbcc4c2b8f6aa"
+    },
+    "references": {
+      "agent": "sema:Agent#mh:SHA-256:e127459069739fffc96a71d54ef6e8c97ca53471d5349c16aa72a092a33756cd",
+      "compatibility_check": "sema:CompatibilityCheck#mh:SHA-256:7f70838f05f3aad069b89dcbc705283872f66fde4bc95c6bfa0dc917955e050d",
+      "criteria": "sema:Criteria#mh:SHA-256:92ab804441f5ff5307c6e45905818372e6159c4bd64d264ac7fddd6705de8acb",
+      "judge": "sema:Judge#mh:SHA-256:704cbb71588d7a3bafa08b71c863005e31ec4400860b9cb8b094e660da9c7c6c",
+      "meta": "sema:Meta#mh:SHA-256:f277723b905f6c94549f27f7eb58597096f3052165f5ad90af8b273188cee079",
+      "system": "sema:System#mh:SHA-256:f8eb318a1113a10fead02fbf14ae433767ac1a69c9579cdb584cc622068e90b3"
+    }
+  },
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}

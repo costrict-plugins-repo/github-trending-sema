@@ -1,0 +1,36 @@
+{
+  "handle": "PreMortem",
+  "mechanism": "For a contemplated course, state an unwanted outcome and reason as though it has already occurred. Ask what caused it and record course- and context-linked causal scenarios. Return those scenarios; selection, ranking, and response remain caller choices.",
+  "gloss": "Simulating failure to identify hidden risks",
+  "failure_modes": [
+    "Performative Doomerism: Recording generic disasters disconnected from the course or context."
+  ],
+  "invariants": [
+    "Prospective Hindsight: During scenario generation, the selected unwanted outcome is treated as already having occurred, without asserting its probability.",
+    "Causal Specificity: Each recorded scenario names a causal explanation linked to the course and context; generic bad luck alone is insufficient."
+  ],
+  "preconditions": [
+    "A contemplated course is identified."
+  ],
+  "postconditions": [
+    "Course-linked causal failure scenarios, or an explicit none-found result, recorded."
+  ],
+  "_meta": {
+    "tier": 1,
+    "ring": 2,
+    "supersedes": [
+      "sema:PreMortem#mh:SHA-256:f69d7ea1811d52c879c9d45e5546796ca328f8806e322fe42bd3ae2ebfc9dea5",
+      "sema:PreMortem#mh:SHA-256:6cc4fa30402760c632af25ea100c15fa3b0191b6a3beae343b84a8162d1123e2",
+      "sema:PreMortem#mh:SHA-256:4c7fe58aa4f9a9e7a319d8eb3ca56e449a390d6b0fa574b258f9cf7a32ef138e"
+    ],
+    "path": [
+      "Mind",
+      "Strategy"
+    ]
+  },
+  "sema_id": "sema:PreMortem#mh:SHA-256:e4c24813f33aa41fdb183e380d05707fe1fd813c46b4127602449a8988f47964",
+  "sema_ref": "PreMortem#e4c2",
+  "sema_stub": "e4c2",
+  "sema_layer": "Mind",
+  "sema_category": "Strategy"
+}
